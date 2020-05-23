@@ -85,9 +85,3 @@ int server::init(char *name, int ip_version, char *ip, int port) {
     return 0;
 }
 
-
-server *new_server() {
-    server *s = new server();
-    s->init("tink", AF_INET, "0.0.0.0", 8823);
-    return s;
-}

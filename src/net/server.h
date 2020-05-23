@@ -24,5 +24,4 @@ public:
     int run();
     int stop();
 };
-server* new_server();
 #endif
