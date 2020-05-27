@@ -5,29 +5,34 @@
 #ifndef TINK_CONNECTION_H
 #define TINK_CONNECTION_H
 
-#include <interface_conn.h>
+#include <iconnection.h>
 #include <error_code.h>
-class connection : public interface_conn {
+#include <irouter.h>
+
+class Connection : public IConnection {
+private:
     int conn_fd;
     int conn_id;
     bool is_close;
-    conn_handle_func handle_api;
+//    conn_handle_func handle_api;
     struct sockaddr remote_addr;
-    int init(int conn_fd, int id, conn_handle_func callback);
+    IRouter &router;
+public:
+    int Init(int conn_fd, int id);
 
-    int start();
+    int Start();
     // 停止链接
-    int stop();
+    int Stop();
     // 获取链接的socket
-    int get_tcp_conn();
+    int GetTcpConn();
     // 获取链接id
-    int get_conn_id();
+    int GetConnId();
 
-    int start_reader();
+    int StartReader();
     // 获取客户端的tcp状态 ip port
-    sockaddr get_remote_addr();
+    sockaddr GetRemoteAddr();
     // 发送数据到客户端
-    int send(char *buf, int len);
+    int Send(char *buf, int len);
 };
 
 

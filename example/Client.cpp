@@ -7,7 +7,7 @@
 #include <cerrno>
 #define MAX_BUF_SIZE 1024
 int main() {
-    printf("client start...");
+    printf("client Start...");
     sleep(1);
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in addr;
@@ -29,7 +29,7 @@ int main() {
 //        strcpy(buf, "hello tink!");
         scanf("%s", buf);
         if (send(fd, buf, strlen(buf), 0) == -1) {
-            printf("client send msg error %s\n", strerror(errno));
+            printf("client Send msg error %s\n", strerror(errno));
             return 0;
         }
         if ((recv_size = recv(fd, recv_buf, MAX_BUF_SIZE, 0)) == -1) {

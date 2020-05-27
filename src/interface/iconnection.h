@@ -9,19 +9,19 @@
 
 typedef int (*conn_handle_func)(int, char*, int);
 
-class interface_conn {
+class IConnection {
     // 启动链接
-    int start();
+    int Start();
     // 停止链接
-    int stop();
+    int Stop();
     // 获取链接的socket
-    int get_tcp_conn();
+    int GetTcpConn();
     // 获取链接id
-    int get_conn_id();
+    int GetConnId();
     // 获取客户端的tcp状态 ip port
-    sockaddr* get_remote_addr();
+    sockaddr* GetRemoteAddr();
     // 发送数据到客户端
-    int send(char *buf, int len);
+    int Send(char *buf, int len);
 };
 
 
