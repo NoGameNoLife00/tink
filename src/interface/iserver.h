@@ -14,11 +14,11 @@ public:
     // 启动
     virtual int Start() = 0;
     // 停止
-    virtual int Stop();
+    virtual int Stop() = 0;
     // 运行
-    virtual int Run();
+    virtual int Run() = 0;
     // 给当前服务注册一个路由方法，供客户端链接处理使用
-    virtual int AddRouter(IRouter router);
+    virtual int AddRouter(IRouter *router) = 0;
 //    virtual ~IServer() = 0;
 };
 

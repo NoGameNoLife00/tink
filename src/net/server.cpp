@@ -56,7 +56,7 @@ int Server::Start() {
         }
         cid++;
         Connection *conn = new Connection();
-        conn->Init(cli_fd, cid);
+        conn->Init(cli_fd, cid, this->router);
 
         int pid = fork();
         if (pid == 0) {

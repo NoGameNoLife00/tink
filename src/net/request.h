@@ -12,12 +12,9 @@ class Request : public IRequest {
 public:
     IConnection *conn;
     char* data;
-    IConnection *GetConnection() override;
+    IConnection *GetConnection();
 
-    char *GetData() override;
-
-
-
+    char *GetData();
 };
 
 

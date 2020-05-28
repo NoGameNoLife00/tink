@@ -8,10 +8,11 @@
 #include <iconnection.h>
 
 class IRequest {
+public:
     // 获取当前连接
     virtual IConnection* GetConnection() = 0;
     // 获取请求的消息数据
-    virtual char* GetData();
+    virtual char* GetData() = 0;
 };
 
 #endif //TINK_IREQUEST_H

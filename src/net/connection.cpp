@@ -10,9 +10,10 @@
 #include "request.h"
 
 
-int Connection::Init(int conn_fd, int id) {
+int Connection::Init(int conn_fd, int id, IRouter *router) {
     this->conn_fd = conn_fd;
     this->conn_id = id;
+    this->router = router;
     this->is_close = false;
     return 0;
 }
@@ -40,7 +41,7 @@ int Connection::GetConnId() {
     return  this->conn_id;
 }
 
-sockaddr Connection::GetRemoteAddr() {
+struct sockaddr* Connection::GetRemoteAddr() {
     return this->remote_addr;
 }
 
@@ -69,9 +70,9 @@ int Connection::StartReader() {
         Request req;
         req.conn = this;
         req.data = buf;
-        router.PreHandle(req);
-        router.Handle(req);
-        router.PostHandle(req);
+        router->PreHandle(req);
+        router->Handle(req);
+        router->PostHandle(req);
 //        int ret = handle_api(conn_fd, buf, recv_size);
 //        if (ret != E_OK) {
 //            printf("handle is error, conn_id:%d error_code:%d \n", conn_id, ret);

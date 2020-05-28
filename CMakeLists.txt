@@ -13,4 +13,4 @@ add_executable(tink app/main.cpp
         src/net/server.h src/net/server.cpp
         src/interface/iconnection.h
         src/error_code.h src/net/connection.cpp src/net/connection.h src/net/request.cpp src/net/request.h src/net/base_router.cpp src/net/base_router.h)
-add_executable(example_client example/Client.cpp src/interface/irequest.h src/interface/irouter.h)
+add_executable(example_client example/client.cpp src/interface/irequest.h src/interface/irouter.h)

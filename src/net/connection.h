@@ -15,10 +15,10 @@ private:
     int conn_id;
     bool is_close;
 //    conn_handle_func handle_api;
-    struct sockaddr remote_addr;
-    IRouter &router;
+    struct sockaddr *remote_addr;
+    IRouter *router;
 public:
-    int Init(int conn_fd, int id);
+    int Init(int conn_fd, int id, IRouter *router);
 
     int Start();
     // 停止链接
@@ -30,7 +30,7 @@ public:
 
     int StartReader();
     // 获取客户端的tcp状态 ip port
-    sockaddr GetRemoteAddr();
+    struct sockaddr* GetRemoteAddr();
     // 发送数据到客户端
     int Send(char *buf, int len);
 };
