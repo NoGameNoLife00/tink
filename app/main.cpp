@@ -5,9 +5,10 @@
 #include <sys/socket.h>
 #include <cstring>
 #include <error_code.h>
+#include <w32api/asptlb.h>
 
-class PingRouter : public BaseRouter {
-    int PreHandle(IRequest &request) override {
+class PingRouter : public tink::BaseRouter {
+    int PreHandle(tink::IRequest &request) override {
         printf("call router [PreHandle]\n");
         int fd = request.GetConnection()->GetTcpConn();
         char *str = "before ping\n";
@@ -18,7 +19,7 @@ class PingRouter : public BaseRouter {
         return E_OK;
     }
 
-    int Handle(IRequest &request) override {
+    int Handle(tink::IRequest &request) override {
         printf("call router [Handle]\n");
         int fd = request.GetConnection()->GetTcpConn();
         char *str = "ping....\n";
@@ -29,7 +30,7 @@ class PingRouter : public BaseRouter {
         return E_OK;
     }
 
-    int PostHandle(IRequest &request) override {
+    int PostHandle(tink::IRequest &request) override {
         printf("call router [PostHandle]\n");
         int fd = request.GetConnection()->GetTcpConn();
         char *str = "after ping\n";
@@ -42,7 +43,7 @@ class PingRouter : public BaseRouter {
 };
 
 int main() {
-    Server *s = new Server();
+    tink::Server *s = new tink::Server();
     PingRouter *br = new PingRouter();
     s->Init("tink", AF_INET, "0.0.0.0", 8823);
     s->AddRouter(br);

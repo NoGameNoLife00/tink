@@ -8,14 +8,17 @@
 
 #include <irequest.h>
 
-class Request : public IRequest {
-public:
-    IConnection *conn;
-    char* data;
-    IConnection *GetConnection();
+namespace tink {
+    class Request : public IRequest {
+    public:
+        IConnection *conn;
+        char* data;
+        IConnection *GetConnection();
 
-    char *GetData();
-};
+        char *GetData();
+    };
+
+}
 
 
 #endif //TINK_REQUEST_H

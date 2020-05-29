@@ -6,25 +6,29 @@
 
 #include <iserver.h>
 #include <string>
-//typedef struct ServerInfo_ {
-//
-//}ServerInfo;
+#include <memory>
 
 #define NAME_STR_LEN 64
 #define IP_STR_LEN 20
 #define MAX_MSG_LEN 2048
-class Server : public IServer {
-public:
-    char name[NAME_STR_LEN];
-    int ip_version;
-    char ip[IP_STR_LEN];
-    int port;
-    IRouter *router;
-    int Init(char *name, int ip_version, char *ip, int port);
-    int Start();
-    int Run();
-    int Stop();
+namespace tink {
 
-    int AddRouter(IRouter *router);
-};
+    class Server : public IServer {
+    public:
+        char name[NAME_STR_LEN];
+        int ip_version;
+        char ip[IP_STR_LEN];
+        int port;
+//        shared_ptr<IRouter> router;
+        IRouter *router;
+        int Init(char *name, int ip_version, char *ip, int port);
+        int Start();
+        int Run();
+        int Stop();
+
+        int AddRouter(IRouter *router);
+    };
+}
+
+
 #endif
