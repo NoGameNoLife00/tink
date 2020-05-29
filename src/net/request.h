@@ -8,14 +8,18 @@
 
 #include <irequest.h>
 
-class Request : public IRequest {
-public:
-    IConnection *conn;
-    char* data;
-    IConnection *GetConnection();
+namespace tink {
+    class Request : public IRequest {
+    private:
+    public:
+        Request(IConnection &, std::shared_ptr<byte>);
+        IConnection& conn;
+        std::shared_ptr<byte> data;
+        IConnection & GetConnection();
+        std::shared_ptr<byte> GetData();
+    };
 
-    char *GetData();
-};
+}
 
 
 #endif //TINK_REQUEST_H

@@ -30,7 +30,7 @@ int main() {
         scanf("%s", buf);
         if (send(fd, buf, strlen(buf), 0) == -1) {
             printf("client Send msg error %s\n", strerror(errno));
-            return 0;
+            break;
         }
         if ((recv_size = recv(fd, recv_buf, MAX_BUF_SIZE, 0)) == -1) {
             printf("client recv msg error %s\n", strerror(errno));
