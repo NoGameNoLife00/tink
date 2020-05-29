@@ -7,11 +7,13 @@
 #include <cstring>
 #include <connection.h>
 #include <server.h>
-#include "request.h"
+#include <request.h>
+#include <connection.h>
+
 
 namespace tink {
 
-    int Connection::Init(int conn_fd, int id, IRouter *router) {
+    int Connection::Init(int conn_fd, int id, std::shared_ptr<IRouter> router) {
         this->conn_fd = conn_fd;
         this->conn_id = id;
         this->router = router;
@@ -42,7 +44,7 @@ namespace tink {
         return  this->conn_id;
     }
 
-    struct sockaddr* Connection::GetRemoteAddr() {
+    RemoteAddrPtr Connection::GetRemoteAddr() {
         return this->remote_addr;
     }
 
@@ -58,19 +60,18 @@ namespace tink {
 
     int Connection::StartReader() {
         printf("reader process is running\n");
-        char *buf = new char[MAX_MSG_LEN];
+        std::shared_ptr<byte> buf(new char[MAX_MSG_LEN]);
         int recv_size = 0;
         while (true) {
             // 读取客户端的数据到buf中
-            memset(buf, 0, sizeof(buf));
-            if ((recv_size = read(conn_fd, buf, sizeof(buf))) == -1) {
+            memset(buf.get(), 0, sizeof(buf));
+            if ((recv_size = read(conn_fd, buf.get(), sizeof(buf.get()))) == -1) {
                 printf("read error:%s\n", strerror(errno));
                 continue;
             }
 
-            Request req;
-            req.conn = this;
-            req.data = buf;
+            Request req(*this, buf);
+//            req.conn = std::shared_ptr<IConnection>(this);
             router->PreHandle(req);
             router->Handle(req);
             router->PostHandle(req);
@@ -80,7 +81,6 @@ namespace tink {
 //            break;
 //        }
         }
-        delete buf;
         return 0;
     }
 

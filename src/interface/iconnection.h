@@ -5,10 +5,12 @@
 #ifndef INTERFACE_CONN_H
 #define INTERFACE_CONN_H
 
-#include <cygwin/socket.h>
+#include <sys/socket.h>
+#include <memory>
 
 namespace tink {
 //    typedef int (*conn_handle_func)(int, char*, int);
+    typedef  std::shared_ptr<struct sockaddr> RemoteAddrPtr;
 
     class IConnection {
     public:
@@ -22,9 +24,7 @@ namespace tink {
             return 0;
         };
         // 获取客户端的tcp状态 ip port
-        virtual struct sockaddr* GetRemoteAddr() {
-            return 0;
-        };
+        virtual RemoteAddrPtr GetRemoteAddr() = 0;
         // 发送数据到客户端
         virtual int Send(char *buf, int len) {
             return 0;

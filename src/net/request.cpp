@@ -1,11 +1,17 @@
 
 #include <request.h>
+#include "request.h"
+
 namespace tink {
-    IConnection *Request::GetConnection() {
+    Request::Request(IConnection &conn, std::shared_ptr<byte> data) : conn(conn) {
+        this->data = data;
+    }
+
+    IConnection & Request::GetConnection() {
         return conn;
     }
 
-    char *Request::GetData() {
+    std::shared_ptr<byte> Request::GetData() {
         return data;
     }
 }

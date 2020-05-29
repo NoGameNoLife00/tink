@@ -13,9 +13,12 @@
 #include <connection.h>
 
 
+
 namespace tink {
+
+
     int Server::Start() {
-        printf("[Start] Server listener at ip:%s, port:%d, is starting\n", ip, port);
+        printf("[Start] Server listener at ip:%s, port:%d, is starting\n", ip.get()->c_str(), port);
         int srv_fd = socket(ip_version, SOCK_STREAM, 0);
         if (srv_fd == -1) {
             printf("Server create socket error: %s (code:%d)\n", strerror(errno), errno);
@@ -35,7 +38,7 @@ namespace tink {
             printf("listen socket error: %s(code:%d)\n", strerror(errno), errno);
             exit(1);
         }
-        printf("Start tink Server %s listening\n", name);
+        printf("Start tink Server %s listening\n", name.get()->c_str());
         struct sockaddr_in cli_addr;
         u_int cid = 0;
         socklen_t cli_add_size = sizeof(cli_addr);
@@ -46,12 +49,12 @@ namespace tink {
                 continue;
             }
             cid++;
-            Connection *conn = new Connection();
-            conn->Init(cli_fd, cid, this->router);
+            Connection conn;
+            conn.Init(cli_fd, cid, this->router);
 
             int pid = fork();
             if (pid == 0) {
-                conn->Start();
+                conn.Start();
 //            close(srv_fd);
             }
 //        int pid = fork();
@@ -90,15 +93,16 @@ namespace tink {
         return 0;
     }
 
-    int Server::AddRouter(IRouter *router) {
+    int Server::AddRouter(std::shared_ptr<IRouter> router) {
         this->router = router;
         printf("add router success\n");
         return 0;
     }
 
-    int Server::Init(char *name, int ip_version, char *ip, int port) {
-        strcpy(this->name, name);
-        strcpy(this->ip, ip);
+    int Server::Init(std::shared_ptr<std::string> name,int ip_version,
+            std::shared_ptr<std::string> ip, int port) {
+        this->name = name;
+        this->ip = ip;
         this->ip_version = ip_version;
         this->port = port;
 //    this->router = router;
