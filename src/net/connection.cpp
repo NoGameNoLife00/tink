@@ -9,6 +9,7 @@
 #include <server.h>
 #include <request.h>
 #include <connection.h>
+#include <global_mng.h>
 
 
 namespace tink {
@@ -60,7 +61,8 @@ namespace tink {
 
     int Connection::StartReader() {
         printf("reader process is running\n");
-        std::shared_ptr<byte> buf(new char[MAX_MSG_LEN]);
+        std::shared_ptr<GlobalMng> globalObj = tink::Singleton<tink::GlobalMng>::GetInstance();
+        std::shared_ptr<byte> buf(new char[globalObj->getMaxPackageSize()]);
         int recv_size = 0;
         while (true) {
             // 读取客户端的数据到buf中

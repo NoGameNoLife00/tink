@@ -1,8 +1,8 @@
 #include <iostream>
 #include <server.h>
-#include <cygwin/socket.h>
-#include <base_router.h>
+#include <global_mng.h>
 #include <sys/socket.h>
+#include <base_router.h>
 #include <cstring>
 #include <error_code.h>
 
@@ -42,11 +42,14 @@ class PingRouter : public tink::BaseRouter {
 };
 
 int main() {
+    std::shared_ptr<tink::GlobalMng> globalObj = tink::Singleton<tink::GlobalMng>::GetInstance();
+    globalObj->Init();
+
     tink::Server *s = new tink::Server();
     std::shared_ptr<PingRouter> br(new PingRouter());
     std::shared_ptr<std::string> name(new std::string("tink"));
     std::shared_ptr<std::string> ip(new std::string("0.0.0.0"));
-    s->Init(name, AF_INET, ip, 8823);
+    s->Init(globalObj->getName(), AF_INET, globalObj->getHost(), globalObj->getPort());
     s->AddRouter(br);
     s->Run();
     delete  s;

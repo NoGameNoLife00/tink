@@ -11,14 +11,18 @@
 #include <cstring>
 #include <unistd.h>
 #include <connection.h>
-
+#include <global_mng.h>
 
 
 namespace tink {
 
 
     int Server::Start() {
-        printf("[Start] Server listener at ip:%s, port:%d, is starting\n", ip.get()->c_str(), port);
+        std::shared_ptr<GlobalMng> globalObj = tink::Singleton<tink::GlobalMng>::GetInstance();
+        printf("[tink] Server Name:%s, listener at IP:%s, Port:%d, is starting.\n",
+                name->c_str(), ip->c_str(), port);
+        printf("[tink] Version: %s, MaxConn:%d, MaxPacketSize:%d\n", globalObj->getVersion()->c_str(),
+                globalObj->getMaxConn(), globalObj->getMaxPackageSize());
         int srv_fd = socket(ip_version, SOCK_STREAM, 0);
         if (srv_fd == -1) {
             printf("Server create socket error: %s (code:%d)\n", strerror(errno), errno);
