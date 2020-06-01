@@ -15,13 +15,6 @@ namespace tink {
 
 
     class Connection : public IConnection {
-    private:
-        int conn_fd;
-        int conn_id;
-        bool is_close;
-//    conn_handle_func handle_api;
-        RemoteAddrPtr remote_addr;
-        std::shared_ptr<IRouter> router;
     public:
         int Init(int conn_fd, int id, std::shared_ptr<IRouter> router);
 
@@ -38,6 +31,13 @@ namespace tink {
         RemoteAddrPtr GetRemoteAddr();
         // 发送数据到客户端
         int Send(char *buf, int len);
+    private:
+        int conn_fd;
+        int conn_id;
+        bool is_close;
+//    conn_handle_func handle_api;
+        RemoteAddrPtr remote_addr;
+        std::shared_ptr<IRouter> router;
     };
 }
 

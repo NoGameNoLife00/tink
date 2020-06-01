@@ -5,7 +5,7 @@
 #include <irouter.h>
 namespace tink {
     //
-    // 所有的Router继承BaseRouter类，因为某些Router类不需要某种Handle
+    // 鎵�鏈夌殑Router缁ф壙BaseRouter绫伙紝鍥犱负鏌愪簺Router绫讳笉闇�瑕佹煇绉岺andle
     //
     class BaseRouter : public IRouter {
     public:

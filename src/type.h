@@ -4,6 +4,7 @@
 
 #ifndef TINK_TYPE_H
 #define TINK_TYPE_H
+#include <sys/types.h>
 
 typedef char byte;
 

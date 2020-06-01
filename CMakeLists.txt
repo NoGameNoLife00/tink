@@ -33,5 +33,5 @@ add_executable(tink app/main.cpp
         src/net/request.h
         src/net/base_router.cpp
         src/net/base_router.h
-        src/type.h src/interface/singleton.h)
-add_executable(example_client example/client.cpp src/interface/irequest.h src/interface/irouter.h src/interface/singleton.h)
+        src/type.h src/interface/singleton.h src/net/message.cpp src/net/message.h src/net/datapack.cpp src/net/datapack.h)
+add_executable(example_client example/client.cpp src/interface/irequest.h src/interface/irouter.h src/interface/singleton.h src/interface/imessage.h src/interface/idatapack.h)

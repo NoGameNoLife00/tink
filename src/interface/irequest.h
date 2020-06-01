@@ -1,5 +1,5 @@
 //
-// ¿Í»§¶ËÇëÇóµÄÁ´½ÓĞÅÏ¢
+// å®¢æˆ·ç«¯è¯·æ±‚çš„é“¾æ¥ä¿¡æ¯
 //
 
 #ifndef TINK_IREQUEST_H
@@ -10,9 +10,9 @@
 namespace tink {
     class IRequest {
     public:
-        // »ñÈ¡µ±Ç°Á¬½Ó
+        // è·å–å½“å‰è¿æ¥
         virtual IConnection & GetConnection() = 0;
-        // »ñÈ¡ÇëÇóµÄÏûÏ¢Êı¾İ
+        // è·å–è¯·æ±‚çš„æ¶ˆæ¯æ•°æ®
         virtual std::shared_ptr<byte> GetData() = 0;
     };
 }
