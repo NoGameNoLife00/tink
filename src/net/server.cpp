@@ -21,8 +21,8 @@ namespace tink {
         std::shared_ptr<GlobalMng> globalObj = tink::Singleton<tink::GlobalMng>::GetInstance();
         printf("[tink] Server Name:%s, listener at IP:%s, Port:%d, is starting.\n",
                 name->c_str(), ip->c_str(), port);
-        printf("[tink] Version: %s, MaxConn:%d, MaxPacketSize:%d\n", globalObj->getVersion()->c_str(),
-                globalObj->getMaxConn(), globalObj->getMaxPackageSize());
+        printf("[tink] Version: %s, MaxConn:%d, MaxPacketSize:%d\n", globalObj->GetVersion()->c_str(),
+               globalObj->GetMaxConn(), globalObj->GetMaxPackageSize());
         int srv_fd = socket(ip_version, SOCK_STREAM, 0);
         if (srv_fd == -1) {
             printf("Server create socket error: %s (code:%d)\n", strerror(errno), errno);

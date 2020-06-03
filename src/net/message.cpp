@@ -15,19 +15,19 @@ namespace tink {
     }
 
     uint Message::GetDataLen() const {
-        return data_len;
+        return data_len_;
     }
 
     void Message::SetDataLen(uint dataLen) {
-        data_len = dataLen;
+        data_len_ = dataLen;
     }
 
     const std::shared_ptr<byte> &Message::GetData() const {
-        return data;
+        return data_;
     }
 
     void Message::SetData(const std::shared_ptr<byte> &data) {
-        Message::data = data;
+        Message::data_ = data;
     }
 
 }

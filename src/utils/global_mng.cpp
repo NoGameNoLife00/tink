@@ -66,15 +66,15 @@ namespace tink {
         return 0;
     }
 
-    const std::shared_ptr<IServer> &GlobalMng::getServer() const {
+    const std::shared_ptr<IServer> &GlobalMng::GetServer() const {
         return server_;
     }
 
-    const std::shared_ptr<std::string> &GlobalMng::getHost() const {
+    const std::shared_ptr<std::string> &GlobalMng::GetHost() const {
         return host_;
     }
 
-    const std::shared_ptr<std::string> &GlobalMng::getName() const {
+    const std::shared_ptr<std::string> &GlobalMng::GetName() const {
         return name_;
     }
 
@@ -82,15 +82,15 @@ namespace tink {
         return port_;
     }
 
-    const std::shared_ptr<std::string> &GlobalMng::getVersion() const {
+    const std::shared_ptr<std::string> &GlobalMng::GetVersion() const {
         return version_;
     }
 
-    int GlobalMng::getMaxConn() const {
+    int GlobalMng::GetMaxConn() const {
         return max_conn_;
     }
 
-    uint GlobalMng::getMaxPackageSize() const {
+    uint GlobalMng::GetMaxPackageSize() const {
         return max_package_size_;
     }
 }

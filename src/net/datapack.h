@@ -13,7 +13,7 @@ namespace tink {
 
         int Unpack(std::shared_ptr<byte> data, std::shared_ptr<IMessage> msg) override;
 
-        int Pack(std::shared_ptr<IMessage> msg, std::shared_ptr<byte> data);
+        int Pack(std::shared_ptr<IMessage> msg, std::shared_ptr<byte> *data);
     };
 }
 

@@ -7,6 +7,7 @@
 #include <type.h>
 #include <cstring>
 #include <global_mng.h>
+#include <error_code.h>
 
 namespace tink {
 
@@ -15,7 +16,7 @@ namespace tink {
         return 8;
     }
 
-    int DataPack::Pack(std::shared_ptr<IMessage> msg, std::shared_ptr<byte> data) {
+    int DataPack::Pack(std::shared_ptr<IMessage> msg, std::shared_ptr<byte> *data) {
         uint buff_len = GetHeadLen() + msg->GetDataLen();
         byte * buff = new byte[buff_len];
         // 写id
@@ -25,10 +26,10 @@ namespace tink {
         byte *ptr = buff + sizeof(id);
         uint data_len = msg->GetDataLen();
         memset(ptr, data_len, sizeof(data_len));
-        // 写data
-        ptr += sizeof(data_len);
-        memcpy(ptr, msg->GetData().get(), data_len);
-        data.reset(buff);
+//        // 写data
+//        ptr += sizeof(data_len);
+//        memcpy(ptr, msg->GetData().get(), data_len);
+//        data->reset(buff);
         return 0;
     }
 
@@ -50,7 +51,10 @@ namespace tink {
         msg->SetDataLen(data_len);
         msg->SetData(in_data);
         std::shared_ptr<GlobalMng> globalObj = Singleton<GlobalMng>::GetInstance();
-        return 0;
+        if (globalObj->GetMaxPackageSize() > 0 && data_len > globalObj->GetMaxPackageSize()) {
+            return E_PACKET_SIZE;
+        }
+        return E_OK;
     }
 
 }

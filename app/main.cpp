@@ -49,7 +49,7 @@ int main() {
     std::shared_ptr<PingRouter> br(new PingRouter());
     std::shared_ptr<std::string> name(new std::string("tink"));
     std::shared_ptr<std::string> ip(new std::string("0.0.0.0"));
-    s->Init(globalObj->getName(), AF_INET, globalObj->getHost(), globalObj->getPort());
+    s->Init(globalObj->GetName(), AF_INET, globalObj->GetHost(), globalObj->getPort());
     s->AddRouter(br);
     s->Run();
     delete  s;

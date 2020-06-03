@@ -25,8 +25,8 @@ namespace tink {
 
     private:
         uint id_; // 消息ID
-        uint data_len; // 消息长度
-        std::shared_ptr<byte> data; // 消息数据
+        uint data_len_; // 消息长度
+        std::shared_ptr<byte> data_; // 消息数据
     };
 }
 
