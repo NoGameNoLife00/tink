@@ -16,7 +16,7 @@ namespace tink {
         // 序列化
         virtual int Pack(std::shared_ptr<IMessage> msg, std::shared_ptr<byte> *data) = 0;
         // 反序列化
-        virtual int Unpack(std::shared_ptr<byte> data, std::shared_ptr<IMessage> msg);
+        virtual int Unpack(std::shared_ptr<byte> data, std::shared_ptr<IMessage> msg) { return 0;};
     };
 
 }

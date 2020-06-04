@@ -12,11 +12,11 @@ namespace tink {
     class IMessage {
     public:
         virtual uint GetId() const = 0;
-        virtual void SetId(uint id);
-        virtual uint GetDataLen() const;
-        virtual void SetDataLen(uint dataLen);
+        virtual void SetId(uint id) {};
+        virtual uint GetDataLen() const {return 0;};
+        virtual void SetDataLen(uint dataLen) {};
         virtual const std::shared_ptr<byte> &GetData() const = 0;
-        virtual void SetData(const std::shared_ptr<byte> &data);
+        virtual void SetData(const std::shared_ptr<byte> &data) {};
     };
 }
 
