@@ -11,9 +11,9 @@ namespace tink {
     public:
         uint GetHeadLen();
 
-        int Unpack(std::shared_ptr<byte> data, std::shared_ptr<IMessage> msg) override;
+        int Unpack(byte *data, IMessage &msg);
 
-        int Pack(std::shared_ptr<IMessage> msg, std::shared_ptr<byte> *data);
+        int Pack(IMessage &msg, byte *data);
     };
 }
 
