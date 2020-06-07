@@ -34,7 +34,7 @@ int main() {
 //        strcpy(str_buf.get(), "hello world");
         // 发送msg给客户端
         tink::Message msg;
-        msg.Init(1,strlen(str_buf.get())+1, str_buf);
+        msg.Init(0,strlen(str_buf.get())+1, str_buf);
         char *out;
         uint out_len;
         dp.Pack(msg, &out, &out_len);

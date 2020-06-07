@@ -54,7 +54,7 @@ namespace tink {
             }
             cid++;
             std::shared_ptr<Connection> conn(new Connection);
-            conn->Init(cli_fd, cid, this->router);
+            conn->Init(cli_fd, cid, this->msg_handler_);
 //            conn->Start();
             int pid = fork();
             if (pid == 0) {
@@ -97,19 +97,19 @@ namespace tink {
         return 0;
     }
 
-    int Server::AddRouter(std::shared_ptr<IRouter> router) {
-        this->router = router;
-        printf("add router success\n");
+    int Server::AddRouter(uint msg_id, std::shared_ptr<IRouter> &router) {
+        msg_handler_->AddRouter(msg_id, router);
         return 0;
     }
 
-    int Server::Init(std::shared_ptr<std::string> name,int ip_version,
-            std::shared_ptr<std::string> ip, int port) {
+    int Server::Init(std::shared_ptr<std::string> name, int ip_version,
+                     std::shared_ptr<std::string> ip, int port,
+                     std::shared_ptr<IMsgHandler> &msg_handler) {
         this->name = name;
         this->ip = ip;
         this->ip_version = ip_version;
         this->port = port;
-//    this->router = router;
+        this->msg_handler_ = msg_handler;
         return 0;
     }
 

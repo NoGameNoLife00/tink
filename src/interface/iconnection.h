@@ -34,6 +34,7 @@ namespace tink {
         virtual int GetTcpConn() {
             return 0;
         };
+        virtual ~IConnection(){};
     };
 
 }

@@ -9,6 +9,7 @@
 #include <error_code.h>
 #include <irouter.h>
 #include <memory>
+#include <imsg_handler.h>
 
 namespace tink {
 
@@ -16,7 +17,7 @@ namespace tink {
 
 class Connection : public IConnection, public std::enable_shared_from_this<Connection> {
     public:
-        int Init(int conn_fd, int id, std::shared_ptr<IRouter> router);
+        int Init(int conn_fd, int id, std::shared_ptr<IMsgHandler> &msg_handler);
 
         int Start();
         // 停止链接
@@ -34,12 +35,14 @@ class Connection : public IConnection, public std::enable_shared_from_this<Conne
         // 发送Msg包到客户端
     int SendMsg(uint msg_id, std::shared_ptr<byte> &data, uint data_len);
     private:
-        int conn_fd;
-        int conn_id;
-        bool is_close;
+        int conn_fd_;
+        int conn_id_;
+        bool is_close_;
 //    conn_handle_func handle_api;
-        RemoteAddrPtr remote_addr;
-        std::shared_ptr<IRouter> router;
+        RemoteAddrPtr remote_addr_;
+        // 消息管理器
+        std::shared_ptr<IMsgHandler> msg_handler_;
+//        std::shared_ptr<IRouter> router;
     };
 }
 

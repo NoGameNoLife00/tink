@@ -18,6 +18,8 @@ namespace tink {
         virtual uint GetMsgId() {
             return 0;
         };
+
+        virtual ~IRequest() {};
     };
 }
 
