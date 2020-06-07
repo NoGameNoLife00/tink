@@ -16,7 +16,7 @@
 
 namespace tink {
 
-    int Connection::Init(int conn_fd, int id, std::shared_ptr<IMsgHandler> &msg_handler) {
+    int Connection::Init(int conn_fd, int id, std::shared_ptr<IMessageHandler> &msg_handler) {
         this->conn_fd_ = conn_fd;
         this->conn_id_ = id;
         this->msg_handler_ = msg_handler;

@@ -3,9 +3,9 @@
 //
 
 #include <error_code.h>
-#include <msg_handler.h>
+#include <message_handler.h>
 namespace tink {
-    int MsgHandler::DoMsgHandle(IRequest &request) {
+    int MessageHandler::DoMsgHandle(IRequest &request) {
         // 根据MsgId 调度对应router业务
         auto iter = apis.find(request.GetMsgId());
         if (iter != apis.end()) {
@@ -18,7 +18,7 @@ namespace tink {
         return E_OK;
     }
 
-    int MsgHandler::AddRouter(uint msg_id, std::shared_ptr<IRouter> &router) {
+    int MessageHandler::AddRouter(uint msg_id, std::shared_ptr<IRouter> &router) {
         if (apis.find(msg_id) != apis.end()) {
             printf("msg repeat add, msg_id=%d", msg_id);
             return E_MSG_REPEAT_ROUTER;

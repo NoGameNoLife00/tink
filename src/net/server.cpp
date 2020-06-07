@@ -104,7 +104,7 @@ namespace tink {
 
     int Server::Init(std::shared_ptr<std::string> name, int ip_version,
                      std::shared_ptr<std::string> ip, int port,
-                     std::shared_ptr<IMsgHandler> &msg_handler) {
+                     std::shared_ptr<IMessageHandler> &msg_handler) {
         this->name = name;
         this->ip = ip;
         this->ip_version = ip_version;

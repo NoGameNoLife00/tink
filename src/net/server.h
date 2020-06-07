@@ -7,7 +7,7 @@
 #include <iserver.h>
 #include <string>
 #include <memory>
-#include <imsg_handler.h>
+#include <imessage_handler.h>
 
 #define NAME_STR_LEN 64
 #define IP_STR_LEN 20
@@ -19,7 +19,7 @@ namespace tink {
 //        IRouter *router;
         int Init(std::shared_ptr<std::string> name, int ip_version,
                  std::shared_ptr<std::string> ip, int port,
-                 std::shared_ptr<IMsgHandler> &msg_handler);
+                 std::shared_ptr<IMessageHandler> &msg_handler);
         int Start();
         int Run();
         int Stop();
@@ -32,7 +32,7 @@ namespace tink {
         int ip_version;
         int port;
         std::shared_ptr<IRouter> router;
-        std::shared_ptr<IMsgHandler> msg_handler_;
+        std::shared_ptr<IMessageHandler> msg_handler_;
     };
 }
 

@@ -3,8 +3,8 @@
 #include <message.h>
 #include <datapack.h>
 #include <global_mng.h>
-#include <imsg_handler.h>
-#include <msg_handler.h>
+#include <imessage_handler.h>
+#include <message_handler.h>
 //using tink::DataPack;
 //using tink::Message;
 TEST(datapackTest, test1) {
@@ -12,7 +12,7 @@ TEST(datapackTest, test1) {
     tink::DataPack dp;
     tink::Message msg;
     std::shared_ptr<byte> buf(new byte[5] {'t','i','n','k','\0'});
-    std::shared_ptr<tink::IMsgHandler> msg_handler(new tink::MsgHandler());
+    std::shared_ptr<tink::IMessageHandler> msg_handler(new tink::MessageHandler());
 
     msg.SetId(1);
     msg.SetDataLen(5);

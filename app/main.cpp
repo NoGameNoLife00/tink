@@ -5,7 +5,7 @@
 #include <base_router.h>
 #include <cstring>
 #include <error_code.h>
-#include <msg_handler.h>
+#include <message_handler.h>
 
 class PingRouter : public tink::BaseRouter {
     int Handle(tink::IRequest &request) override {
@@ -47,7 +47,7 @@ int main() {
     std::shared_ptr<tink::IRouter> hi_br(new HiRouter());
     std::shared_ptr<std::string> name(new std::string("tink"));
     std::shared_ptr<std::string> ip(new std::string("0.0.0.0"));
-    std::shared_ptr<tink::IMsgHandler> handler(new tink::MsgHandler());
+    std::shared_ptr<tink::IMessageHandler> handler(new tink::MessageHandler());
     s->Init(globalObj->GetName(), AF_INET, globalObj->GetHost(), globalObj->getPort(), handler);
     s->AddRouter(0, br);
     s->AddRouter(1, hi_br);
