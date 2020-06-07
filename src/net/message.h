@@ -11,6 +11,7 @@
 namespace tink {
     class Message : public IMessage{
     public:
+        int Init(uint id, uint len, const std::shared_ptr<byte> &data);
         uint GetId() const;
 
         void SetId(uint id);
@@ -19,7 +20,7 @@ namespace tink {
 
         void SetDataLen(uint dataLen);
 
-        const std::shared_ptr<byte> &GetData() const;
+        std::shared_ptr<byte> &GetData();
 
         void SetData(const std::shared_ptr<byte> &data);
 

@@ -14,7 +14,7 @@ namespace tink {
         // 获取包的头的长度
         virtual uint GetHeadLen() = 0;
         // 序列化
-        virtual int Pack(IMessage &msg, byte *data) = 0;
+        virtual int Pack(IMessage &msg, byte **data, uint *data_len) = 0;
         // 反序列化
         virtual int Unpack(byte *data, IMessage &msg) { return 0;};
     };

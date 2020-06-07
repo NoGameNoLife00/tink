@@ -59,6 +59,7 @@ namespace tink {
             }
             delete [] buff;
         } else {
+            printf("tink open file etc/config.json failed");
             exit(0);
         }
         cJSON_Delete(json);

@@ -3,16 +3,21 @@
 #include "request.h"
 
 namespace tink {
-    Request::Request(IConnection &conn, std::shared_ptr<byte> data) : conn(conn) {
-        this->data = data;
+    Request::Request(std::shared_ptr<IConnection> &conn, std::shared_ptr<IMessage> &msg) {
+        this->conn = conn;
+        this->msg = msg;
     }
 
-    IConnection & Request::GetConnection() {
+    std::shared_ptr<IConnection> & Request::GetConnection() {
         return conn;
     }
 
-    std::shared_ptr<byte> Request::GetData() {
-        return data;
+    std::shared_ptr<byte>& Request::GetData() {
+        return msg->GetData();
+    }
+
+    uint Request::GetMsgId() {
+        return msg->GetId();
     }
 }
 

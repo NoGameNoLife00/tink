@@ -7,38 +7,40 @@
 #include <error_code.h>
 
 class PingRouter : public tink::BaseRouter {
-    int PreHandle(tink::IRequest &request) override {
-        printf("call router [PreHandle]\n");
-        int fd = request.GetConnection().GetTcpConn();
-        char *str = "before ping\n";
-        if (send(fd, str, strlen(str)+1, 0) == -1) {
-            printf("call back ping error: %s\n", strerror(errno));
-            return E_FAILED;
-        }
-        return E_OK;
-    }
+//    int PreHandle(tink::IRequest &request) override {
+//        printf("call router [PreHandle]\n");
+//        int fd = request.GetConnection().GetTcpConn();
+//        char *str = "before ping\n";
+//        if (send(fd, str, strlen(str)+1, 0) == -1) {
+//            printf("call back ping error: %s\n", strerror(errno));
+//            return E_FAILED;
+//        }
+//        return E_OK;
+//    }
 
     int Handle(tink::IRequest &request) override {
         printf("call router [Handle]\n");
-        int fd = request.GetConnection().GetTcpConn();
-        char *str = "ping....\n";
-        if (send(fd, str, strlen(str)+1, 0) == -1) {
-            printf("call back ping error: %s\n", strerror(errno));
-            return E_FAILED;
+        printf("recv from client: msgId = %d, data=%s\n", request.GetMsgId(), request.GetData().get());
+        char *str = new char[20] {0};
+        strcpy(str, "ping....\n");
+        std::shared_ptr<byte> data(str);
+        int e_code = request.GetConnection()->SendMsg(1, data, strlen(str)+1);
+        if (e_code != E_OK) {
+            printf("send msg error:%d",e_code);
         }
         return E_OK;
     }
 
-    int PostHandle(tink::IRequest &request) override {
-        printf("call router [PostHandle]\n");
-        int fd = request.GetConnection().GetTcpConn();
-        char *str = "after ping\n";
-        if (send(fd, str, strlen(str)+1, 0) == -1) {
-            printf("call back ping error: %s\n", strerror(errno));
-            return E_FAILED;
-        }
-        return E_OK;
-    }
+//    int PostHandle(tink::IRequest &request) override {
+//        printf("call router [PostHandle]\n");
+//        int fd = request.GetConnection().GetTcpConn();
+//        char *str = "after ping\n";
+//        if (send(fd, str, strlen(str)+1, 0) == -1) {
+//            printf("call back ping error: %s\n", strerror(errno));
+//            return E_FAILED;
+//        }
+//        return E_OK;
+//    }
 };
 
 int main() {

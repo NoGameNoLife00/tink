@@ -53,13 +53,13 @@ namespace tink {
                 continue;
             }
             cid++;
-            Connection conn;
-            conn.Init(cli_fd, cid, this->router);
-
+            std::shared_ptr<Connection> conn(new Connection);
+            conn->Init(cli_fd, cid, this->router);
+//            conn->Start();
             int pid = fork();
             if (pid == 0) {
-                conn.Start();
-//            close(srv_fd);
+                conn->Start();
+////            close(srv_fd);
             }
 //        int pid = fork();
 //        if (pid == 0) {

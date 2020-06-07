@@ -15,7 +15,7 @@ namespace tink {
         virtual void SetId(uint id) {};
         virtual uint GetDataLen() const {return 0;};
         virtual void SetDataLen(uint dataLen) {};
-        virtual const std::shared_ptr<byte> &GetData() const = 0;
+        virtual std::shared_ptr<byte>& GetData() = 0;
         virtual void SetData(const std::shared_ptr<byte> &data) {};
     };
 }

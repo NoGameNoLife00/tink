@@ -1,10 +1,15 @@
 #include <cstdio>
 #include <unistd.h>
 #include <sys/socket.h>
-#include <cygwin/in.h>
+//#include <cygwin/in.h>
 #include <cstring>
 #include <arpa/inet.h>
 #include <cerrno>
+#include <datapack.h>
+#include <message.h>
+#include <type.h>
+
+
 #define MAX_BUF_SIZE 1024
 int main() {
     printf("client Start...");
@@ -20,26 +25,44 @@ int main() {
         printf("client connect error %s\n", strerror(errno));
         return 0;
     }
-    char buf[MAX_BUF_SIZE];
-    char recv_buf[MAX_BUF_SIZE];
+    std::shared_ptr<char> str_buf(new char[MAX_BUF_SIZE]);
     int recv_size = 0;
+    tink::DataPack dp;
     while (true) {
-        memset(buf, 0, sizeof(buf));
-        memset(recv_buf, 0, sizeof(recv_buf));
-//        strcpy(buf, "hello tink!");
-        scanf("%s", buf);
-        if (send(fd, buf, strlen(buf), 0) == -1) {
+        memset(str_buf.get(), 0, MAX_BUF_SIZE);
+        scanf("%s", str_buf.get());
+//        strcpy(str_buf.get(), "hello world");
+        // 发送msg给客户端
+        tink::Message msg;
+        msg.Init(1,strlen(str_buf.get())+1, str_buf);
+        char *out;
+        uint out_len;
+        dp.Pack(msg, &out, &out_len);
+        if (send(fd, out, out_len, 0) == -1) {
             printf("client Send msg error %s\n", strerror(errno));
             break;
         }
-        if ((recv_size = recv(fd, recv_buf, MAX_BUF_SIZE, 0)) == -1) {
-            printf("client recv msg error %s\n", strerror(errno));
-            return 0;
-        } else if ((recv_size >0)) {
-            recv_buf[recv_size] = '\0';
-            printf("client recv msg:%s\n", recv_buf);
-        }
+        delete [] out;
 
+        char * msg_head = new char[dp.GetHeadLen()];
+        tink::Message recv_msg;
+
+        if ((recv(fd, msg_head, dp.GetHeadLen(), 0)) == -1) {
+            printf("client recv msg head error %s\n", strerror(errno));
+            return 0;
+        }
+        dp.Unpack(msg_head, recv_msg);
+        if (recv_msg.GetDataLen() > 0) {
+            std::shared_ptr<char> data(new char[recv_msg.GetDataLen()]);
+            if ((recv(fd, data.get(), recv_msg.GetDataLen(), 0)) == -1) {
+                printf("client recv msg data error %s\n", strerror(errno));
+                return 0;
+            }
+            recv_msg.SetData(data);
+
+            printf("client recv msg: id=%d, len=%d, data=%s",recv_msg.GetId(),
+                    recv_msg.GetDataLen(), recv_msg.GetData().get());
+        }
 
     }
     close(fd);

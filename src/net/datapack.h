@@ -13,7 +13,7 @@ namespace tink {
 
         int Unpack(byte *data, IMessage &msg);
 
-        int Pack(IMessage &msg, byte *data);
+        int Pack(IMessage &msg, byte **data, uint *data_len);
     };
 }
 

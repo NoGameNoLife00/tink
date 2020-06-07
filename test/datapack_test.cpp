@@ -17,12 +17,13 @@ TEST(datapackTest, test1) {
     msg.SetData(buf);
 
 //    std::shared_ptr<tink::Message> msg_ptr(&msg);
-    byte * buf_out = new byte[globalObj->GetMaxPackageSize()] {0};
-    dp.Pack(msg, buf_out);
+    byte * out;
+    uint out_len;
+    dp.Pack(msg, &out, &out_len);
 
 
     tink::Message out_msg;
-    dp.Unpack(buf_out,out_msg);
+    dp.Unpack(out,out_msg);
     EXPECT_EQ(msg.GetId(), out_msg.GetId());
     EXPECT_EQ(msg.GetDataLen(), out_msg.GetDataLen());
     EXPECT_STREQ(msg.GetData().get(), "tink");

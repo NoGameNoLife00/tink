@@ -14,7 +14,7 @@ namespace tink {
 
 
 
-    class Connection : public IConnection {
+class Connection : public IConnection, public std::enable_shared_from_this<Connection> {
     public:
         int Init(int conn_fd, int id, std::shared_ptr<IRouter> router);
 
@@ -29,8 +29,10 @@ namespace tink {
         int StartReader();
         // 获取客户端的tcp状态 ip port
         RemoteAddrPtr GetRemoteAddr();
-        // 发送数据到客户端
-        int Send(char *buf, int len);
+//        // 发送数据到客户端
+//        int Send(char *buf, int len);
+        // 发送Msg包到客户端
+    int SendMsg(uint msg_id, std::shared_ptr<byte> &data, uint data_len);
     private:
         int conn_fd;
         int conn_id;

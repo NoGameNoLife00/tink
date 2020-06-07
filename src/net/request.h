@@ -7,16 +7,20 @@
 
 
 #include <irequest.h>
+#include <imessage.h>
 
 namespace tink {
     class Request : public IRequest {
     public:
-        Request(IConnection &, std::shared_ptr<byte>);
-        IConnection& conn;
-        std::shared_ptr<byte> data;
-        IConnection & GetConnection();
-        std::shared_ptr<byte> GetData();
+        Request(std::shared_ptr<IConnection>& conn, std::shared_ptr<IMessage>& msg);
+        std::shared_ptr<IConnection>& GetConnection();
+        std::shared_ptr<byte>& GetData();
+        uint GetMsgId();
     private:
+        std::shared_ptr<IConnection> conn;
+//        std::shared_ptr<byte> data;
+
+        std::shared_ptr<IMessage> msg;
     };
 
 }

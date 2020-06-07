@@ -7,6 +7,7 @@
 
 #include <sys/socket.h>
 #include <memory>
+#include <type.h>
 
 namespace tink {
 //    typedef int (*conn_handle_func)(int, char*, int);
@@ -25,8 +26,8 @@ namespace tink {
         };
         // 获取客户端的tcp状态 ip port
         virtual RemoteAddrPtr GetRemoteAddr() = 0;
-        // 发送数据到客户端
-        virtual int Send(char *buf, int len) {
+        // 发送msg包到客户端
+        virtual int SendMsg(uint msg_id, std::shared_ptr<byte> &data, uint data_len) {
             return 0;
         };
         // 获取链接的socket
