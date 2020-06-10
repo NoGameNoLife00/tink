@@ -15,7 +15,7 @@ namespace tink {
         // 获取请求的消息数据
         virtual std::shared_ptr<byte>& GetData() = 0;
         // 获取请求消息的ID
-        virtual uint GetMsgId() {
+        virtual uint32_t GetMsgId() {
             return 0;
         };
 

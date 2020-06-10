@@ -18,7 +18,7 @@ namespace tink {
         return E_OK;
     }
 
-    int MessageHandler::AddRouter(uint msg_id, std::shared_ptr<IRouter> &router) {
+    int MessageHandler::AddRouter(uint32_t msg_id, std::shared_ptr<IRouter> &router) {
         if (apis.find(msg_id) != apis.end()) {
             printf("msg repeat add, msg_id=%d", msg_id);
             return E_MSG_REPEAT_ROUTER;

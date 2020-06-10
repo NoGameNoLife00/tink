@@ -24,7 +24,7 @@ namespace tink {
         int Run();
         int Stop();
 
-        int AddRouter(uint msg_id, std::shared_ptr<IRouter> &router);
+        int AddRouter(uint32_t msg_id, std::shared_ptr<IRouter> &router);
 
     private:
         std::shared_ptr<std::string> name;

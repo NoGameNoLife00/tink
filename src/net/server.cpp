@@ -55,12 +55,7 @@ namespace tink {
             cid++;
             std::shared_ptr<Connection> conn(new Connection);
             conn->Init(cli_fd, cid, this->msg_handler_);
-//            conn->Start();
-            int pid = fork();
-            if (pid == 0) {
-                conn->Start();
-////            close(srv_fd);
-            }
+            conn->Start();
 //        int pid = fork();
 //        if (pid == 0) {
 //            char recv_buf[MAX_MSG_LEN] = {};
@@ -97,7 +92,7 @@ namespace tink {
         return 0;
     }
 
-    int Server::AddRouter(uint msg_id, std::shared_ptr<IRouter> &router) {
+    int Server::AddRouter(uint32_t msg_id, std::shared_ptr<IRouter> &router) {
         msg_handler_->AddRouter(msg_id, router);
         return 0;
     }

@@ -30,7 +30,7 @@ namespace tink {
         fp = fopen("etc/config.json", "r");
         if (fp != nullptr) {
             fseek(fp, 0, SEEK_END);
-            uint f_size = ftell(fp);
+            uint32_t f_size = ftell(fp);
             char* buff = new char[f_size];
             rewind(fp);
             fread(buff, sizeof(char), f_size, fp);
@@ -91,7 +91,7 @@ namespace tink {
         return max_conn_;
     }
 
-    uint GlobalMng::GetMaxPackageSize() const {
+    uint32_t GlobalMng::GetMaxPackageSize() const {
         return max_package_size_;
     }
 }

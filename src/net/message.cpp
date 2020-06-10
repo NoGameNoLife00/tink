@@ -7,19 +7,19 @@
 
 namespace tink {
 
-    uint Message::GetId() const {
+    uint32_t Message::GetId() const {
         return id_;
     }
 
-    void Message::SetId(uint id) {
+    void Message::SetId(uint32_t id) {
         id_ = id;
     }
 
-    uint Message::GetDataLen() const {
+    uint32_t Message::GetDataLen() const {
         return data_len_;
     }
 
-    void Message::SetDataLen(uint dataLen) {
+    void Message::SetDataLen(uint32_t dataLen) {
         data_len_ = dataLen;
     }
 
@@ -31,7 +31,7 @@ namespace tink {
         Message::data_ = data;
     }
 
-    int Message::Init(uint id, uint len, const std::shared_ptr<byte> &data) {
+    int Message::Init(uint32_t id, uint32_t len, const std::shared_ptr<byte> &data) {
         id_ = id;
         data_len_ = len;
         data_ = data;

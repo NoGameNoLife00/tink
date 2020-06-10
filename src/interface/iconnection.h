@@ -27,7 +27,7 @@ namespace tink {
         // 获取客户端的tcp状态 ip port
         virtual RemoteAddrPtr GetRemoteAddr() = 0;
         // 发送msg包到客户端
-        virtual int SendMsg(uint msg_id, std::shared_ptr<byte> &data, uint data_len) {
+        virtual int SendMsg(uint32_t msg_id, std::shared_ptr<byte> &data, uint32_t data_len) {
             return 0;
         };
         // 获取链接的socket

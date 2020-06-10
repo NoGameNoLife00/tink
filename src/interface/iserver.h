@@ -19,7 +19,7 @@ namespace tink {
         // 运行
         virtual int Run() = 0;
         // 给当前服务注册一个路由方法，供客户端链接处理使用
-        virtual int AddRouter(uint msg_id, std::shared_ptr<IRouter> &router) = 0;
+        virtual int AddRouter(uint32_t msg_id, std::shared_ptr<IRouter> &router) = 0;
 //    virtual ~IServer() = 0;
     };
 }

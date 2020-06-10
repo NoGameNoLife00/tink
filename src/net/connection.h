@@ -26,18 +26,29 @@ class Connection : public IConnection, public std::enable_shared_from_this<Conne
         int GetTcpConn();
         // 获取链接id
         int GetConnId();
-
+        // 开启读进程
         int StartReader();
+        // 开启写进程
+        int StartWriter();
+
+        void SetReaderPid(pid_t readerPid);
+
         // 获取客户端的tcp状态 ip port
         RemoteAddrPtr GetRemoteAddr();
 //        // 发送数据到客户端
 //        int Send(char *buf, int len);
         // 发送Msg包到客户端
-    int SendMsg(uint msg_id, std::shared_ptr<byte> &data, uint data_len);
+        int SendMsg(uint32_t msg_id, std::shared_ptr<byte> &data, uint32_t data_len);
+
+
+
     private:
+        pid_t writer_pid;
+        pid_t reader_pid;
         int conn_fd_;
         int conn_id_;
         bool is_close_;
+        int fds_[2];
 //    conn_handle_func handle_api;
         RemoteAddrPtr remote_addr_;
         // 消息管理器

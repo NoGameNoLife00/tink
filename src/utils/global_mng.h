@@ -30,13 +30,13 @@ namespace tink {
 
         int GetMaxConn() const;
 
-        uint GetMaxPackageSize() const;
+        uint32_t GetMaxPackageSize() const;
 
     private:
         // 框架
         std::shared_ptr<std::string> version_;
         int max_conn_;
-        uint max_package_size_;
+        uint32_t max_package_size_;
 
         // 全局Server对象
         std::shared_ptr<IServer> server_;

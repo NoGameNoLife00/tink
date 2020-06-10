@@ -5,14 +5,13 @@
 #include <global_mng.h>
 #include <imessage_handler.h>
 #include <message_handler.h>
-//using tink::DataPack;
-//using tink::Message;
+
 TEST(datapackTest, test1) {
     auto globalObj = tink::Singleton<tink::GlobalMng>::GetInstance();
     tink::DataPack dp;
     tink::Message msg;
     std::shared_ptr<byte> buf(new byte[5] {'t','i','n','k','\0'});
-    std::shared_ptr<tink::IMessageHandler> msg_handler(new tink::MessageHandler());
+    std::shared_ptr<tink::IMessageHandler> msg_handler(new tink::MessageHandler);
 
     msg.SetId(1);
     msg.SetDataLen(5);

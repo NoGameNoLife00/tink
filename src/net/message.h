@@ -11,22 +11,22 @@
 namespace tink {
     class Message : public IMessage{
     public:
-        int Init(uint id, uint len, const std::shared_ptr<byte> &data);
-        uint GetId() const;
+        int Init(uint32_t id, uint32_t len, const std::shared_ptr<byte> &data);
+        uint32_t GetId() const;
 
-        void SetId(uint id);
+        void SetId(uint32_t id);
 
-        uint GetDataLen() const;
+        uint32_t GetDataLen() const;
 
-        void SetDataLen(uint dataLen);
+        void SetDataLen(uint32_t dataLen);
 
         std::shared_ptr<byte> &GetData();
 
         void SetData(const std::shared_ptr<byte> &data);
 
     private:
-        uint id_; // 消息ID
-        uint data_len_; // 消息长度
+        uint32_t id_; // 消息ID
+        uint32_t data_len_; // 消息长度
         std::shared_ptr<byte> data_; // 消息数据
     };
 }

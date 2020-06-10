@@ -9,11 +9,11 @@
 namespace tink {
     class DataPack: public IDataPack {
     public:
-        uint GetHeadLen();
+        uint32_t GetHeadLen();
 
         int Unpack(byte *data, IMessage &msg);
 
-        int Pack(IMessage &msg, byte **data, uint *data_len);
+        int Pack(IMessage &msg, byte **data, uint32_t *data_len);
     };
 }
 

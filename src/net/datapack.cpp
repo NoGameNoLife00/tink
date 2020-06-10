@@ -11,21 +11,21 @@
 
 namespace tink {
 
-    uint DataPack::GetHeadLen() {
-        // uint32 + uint32
+    uint32_t DataPack::GetHeadLen() {
+        // uint32_t32 + uint32_t32
         return 8;
     }
 
-    int DataPack::Pack(IMessage &msg, byte **data, uint *data_len) {
+    int DataPack::Pack(IMessage &msg, byte **data, uint32_t *data_len) {
         *data_len = GetHeadLen() + msg.GetDataLen();
         *data = new byte[*data_len];
         byte * buff = *data;
         // 写id
-        uint id = msg.GetId();
+        uint32_t id = msg.GetId();
         memcpy(buff, &id, sizeof(id));
         // 写长度
         byte *ptr = buff + sizeof(id);
-        uint len = msg.GetDataLen();
+        uint32_t len = msg.GetDataLen();
         memcpy(ptr, &len, sizeof(len));
         // 写data
         ptr += sizeof(len);
@@ -37,11 +37,11 @@ namespace tink {
     int DataPack::Unpack(byte *data, IMessage &msg) {
         byte *ptr = data;
         // 读id
-        uint id = 0;
+        uint32_t id = 0;
         memcpy(&id, ptr, sizeof(id));
         ptr = ptr + sizeof(id);
         // 读数据长度
-        uint data_len = 0;
+        uint32_t data_len = 0;
         memcpy(&data_len, ptr, sizeof(data_len));
 //        ptr += sizeof(data_len);
         // 读数据

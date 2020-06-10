@@ -11,8 +11,8 @@ namespace tink {
         // 调度执行Router消息处理方法
         virtual int DoMsgHandle(IRequest &request) = 0;
         // 绑定Message对应的Router
-        virtual int AddRouter(uint msg_id, std::shared_ptr<IRouter> &router) {};
-        virtual ~IMessageHandler() {};
+        virtual int AddRouter(uint32_t msg_id, std::shared_ptr<IRouter> &router) =0;
+//        virtual ~IMessageHandler() {};
     };
 }
 
