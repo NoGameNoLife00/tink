@@ -26,7 +26,7 @@ namespace tink {
     }
 
     int Connection::Stop() {
-        printf("conn stop, conn_id:%d\n", conn_id_);
+        printf("conn_ stop, conn_id:%d\n", conn_id_);
         if (is_close_) {
             return 0;
         }
@@ -52,7 +52,7 @@ namespace tink {
     }
 
     int Connection::Start() {
-        printf("conn Start; conn_id:%d\n", conn_id_);
+        printf("conn_ Start; conn_id:%d\n", conn_id_);
         // 启动当前链接读取数据的业务
         if (pipe(fds_) < 0) {
             printf("read msg head error:%s\n", strerror(errno));
@@ -102,7 +102,7 @@ namespace tink {
 
             std::shared_ptr<IConnection> conn = shared_from_this();
             Request req(conn, msg);
-//            req.conn = std::shared_ptr<IConnection>(this);
+//            req.conn_ = std::shared_ptr<IConnection>(this);
             msg_handler_->DoMsgHandle(req);
 //        int ret = handle_api(conn_fd, buf, recv_size);
 //        if (ret != E_OK) {

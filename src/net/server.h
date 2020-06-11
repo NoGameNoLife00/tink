@@ -16,7 +16,6 @@ namespace tink {
 
     class Server : public IServer {
     public:
-//        IRouter *router;
         int Init(std::shared_ptr<std::string> name, int ip_version,
                  std::shared_ptr<std::string> ip, int port,
                  std::shared_ptr<IMessageHandler> &msg_handler);
@@ -27,11 +26,10 @@ namespace tink {
         int AddRouter(uint32_t msg_id, std::shared_ptr<IRouter> &router);
 
     private:
-        std::shared_ptr<std::string> name;
-        std::shared_ptr<std::string> ip;
-        int ip_version;
-        int port;
-        std::shared_ptr<IRouter> router;
+        std::shared_ptr<std::string> name_;
+        std::shared_ptr<std::string> ip_;
+        int ip_version_;
+        int port_;
         std::shared_ptr<IMessageHandler> msg_handler_;
     };
 }

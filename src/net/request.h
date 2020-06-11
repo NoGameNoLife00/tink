@@ -17,10 +17,10 @@ namespace tink {
         std::shared_ptr<byte>& GetData();
         uint32_t GetMsgId();
     private:
-        std::shared_ptr<IConnection> conn;
+        std::shared_ptr<IConnection> conn_;
 //        std::shared_ptr<byte> data;
 
-        std::shared_ptr<IMessage> msg;
+        std::shared_ptr<IMessage> msg_;
     };
 
 }
