@@ -9,9 +9,6 @@
 #include <memory>
 #include <imessage_handler.h>
 
-#define NAME_STR_LEN 64
-#define IP_STR_LEN 20
-#define MAX_MSG_LEN 2048
 namespace tink {
 
     class Server : public IServer {
@@ -22,9 +19,7 @@ namespace tink {
         int Start();
         int Run();
         int Stop();
-
         int AddRouter(uint32_t msg_id, std::shared_ptr<IRouter> &router);
-
     private:
         std::shared_ptr<std::string> name_;
         std::shared_ptr<std::string> ip_;

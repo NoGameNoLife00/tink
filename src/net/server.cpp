@@ -56,28 +56,6 @@ namespace tink {
             std::shared_ptr<Connection> conn(new Connection);
             conn->Init(cli_fd, cid, this->msg_handler_);
             conn->Start();
-//        int pid = fork();
-//        if (pid == 0) {
-//            char recv_buf[MAX_MSG_LEN] = {};
-//            while (true) {
-//                int ret = read(cli_fd, recv_buf, sizeof(recv_buf));
-//                if (ret == 0) {
-//                    printf("client socket closed \n");
-//                    break;
-//                } else if (ret < 0) {
-//                    printf("read client error: %s(code:%d)", strerror(errno), errno);
-//                    break;
-//                }
-//                printf("recv client message: %s \n", recv_buf);
-//                write(cli_fd, recv_buf, ret);
-//                memset(recv_buf, 0, sizeof(recv_buf));
-//            }
-//            close(cli_fd);
-//            close(srv_fd);
-//            exit(0);
-//        } else{
-//            close(cli_fd);
-//        }
         }
         close(srv_fd);
         return 0;
