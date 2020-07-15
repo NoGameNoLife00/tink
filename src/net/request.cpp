@@ -16,7 +16,7 @@ namespace tink {
         return msg->GetData();
     }
 
-    uint32_t Request::GetMsgId() {
+    int32_t Request::GetMsgId() {
         return msg->GetId();
     }
 }

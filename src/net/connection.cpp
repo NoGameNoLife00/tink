@@ -13,7 +13,7 @@
 #include <arpa/inet.h>
 #include "datapack.h"
 #include "message.h"
-
+#include <csignal>
 
 namespace tink {
 
@@ -103,7 +103,7 @@ namespace tink {
             std::shared_ptr<IConnection> conn = shared_from_this();
             Request req(conn, msg);
 //            req.conn = std::shared_ptr<IConnection>(this);
-            msg_handler_->DoMsgHandle(req);
+//            msg_handler_->DoMsgHandle(req);
 //        int ret = handle_api(conn_fd, buf, recv_size);
 //        if (ret != E_OK) {
 //            printf("handle is error, conn_id:%d error_code:%d \n", conn_id, ret);

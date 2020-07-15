@@ -12,7 +12,7 @@ namespace tink {
     class Message : public IMessage{
     public:
         int Init(uint32_t id, uint32_t len, const std::shared_ptr<byte> &data);
-        uint32_t GetId() const;
+        int32_t GetId() const;
 
         void SetId(uint32_t id);
 

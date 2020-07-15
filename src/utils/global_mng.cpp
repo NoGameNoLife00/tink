@@ -20,6 +20,8 @@ namespace tink {
         port_ = 8896;
         max_conn_ = 10000;
         max_package_size_ = 2048;
+        worker_pool_size_ = 10;
+        max_worker_task_len_ = 1024;
     }
 
     int GlobalMng::Init() {
@@ -56,6 +58,10 @@ namespace tink {
             item = cJSON_GetObjectItem(json, "max_connection");
             if (item != nullptr) {
                 max_conn_ = item->valueint;
+            }
+            item = cJSON_GetObjectItem(json, "worker_pool_size");
+            if (item != nullptr) {
+                worker_pool_size_ = item->valueint;
             }
             delete [] buff;
         } else {
@@ -94,5 +100,10 @@ namespace tink {
     uint32_t GlobalMng::GetMaxPackageSize() const {
         return max_package_size_;
     }
+
+    uint32_t GlobalMng::GetWorkerPoolSize() const {
+        return worker_pool_size_;
+    }
+
 }
 

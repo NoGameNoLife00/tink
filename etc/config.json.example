@@ -2,5 +2,6 @@
   "name" : "tink server",
   "host" : "127.0.0.1",
   "port": 8823,
-  "max_connection": 1000
+  "max_connection": 1000,
+  "worker_pool_size": 20
 }

@@ -1,9 +1,13 @@
 cmake_minimum_required(VERSION 3.0)
+
+
+
+
 project(tink)
 
-set(CMAKE_CXX_STANDARD 14)
-include_directories(D:\\DEV\\cygwin\\usr\\include)
-link_directories(D:\\DEV\\cygwin\\lib)
+#set(CMAKE_CXX_STANDARD 14)
+#include_directories(D:\\DEV\\cygwin\\usr\\include)
+#link_directories(D:\\DEV\\cygwin\\lib)
 
 
 include_directories(src/interface)

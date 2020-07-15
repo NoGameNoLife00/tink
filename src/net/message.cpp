@@ -7,7 +7,7 @@
 
 namespace tink {
 
-    uint32_t Message::GetId() const {
+    int32_t Message::GetId() const {
         return id_;
     }
 

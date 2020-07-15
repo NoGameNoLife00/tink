@@ -16,7 +16,7 @@ namespace  tink{
         // 处理conn业务之后的hook
         virtual int PostHandle(IRequest &request) = 0;
     };
-
+    typedef std::shared_ptr<IRouter> IRouterPtr;
 }
 
 

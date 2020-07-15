@@ -31,7 +31,7 @@ namespace tink {
         int GetMaxConn() const;
 
         uint32_t GetMaxPackageSize() const;
-
+        uint32_t GetWorkerPoolSize() const;
     private:
         // 框架
         std::shared_ptr<std::string> version_;
@@ -43,6 +43,9 @@ namespace tink {
         std::shared_ptr<std::string> host_;
         std::shared_ptr<std::string> name_;
         int port_;
+        uint32_t worker_pool_size_;
+        // 框架允许的最大任务数量
+        uint32_t max_worker_task_len_;
     };
 
 }

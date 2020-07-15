@@ -15,7 +15,7 @@ namespace tink {
         Request(std::shared_ptr<IConnection>& conn, std::shared_ptr<IMessage>& msg);
         std::shared_ptr<IConnection>& GetConnection();
         std::shared_ptr<byte>& GetData();
-        uint32_t GetMsgId();
+        int32_t GetMsgId();
     private:
         std::shared_ptr<IConnection> conn;
 //        std::shared_ptr<byte> data;
