@@ -15,8 +15,13 @@ namespace tink {
 
 
 
-class Connection : public IConnection, public std::enable_shared_from_this<Connection> {
+class Connection : public IConnection
+//        , public std::enable_shared_from_this<Connection>
+        {
     public:
+        static void* StartWriter(void* conn_ptr);
+        static void* StartReader(void* conn_ptr);
+
         int Init(int conn_fd, int id, std::shared_ptr<IMessageHandler> &msg_handler);
 
         int Start();
@@ -39,22 +44,20 @@ class Connection : public IConnection, public std::enable_shared_from_this<Conne
 //        int Send(char *buf, int len);
         // 发送Msg包到客户端
         int SendMsg(uint32_t msg_id, std::shared_ptr<byte> &data, uint32_t data_len);
-
-
-
     private:
-        pid_t writer_pid;
-        pid_t reader_pid;
+        pthread_t writer_pid;
+        pthread_t reader_pid;
         int conn_fd_;
         int conn_id_;
         bool is_close_;
         int fds_[2];
-//    conn_handle_func handle_api;
         RemoteAddrPtr remote_addr_;
         // 消息管理器
         std::shared_ptr<IMessageHandler> msg_handler_;
-//        std::shared_ptr<IRouter> router;
     };
+
+
+
 }
 
 

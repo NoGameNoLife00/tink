@@ -31,8 +31,8 @@ namespace tink {
             return 0;
         }
         // 关闭读写进程
-        kill(writer_pid ,SIGABRT);
-        kill(reader_pid, SIGABRT);
+//        kill(writer_pid ,SIGABRT);
+//        kill(reader_pid, SIGABRT);
         is_close_ = true;
         // 回收socket
         close(conn_fd_);
@@ -58,14 +58,13 @@ namespace tink {
             printf("read msg head error:%s\n", strerror(errno));
             return E_FAILED;
         }
-        writer_pid = fork();
-
-        if (writer_pid == 0) {
-            StartWriter();
+        if (pthread_create(&writer_pid, NULL, StartWriter, NULL) != 0) {
+            printf("create writer thread error:%s\n", strerror(errno));
+            return E_FAILED;
         }
-        reader_pid = fork();
-        if (reader_pid == 0) {
-            StartReader();
+        if (pthread_create(&reader_pid, NULL, StartReader, NULL) != 0) {
+            printf("create reader thread error:%s\n", strerror(errno));
+            return E_FAILED;
         }
         return 0;
     }
@@ -189,6 +188,109 @@ namespace tink {
 
     void Connection::SetReaderPid(pid_t readerPid) {
         reader_pid = readerPid;
+    }
+
+    void *Connection::StartWriter(void *conn_ptr) {
+        Connection *conn = static_cast<Connection*>(conn_ptr);
+        if (!conn_ptr) {
+            printf("[writer] thread run error, conn_ptr is null\n");
+            return nullptr;
+        }
+        char *addr_str = inet_ntoa(((struct sockaddr_in*) conn->GetRemoteAddr().get())->sin_addr);
+        int conn_id = conn->GetConnId();
+        int conn_fd = conn->GetTcpConn();
+        printf("[writer] thread is running, conn_id=%d, client addr=%s\n", conn->GetConnId(), addr_str);
+        std::shared_ptr<GlobalMng> globalObj = tink::Singleton<tink::GlobalMng>::GetInstance();
+        int buf_size = globalObj->GetMaxPackageSize();
+        byte *read_buf = new byte[buf_size];
+        DataPack dp;
+        Message msg;
+        int read_len = 0;
+        while (true) {
+            memset(read_buf, 0, buf_size);
+            if ((read_len = read(fds_[0], read_buf, buf_size)) == -1) {
+                printf("[writer] read pipe error %s\n", strerror(errno));
+                break;
+            }
+            dp.Unpack(read_buf, msg);
+            if (msg.GetId() == -1) {
+                printf("[writer] read exit msg: conn_id=%d", conn->GetConnId() );
+                break;
+            }
+
+            if (send(conn_fd, read_buf, read_len, 0) == -1) {
+                printf("[writer] send msg error %s\n", strerror(errno));
+                break;
+            }
+        }
+
+        printf("[writer] thread exit, conn_id=%d, client_addr=%s", conn_id, addr_str);
+        // 关闭读管道
+        close(fds_[0]);
+        return nullptr;
+    }
+
+    void *Connection::StartReader(void *conn_ptr) {
+        Connection *conn = static_cast<Connection*>(conn_ptr);
+        if (!conn_ptr) {
+            printf("[reader] thread run error, conn_ptr is null\n");
+            return nullptr;
+        }
+
+        printf("[reader] thread is running\n");
+        std::shared_ptr<GlobalMng> globalObj = tink::Singleton<tink::GlobalMng>::GetInstance();
+        DataPack dp;
+        std::shared_ptr<byte> head_data(new byte[dp.GetHeadLen()] {0});
+        int conn_fd = conn->GetTcpConn();
+        while (true) {
+            // 读取客户端的数据到buf中
+            std::shared_ptr<IMessage> msg(new Message);
+            // 读取客户端发送的包头
+            memset(head_data.get(), 0, dp.GetHeadLen());
+            if ((read(conn_fd, head_data.get(), dp.GetHeadLen())) == -1) {
+                printf("[reader] msg head error:%s\n", strerror(errno));
+                break;
+            }
+            int e_code = dp.Unpack(head_data.get(), *msg.get());
+            if (e_code != E_OK) {
+                printf("[reader] unpack error: %d\n", e_code);
+                break;
+            }
+            // 根据dataLen，再读取Data,放入msg中
+            if (msg->GetDataLen() > 0) {
+                std::shared_ptr<byte> buf(new byte[msg->GetDataLen()] {0});
+                if ((read(conn_fd, buf.get(), msg->GetDataLen()) == -1)) {
+                    printf("[reader] msg data error:%s\n", strerror(errno));
+                    break;
+                }
+                msg->SetData(buf);
+            }
+
+            Request req(*conn, msg);
+//            req.conn_ = std::shared_ptr<IConnection>(this);
+//            msg_handler_->DoMsgHandle(req);
+//        int ret = handle_api(conn_fd, buf, recv_size);
+//        if (ret != E_OK) {
+//            printf("handle is error, conn_id:%d error_code:%d \n", conn_id, ret);
+//            break;
+//        }
+        }
+        // 发消息关闭写进程
+        byte *close_buf;
+        uint32_t close_msg_len;
+        Message close_msg;
+        close_msg.SetId(-1);
+        close_msg.SetDataLen(0);
+        dp.Pack(close_msg, &close_buf, &close_msg_len);
+        if (write(fds_[1], close_buf, close_msg_len) != close_msg_len) {
+            printf("[reader] write pipe msg error %s\n", strerror(errno));
+            delete [] close_buf;
+            return nullptr;
+        }
+        delete [] close_buf;
+        // 关闭写管道
+        close(fds_[1]);
+        return nullptr;
     }
 
 }
