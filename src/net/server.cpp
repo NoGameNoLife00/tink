@@ -41,7 +41,7 @@ namespace tink {
             printf("bind socket error: %s(code:%d)\n", strerror(errno), errno);
             exit(1);
         }
-        
+
         if (listen(srv_fd, 20) == -1) {
             printf("listen socket error: %s(code:%d)\n", strerror(errno), errno);
             exit(1);
