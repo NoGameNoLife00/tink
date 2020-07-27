@@ -3,6 +3,7 @@
 //
 
 #include "global_mng.h"
+#include "scope_guard.h"
 #include <stdio.h>
 #include <cJSON.h>
 #include <sys/unistd.h>
@@ -30,6 +31,10 @@ namespace tink {
         char *out;
         char line[READ_BUF_SIZE] = {0};
         fp = fopen("etc/config.json", "r");
+        ON_SCOPE_EXIT([&] {
+            cJSON_Delete(json);
+            fclose(fp);
+        });
         if (fp != nullptr) {
             fseek(fp, 0, SEEK_END);
             uint32_t f_size = ftell(fp);
@@ -68,8 +73,6 @@ namespace tink {
             printf("tink open file etc/config.json failed");
             exit(0);
         }
-        cJSON_Delete(json);
-        fclose(fp);
         return 0;
     }
 

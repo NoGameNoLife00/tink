@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <connection.h>
 #include <global_mng.h>
+#include <scope_guard.h>
 
 
 namespace tink {
@@ -28,6 +29,10 @@ namespace tink {
             printf("Server create socket error: %s (code:%d)\n", strerror(errno), errno);
             exit(0);
         }
+        ON_SCOPE_EXIT([&]{
+            close(srv_fd);
+        });
+
         struct sockaddr_in srv_addr;
         srv_addr.sin_family = ip_version_;
         srv_addr.sin_addr.s_addr = inet_addr("0.0.0.0");
@@ -36,8 +41,7 @@ namespace tink {
             printf("bind socket error: %s(code:%d)\n", strerror(errno), errno);
             exit(1);
         }
-
-
+        
         if (listen(srv_fd, 20) == -1) {
             printf("listen socket error: %s(code:%d)\n", strerror(errno), errno);
             exit(1);
@@ -57,7 +61,6 @@ namespace tink {
             conn->Init(cli_fd, cid, this->msg_handler_);
             conn->Start();
         }
-        close(srv_fd);
         return 0;
     }
 
