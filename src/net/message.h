@@ -7,6 +7,7 @@
 
 
 #include <imessage.h>
+#include <leaked_object_detector.h>
 
 namespace tink {
     class Message : public IMessage{
@@ -28,6 +29,8 @@ namespace tink {
         uint32_t id_; // 消息ID
         uint32_t data_len_; // 消息长度
         std::shared_ptr<byte> data_; // 消息数据
+
+        LEAK_DETECTOR(Message);
     };
 }
 
