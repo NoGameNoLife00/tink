@@ -40,7 +40,7 @@ class HiRouter : public tink::BaseRouter {
 };
 int main() {
     setbuf(stdout, NULL); // debug
-    std::shared_ptr<tink::GlobalMng> globalObj = tink::Singleton<tink::GlobalMng>::GetInstance();
+    std::shared_ptr<tink::GlobalMng> globalObj = GlobalInstance;
     globalObj->Init();
 
     tink::Server *s = new tink::Server();

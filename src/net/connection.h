@@ -10,6 +10,8 @@
 #include <irouter.h>
 #include <memory>
 #include <imessage_handler.h>
+#include <message_queue.h>
+#include <imessage.h>
 
 namespace tink {
 
@@ -18,6 +20,7 @@ namespace tink {
 class Connection : public IConnection
 //        , public std::enable_shared_from_this<Connection>
         {
+    typedef MessageQueue<IMessagePtr> IMessageQueue;
     public:
         static void* StartWriter(void* conn_ptr);
         static void* StartReader(void* conn_ptr);
@@ -32,19 +35,22 @@ class Connection : public IConnection
         // 获取链接id
         int GetConnId();
         // 开启读进程
-        int StartReader();
+//        int StartReader();
         // 开启写进程
-        int StartWriter();
+//        int StartWriter();
 
         void SetReaderPid(pid_t readerPid);
 
-        // 获取客户端的tcp状态 ip port
+        const std::shared_ptr<IMessageHandler> &GetMsgHandler() const;
+
+    // 获取客户端的tcp状态 ip port
         RemoteAddrPtr GetRemoteAddr();
 //        // 发送数据到客户端
 //        int Send(char *buf, int len);
-        // 发送Msg包到客户端
+        // 发送Msg包到写线程
         int SendMsg(uint32_t msg_id, std::shared_ptr<byte> &data, uint32_t data_len);
     private:
+        static IMessageQueue msg_queue;
         pthread_t writer_pid;
         pthread_t reader_pid;
         int conn_fd_;

@@ -7,7 +7,7 @@
 #include <message_handler.h>
 
 TEST(datapackTest, test1) {
-    auto globalObj = tink::Singleton<tink::GlobalMng>::GetInstance();
+    auto globalObj = GlobalInstance;
     tink::DataPack dp;
     tink::Message msg;
     std::shared_ptr<byte> buf(new byte[5] {'t','i','n','k','\0'});

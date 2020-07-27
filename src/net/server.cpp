@@ -18,11 +18,15 @@ namespace tink {
 
 
     int Server::Start() {
-        std::shared_ptr<GlobalMng> globalObj = tink::Singleton<tink::GlobalMng>::GetInstance();
+        std::shared_ptr<GlobalMng> globalObj = GlobalInstance;
         printf("[tink] Server Name:%s, listener at IP:%s, Port:%d, is starting.\n",
                 name_->c_str(), ip_->c_str(), port_);
         printf("[tink] Version: %s, MaxConn:%d, MaxPacketSize:%d\n", globalObj->GetVersion()->c_str(),
                globalObj->GetMaxConn(), globalObj->GetMaxPackageSize());
+
+        // 开启worker工作池
+        msg_handler_->StartWorkerPool();
+
         int srv_fd = socket(ip_version_, SOCK_STREAM, 0);
         if (srv_fd == -1) {
             printf("Server create socket error: %s (code:%d)\n", strerror(errno), errno);
