@@ -51,8 +51,9 @@ namespace tink {
         return 0;
     }
 
-    MessageHandler::~MessageHandler() {
-    }
+//    MessageHandler::~MessageHandler() {
+//
+//    }
 
     void* MessageHandler::StartOneWorker(void* worker_info_ptr) {
         WorkerInfo* info = static_cast<WorkerInfo*>(worker_info_ptr);
@@ -74,6 +75,7 @@ namespace tink {
         }
         printf("work id = %d, is stopped...\n", worker_id);
         delete info;
+        return nullptr;
     }
 
     int MessageHandler::SendMsgToTaskQueue(IRequestPtr &request) {

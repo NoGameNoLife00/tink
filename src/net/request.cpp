@@ -1,7 +1,4 @@
-
 #include <request.h>
-#include "request.h"
-
 namespace tink {
     Request::Request(IConnection &conn, std::shared_ptr<IMessage> &msg) : conn_(conn) {
         this->msg_ = msg;

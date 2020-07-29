@@ -7,6 +7,7 @@
 
 #include <iconnection.h>
 #include <type.h>
+
 namespace tink {
     class IRequest {
     public:

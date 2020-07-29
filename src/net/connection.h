@@ -14,13 +14,12 @@
 #include <imessage.h>
 
 namespace tink {
-
-
-
-class Connection : public IConnection
-//        , public std::enable_shared_from_this<Connection>
-        {
     typedef MessageQueue<IMessagePtr> IMessageQueue;
+    class Connection : public IConnection
+    //        , public std::enable_shared_from_this<Connection>
+        {
+
+
     public:
         static void* StartWriter(void* conn_ptr);
         static void* StartReader(void* conn_ptr);
@@ -61,9 +60,6 @@ class Connection : public IConnection
         // 消息管理器
         std::shared_ptr<IMessageHandler> msg_handler_;
     };
-
-
-
 }
 
 

@@ -8,15 +8,14 @@
 #include <connection.h>
 #include <server.h>
 #include <request.h>
-#include <connection.h>
 #include <global_mng.h>
 #include <arpa/inet.h>
-#include "datapack.h"
-#include "message.h"
+#include <datapack.h>
+#include <message.h>
 #include <pthread.h>
 
 namespace tink {
-
+    IMessageQueue Connection::msg_queue;
     int Connection::Init(int conn_fd, int id, std::shared_ptr<IMessageHandler> &msg_handler) {
         this->conn_fd_ = conn_fd;
         this->conn_id_ = id;

@@ -8,18 +8,20 @@
 #include <imessage_handler.h>
 #include <vector>
 #include <message_queue.h>
+#include <irequest.h>
 
 namespace tink {
+
     typedef MessageQueue<IRequestPtr> IRequestMsgQueue;
     typedef std::shared_ptr<IRequestMsgQueue> IRequestMsgQueuePtr;
     typedef std::vector<IRequestMsgQueuePtr> MsgQueueList;
+
     class MessageHandler : public IMessageHandler {
     public:
 
-        virtual ~MessageHandler();
+//        virtual ~MessageHandler();
         // 存放每个MsgId对应的方法
         std::map<uint32_t, std::shared_ptr<IRouter>> apis;
-
         // 消息队列
         MsgQueueList task_queue;
         // worker 池数量
@@ -33,7 +35,7 @@ namespace tink {
         // 绑定Message对应的Router
         virtual int AddRouter(uint32_t msg_id, IRouterPtr &router);
 
-        int StartWorkerPool();
+        virtual int StartWorkerPool();
         static void* StartOneWorker(void* worker_info_ptr);
         static int StartOneWorker(int worker_id, IRequestMsgQueuePtr &msg_queue);
         // 将消息发送给任务队列
@@ -43,7 +45,7 @@ namespace tink {
     typedef struct WorkerInfo_ {
         MessageHandler * msg_handler;
         int worker_id;
-    } WorkerInfo
+    } WorkerInfo;
 }
 
 #endif //TINK_MESSAGE_HANDLER_H

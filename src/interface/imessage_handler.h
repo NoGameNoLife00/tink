@@ -12,9 +12,9 @@ namespace tink {
         virtual int DoMsgHandle(IRequest &request) = 0;
         // 绑定Message对应的Router
         virtual int AddRouter(uint32_t msg_id, IRouterPtr &router) =0;
-        virtual ~IMessageHandler() {};
-        int StartWorkerPool();
-        virtual int SendMsgToTaskQueue(IRequestPtr &request);
+//        virtual ~IMessageHandler() {};
+        virtual int StartWorkerPool() { return 0; };
+        virtual int SendMsgToTaskQueue(IRequestPtr &request) { return 0; };
     };
 }
 

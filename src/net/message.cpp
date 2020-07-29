@@ -3,7 +3,7 @@
 //
 
 #include <error_code.h>
-#include "message.h"
+#include <message.h>
 
 namespace tink {
 
