@@ -7,14 +7,10 @@
 #include <stdio.h>
 #include <cJSON.h>
 #include <sys/unistd.h>
-
+#include <easylogging++.h>
+INITIALIZE_EASYLOGGINGPP
 namespace tink {
-
-
     GlobalMng::GlobalMng() {
-//        name_ = std::shared_ptr<std::string>(new std::string("tink_server"));
-//        host_ = std::shared_ptr<std::string>(new std::string("0.0.0.0"));
-//        version_ = std::shared_ptr<std::string>(new std::string("v0.5"));
         name_ = std::make_shared<std::string>("tink_server");
         host_ = std::make_shared<std::string>("0.0.0.0");
         version_ = std::make_shared<std::string>("v0.6");

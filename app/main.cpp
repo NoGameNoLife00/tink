@@ -14,7 +14,7 @@ class PingRouter : public tink::BaseRouter {
         char *str = new char[20] {0};
         strcpy(str, "ping....\n");
         std::shared_ptr<byte> data(str);
-        int e_code = request.GetConnection()->SendMsg(1, data, strlen(str)+1);
+        int e_code = request.GetConnection().SendMsg(1, data, strlen(str)+1);
         if (e_code != E_OK) {
             printf("send msg error:%d",e_code);
         }
@@ -30,7 +30,7 @@ class HiRouter : public tink::BaseRouter {
         char *str = new char[20] {0};
         strcpy(str, "ping....\n");
         std::shared_ptr<byte> data(str);
-        int e_code = request.GetConnection()->SendMsg(1, data, strlen(str)+1);
+        int e_code = request.GetConnection().SendMsg(1, data, strlen(str)+1);
         if (e_code != E_OK) {
             printf("send msg error:%d",e_code);
         }
