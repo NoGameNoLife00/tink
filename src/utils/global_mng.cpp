@@ -22,11 +22,13 @@ namespace tink {
     }
 
     int GlobalMng::Init() {
+        el::Configurations conf("log.conf");
+        el::Loggers::reconfigureAllLoggers(conf);
         FILE *fp = nullptr;
         cJSON *json;
         char *out;
         char line[READ_BUF_SIZE] = {0};
-        fp = fopen("etc/config.json", "r");
+        fp = fopen("../etc/config.json", "r");
         ON_SCOPE_EXIT([&] {
             cJSON_Delete(json);
             fclose(fp);

@@ -51,10 +51,6 @@ namespace tink {
         return 0;
     }
 
-//    MessageHandler::~MessageHandler() {
-//
-//    }
-
     void* MessageHandler::StartOneWorker(void* worker_info_ptr) {
         WorkerInfo* info = static_cast<WorkerInfo*>(worker_info_ptr);
         if (!info) {

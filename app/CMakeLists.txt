@@ -10,7 +10,10 @@ add_executable(${BINARY} ${APP_SOURCES})
 target_link_libraries(${BINARY} PUBLIC ${CMAKE_PROJECT_NAME}_lib)
 
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+#set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/../bin)
+SET(EXECUTABLE_OUTPUT_PATH  ${PROJECT_SOURCE_DIR}/bin)
+
 #add_executable(tink_app app/main.cpp)
 #add_executable(tink_app main.cpp
 #        ../libs/cjson/cJSON.h

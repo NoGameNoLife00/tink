@@ -37,7 +37,6 @@ namespace tink {
 
         virtual int StartWorkerPool();
         static void* StartOneWorker(void* worker_info_ptr);
-        static int StartOneWorker(int worker_id, IRequestMsgQueuePtr &msg_queue);
         // 将消息发送给任务队列
         int SendMsgToTaskQueue(IRequestPtr &request);
     };
