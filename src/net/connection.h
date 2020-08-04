@@ -15,6 +15,7 @@
 
 namespace tink {
     typedef MessageQueue<IMessagePtr> IMessageQueue;
+
     class Connection : public IConnection
     //        , public std::enable_shared_from_this<Connection>
         {

@@ -8,10 +8,11 @@
 #include <connection.h>
 #include <server.h>
 #include <request.h>
+#include <connection.h>
 #include <global_mng.h>
 #include <arpa/inet.h>
-#include <datapack.h>
-#include <message.h>
+#include "datapack.h"
+#include "message.h"
 #include <pthread.h>
 
 namespace tink {
@@ -29,11 +30,11 @@ namespace tink {
         if (is_close_) {
             return 0;
         }
-        // 关闭读写进程
+        // ????д????
 //        kill(writer_pid ,SIGABRT);
 //        kill(reader_pid, SIGABRT);
         is_close_ = true;
-        // 回收socket
+        // ????socket
         close(conn_fd_);
         return E_OK;
     }
@@ -52,7 +53,7 @@ namespace tink {
 
     int Connection::Start() {
         printf("conn_ Start; conn_id:%d\n", conn_id_);
-        // 启动当前链接读取数据的业务
+        // ?????????????????????
         if (pipe(fds_) < 0) {
             printf("read msg head error:%s\n", strerror(errno));
             return E_FAILED;
@@ -75,9 +76,9 @@ namespace tink {
 //        DataPack dp;
 //        std::shared_ptr<byte> head_data(new byte[dp.GetHeadLen()] {0});
 //        while (true) {
-//            // 读取客户端的数据到buf中
+//            // ??????????????buf??
 //            std::shared_ptr<IMessage> msg(new Message);
-//            // 读取客户端发送的包头
+//            // ??????????????
 //            memset(head_data.get(), 0, dp.GetHeadLen());
 //            if ((read(conn_fd_, head_data.get(), dp.GetHeadLen())) == -1) {
 //                printf("read msg head error:%s\n", strerror(errno));
@@ -88,7 +89,7 @@ namespace tink {
 //                printf("unpack error: %d\n", e_code);
 //                break;
 //            }
-//            // 根据dataLen，再读取Data,放入msg中
+//            // ????dataLen??????Data,????msg??
 //            if (msg->GetDataLen() > 0) {
 //                std::shared_ptr<byte> buf(new byte[msg->GetDataLen()] {0});
 //                if ((read(conn_fd_, buf.get(), msg->GetDataLen()) == -1)) {
@@ -113,7 +114,7 @@ namespace tink {
 ////            break;
 ////        }
 //        }
-//        // 发消息关闭写进程
+//        // ????????д????
 //        byte *close_buf;
 //        uint32_t close_msg_len;
 //        Message close_msg;
@@ -126,7 +127,7 @@ namespace tink {
 //            return E_FAILED;
 //        }
 //        delete [] close_buf;
-//        // 关闭写管道
+//        // ???д???
 //        close(fds_[1]);
 //        return 0;
 //    }
@@ -140,13 +141,13 @@ namespace tink {
         byte *buf;
         uint32_t buf_len;
         msg->Init(msg_id, data_len, data);
-        // data封包成二进制数据
+        // data??????????????
 //        if (dp.Pack(msg, &buf, &buf_len) != E_OK) {
 //            printf("[reader] pack error msg id = %d\n", msg_id);
 //            delete [] buf;
 //            return E_PACK_FAILED;
 //        }
-//        // 通过管道发送封好的数据给写进程
+//        // ??????????????????д????
 //        if (write(fds_[1], buf, buf_len) != buf_len) {
 //            printf("[reader] write pipe msg error %s\n", strerror(errno));
 //            delete [] buf;
@@ -185,7 +186,7 @@ namespace tink {
 //        }
 //
 //        printf("[writer] thread exit, conn_id=%d, client_addr=%s", conn_id_, addr_str);
-//        // 关闭读管道
+//        // ???????
 //        close(fds_[0]);
 //        return 0;
 //    }
@@ -231,7 +232,7 @@ namespace tink {
         }
 
         printf("[writer] thread exit, conn_id=%d, client_addr=%s", conn_id, addr_str);
-        // 关闭读管道
+        // ???????
 //        close(fds_[0]);
         return nullptr;
     }
@@ -249,9 +250,9 @@ namespace tink {
         std::shared_ptr<byte> head_data(new byte[dp.GetHeadLen()] {0});
         int conn_fd = conn->GetTcpConn();
         while (true) {
-            // 读取客户端的数据到buf中
+            // ??????????????buf??
             std::shared_ptr<IMessage> msg(new Message);
-            // 读取客户端发送的包头
+            // ??????????????
             memset(head_data.get(), 0, dp.GetHeadLen());
             if ((read(conn_fd, head_data.get(), dp.GetHeadLen())) == -1) {
                 printf("[reader] msg head error:%s\n", strerror(errno));
@@ -262,7 +263,7 @@ namespace tink {
                 printf("[reader] unpack error: %d\n", e_code);
                 break;
             }
-            // 根据dataLen，再读取Data,放入msg中
+            // ????dataLen??????Data,????msg??
             if (msg->GetDataLen() > 0) {
                 std::shared_ptr<byte> buf(new byte[msg->GetDataLen()] {0});
                 if ((read(conn_fd, buf.get(), msg->GetDataLen()) == -1)) {
@@ -286,7 +287,7 @@ namespace tink {
 //            break;
 //        }
         }
-        // 发消息关闭写进程
+        // ????????д????
 //        byte *close_buf;
 //        uint32_t close_msg_len;
         std::shared_ptr<Message> close_msg(new Message);
@@ -301,7 +302,7 @@ namespace tink {
 //        }
 
 //        delete [] close_buf;
-        // 关闭写管道
+        // ???д???
 //        close(fds_[1]);
         return nullptr;
     }
