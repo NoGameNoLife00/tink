@@ -6,6 +6,7 @@
 #include <cstring>
 #include <error_code.h>
 #include <message_handler.h>
+//#include <easylogging++.h>
 
 class PingRouter : public tink::BaseRouter {
     int Handle(tink::IRequest &request) override {
@@ -38,7 +39,8 @@ class HiRouter : public tink::BaseRouter {
     }
 
 };
-int main() {
+int main(int argc, char** argv) {
+//    START_EASYLOGGINGPP(argc, argv);
     setbuf(stdout, NULL); // debug
     std::shared_ptr<tink::GlobalMng> globalObj = GlobalInstance;
     globalObj->Init();

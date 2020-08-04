@@ -9,6 +9,8 @@
 #include <iserver.h>
 #include <singleton.h>
 #include <string>
+#include <easylogging++.h>
+
 #define READ_BUF_SIZE 1024
 
 #define GlobalInstance (tink::Singleton<tink::GlobalMng>::GetInstance())
@@ -49,7 +51,7 @@ namespace tink {
         // 框架允许的最大任务数量
         uint32_t max_worker_task_len_;
     };
-
+    extern el::Logger* logger;
 }
 
 

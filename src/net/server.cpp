@@ -20,9 +20,9 @@ namespace tink {
 
     int Server::Start() {
         std::shared_ptr<GlobalMng> globalObj = GlobalInstance;
-        printf("[tink] Server Name:%s, listener at IP:%s, Port:%d, is starting.\n",
+        logger->info("[tink] Server Name:%v, listener at IP:%v, Port:%v, is starting.\n",
                 name_->c_str(), ip_->c_str(), port_);
-        printf("[tink] Version: %s, MaxConn:%d, MaxPacketSize:%d\n", globalObj->GetVersion()->c_str(),
+        logger->info("[tink] Version: %v, MaxConn:%v, MaxPacketSize:%v\n", globalObj->GetVersion()->c_str(),
                globalObj->GetMaxConn(), globalObj->GetMaxPackageSize());
 
         // 开启worker工作池
@@ -30,7 +30,7 @@ namespace tink {
 
         int srv_fd = socket(ip_version_, SOCK_STREAM, 0);
         if (srv_fd == -1) {
-            printf("Server create socket error: %s (code:%d)\n", strerror(errno), errno);
+            logger->info("Server create socket error: %v (code:%v)\n", strerror(errno), errno);
             exit(0);
         }
         ON_SCOPE_EXIT([&]{
@@ -42,22 +42,22 @@ namespace tink {
         srv_addr.sin_addr.s_addr = inet_addr("0.0.0.0");
         srv_addr.sin_port = htons(port_);
         if (bind(srv_fd, (struct sockaddr*)&srv_addr, sizeof(srv_addr)) == -1) {
-            printf("bind socket error: %s(code:%d)\n", strerror(errno), errno);
+            logger->info("bind socket error: %v(code:%v)\n", strerror(errno), errno);
             exit(1);
         }
 
         if (listen(srv_fd, 20) == -1) {
-            printf("listen socket error: %s(code:%d)\n", strerror(errno), errno);
+            logger->info("listen socket error: %v(code:%v)\n", strerror(errno), errno);
             exit(1);
         }
-        printf("Start tink Server %s listening\n", name_.get()->c_str());
+        logger->info("Start tink Server %v listening\n", name_.get()->c_str());
         struct sockaddr_in cli_addr;
         u_int cid = 0;
         socklen_t cli_add_size = sizeof(cli_addr);
         while (true) {
             int cli_fd = accept(srv_fd, (struct sockaddr*)&cli_addr, &cli_add_size);
             if (cli_fd == -1) {
-                printf("accept socket error: %s(code:%d)\n", strerror(errno), errno);
+                logger->info("accept socket error: %v(code:%v)\n", strerror(errno), errno);
                 continue;
             }
             cid++;

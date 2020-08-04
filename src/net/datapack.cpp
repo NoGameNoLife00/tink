@@ -50,8 +50,8 @@ namespace tink {
 
         msg.SetId(id);
         msg.SetDataLen(data_len);
-//        printf("unpack data id =%d", id);
-//        printf("unpack data len =%d", data_len);
+//        logger->info("unpack data id =%v", id);
+//        logger->info("unpack data len =%v", data_len);
 //        msg.SetData(in_data);
         std::shared_ptr<GlobalMng> globalObj = Singleton<GlobalMng>::GetInstance();
         if (globalObj->GetMaxPackageSize() > 0 && data_len > globalObj->GetMaxPackageSize()) {

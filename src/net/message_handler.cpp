@@ -16,14 +16,14 @@ namespace tink {
             iter->second->Handle(request);
             iter->second->PostHandle(request);
         } else {
-            printf("handler msg_id =%d not find", request.GetMsgId());
+            logger->info("handler msg_id =%v not find", request.GetMsgId());
         }
         return E_OK;
     }
 
     int MessageHandler::AddRouter(uint32_t msg_id, IRouterPtr &router) {
         if (apis.find(msg_id) != apis.end()) {
-            printf("msg repeat add, msg_id=%d", msg_id);
+            logger->info("msg repeat add, msg_id=%v", msg_id);
             return E_MSG_REPEAT_ROUTER;
         }
         apis[msg_id] = router;
@@ -42,7 +42,7 @@ namespace tink {
             pthread_t pid = 0;
             WorkerInfo * info = new WorkerInfo{this, i};
             if (pthread_create(&pid, NULL, StartOneWorker, info) != 0) {
-                printf("create writer thread error:%s\n", strerror(errno));
+                logger->info("create writer thread error:%v\n", strerror(errno));
                 return E_FAILED;
             }
             worker_pid_list.push_back(pid);
@@ -54,13 +54,13 @@ namespace tink {
     void* MessageHandler::StartOneWorker(void* worker_info_ptr) {
         WorkerInfo* info = static_cast<WorkerInfo*>(worker_info_ptr);
         if (!info) {
-            printf("worker thread run error, info_ptr is null\n");
+            logger->info("worker thread run error, info_ptr is null\n");
             return nullptr;
         }
         MessageHandler *handler = info->msg_handler;
         int worker_id = info->worker_id;
         IRequestMsgQueuePtr msg_queue = handler->task_queue[worker_id];
-        printf("work id = %d, is started...\n", worker_id);
+        logger->info("work id = %v, is started...\n", worker_id);
         while (true) {
             IRequestPtr req;
             // 消息队列取出router
@@ -69,7 +69,7 @@ namespace tink {
                 break;
             handler->DoMsgHandle(*req);
         }
-        printf("work id = %d, is stopped...\n", worker_id);
+        logger->info("work id = %v, is stopped...\n", worker_id);
         delete info;
         return nullptr;
     }
@@ -78,7 +78,7 @@ namespace tink {
         // 平均分配给TaskQueue (暂时按客户端connId分配
         int conn_id = request->GetConnection().GetConnId();
         int workerId = conn_id % worker_pool_size;
-        printf("add conn_id = %d, request msg_id =%d to worker_id=%d", conn_id, request->GetMsgId(), workerId);
+        logger->info("add conn_id = %v, request msg_id =%v to worker_id=%v", conn_id, request->GetMsgId(), workerId);
         task_queue[workerId]->Push(request);
         return 0;
     }

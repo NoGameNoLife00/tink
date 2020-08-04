@@ -1,15 +1,12 @@
-//
-// Created by admin on 2020/5/28.
-//
-
 #include "global_mng.h"
 #include "scope_guard.h"
 #include <stdio.h>
 #include <cJSON.h>
 #include <sys/unistd.h>
-#include <easylogging++.h>
 INITIALIZE_EASYLOGGINGPP
 namespace tink {
+    el::Logger* logger = el::Loggers::getLogger("default");
+
     GlobalMng::GlobalMng() {
         name_ = std::make_shared<std::string>("tink_server");
         host_ = std::make_shared<std::string>("0.0.0.0");
@@ -22,7 +19,7 @@ namespace tink {
     }
 
     int GlobalMng::Init() {
-        el::Configurations conf("log.conf");
+        el::Configurations conf("../etc/log.conf");
         el::Loggers::reconfigureAllLoggers(conf);
         FILE *fp = nullptr;
         cJSON *json;
@@ -68,7 +65,7 @@ namespace tink {
             }
             delete [] buff;
         } else {
-            printf("tink open file etc/config.json failed");
+            logger->info("tink open file etc/config.json failed");
             exit(0);
         }
         return 0;

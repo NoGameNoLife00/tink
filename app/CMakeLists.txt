@@ -6,7 +6,7 @@ set(SOURCES ${APP_SOURCES})
 
 #add_test(NAME ${BINARY} COMMAND ${BINARY})
 add_executable(${BINARY} ${APP_SOURCES})
-
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fexec-charset=GBK")
 target_link_libraries(${BINARY} PUBLIC ${CMAKE_PROJECT_NAME}_lib)
 
 
