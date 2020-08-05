@@ -12,9 +12,9 @@ namespace tink {
     class IRequest {
     public:
         // 获取当前连接
-        virtual IConnection & GetConnection() = 0;
+        virtual IConnectionPtr & GetConnection() = 0;
         // 获取请求的消息数据
-        virtual std::shared_ptr<byte>& GetData() = 0;
+        virtual BytePtr & GetData() = 0;
         // 获取请求消息的ID
         virtual int32_t GetMsgId() {
             return 0;

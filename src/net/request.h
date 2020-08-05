@@ -12,12 +12,12 @@
 namespace tink {
     class Request : public IRequest {
     public:
-        Request(IConnection& conn, std::shared_ptr<IMessage>& msg);
-        IConnection & GetConnection();
-        std::shared_ptr<byte>& GetData();
+        Request(IConnectionPtr&& conn, IMessagePtr& msg);
+        IConnectionPtr & GetConnection();
+        BytePtr& GetData();
         int32_t GetMsgId();
     private:
-        IConnection& conn_;
+        IConnectionPtr conn_;
         std::shared_ptr<IMessage> msg_;
     };
 

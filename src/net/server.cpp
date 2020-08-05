@@ -51,18 +51,20 @@ namespace tink {
             exit(1);
         }
         logger->info("Start tink Server %v listening\n", name_.get()->c_str());
-        struct sockaddr_in cli_addr;
+
         u_int cid = 0;
-        socklen_t cli_add_size = sizeof(cli_addr);
+
         while (true) {
-            int cli_fd = accept(srv_fd, (struct sockaddr*)&cli_addr, &cli_add_size);
+            RemoteAddrPtr cli_addr(new sockaddr);
+             socklen_t cli_add_size = sizeof(sockaddr);
+            int cli_fd = accept(srv_fd, cli_addr.get(), &cli_add_size);
             if (cli_fd == -1) {
                 logger->info("accept socket error: %v(code:%v)\n", strerror(errno), errno);
                 continue;
             }
             cid++;
             std::shared_ptr<Connection> conn(new Connection);
-            conn->Init(cli_fd, cid, this->msg_handler_);
+            conn->Init(cli_fd, cid, this->msg_handler_, cli_addr);
             conn->Start();
         }
         return 0;
@@ -84,7 +86,7 @@ namespace tink {
 
     int Server::Init(std::shared_ptr<std::string> name, int ip_version,
                      std::shared_ptr<std::string> ip, int port,
-                     std::shared_ptr<IMessageHandler> &msg_handler) {
+                     std::shared_ptr<IMessageHandler> &&msg_handler) {
         this->name_ = name;
         this->ip_ = ip;
         this->ip_version_ = ip_version;

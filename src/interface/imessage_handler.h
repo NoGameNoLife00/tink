@@ -15,6 +15,7 @@ namespace tink {
         virtual int StartWorkerPool() { return 0; };
         virtual int SendMsgToTaskQueue(IRequestPtr &request) { return 0; };
     };
+    typedef std::shared_ptr<IMessageHandler> IMessageHandlerPtr;
 }
 
 #endif //TINK_IMESSAGE_HANDLER_H

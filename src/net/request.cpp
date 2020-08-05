@@ -1,14 +1,15 @@
 #include <request.h>
 namespace tink {
-    Request::Request(IConnection &conn, std::shared_ptr<IMessage> &msg) : conn_(conn) {
+    Request::Request(IConnectionPtr &&conn, IMessagePtr &msg) {
+        this->conn_ = conn;
         this->msg_ = msg;
     }
 
-    IConnection & Request::GetConnection() {
+    IConnectionPtr & Request::GetConnection() {
         return conn_;
     }
 
-    std::shared_ptr<byte>& Request::GetData() {
+    BytePtr& Request::GetData() {
         return msg_->GetData();
     }
 

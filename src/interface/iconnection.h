@@ -37,6 +37,7 @@ namespace tink {
         virtual ~IConnection(){};
     };
 
+    typedef std::shared_ptr<IConnection> IConnectionPtr;
 }
 
 

@@ -15,7 +15,7 @@ namespace tink {
     public:
         int Init(std::shared_ptr<std::string> name, int ip_version,
                  std::shared_ptr<std::string> ip, int port,
-                 std::shared_ptr<IMessageHandler> &msg_handler);
+                 std::shared_ptr<IMessageHandler> &&msg_handler);
         int Start();
         int Run();
         int Stop();

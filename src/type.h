@@ -5,7 +5,8 @@
 #ifndef TINK_TYPE_H
 #define TINK_TYPE_H
 #include <sys/types.h>
+#include <memory>
 
 typedef char byte;
-
+typedef std::shared_ptr<byte> BytePtr;
 #endif //TINK_TYPE_H

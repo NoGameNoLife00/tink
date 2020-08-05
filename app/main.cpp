@@ -15,7 +15,7 @@ class PingRouter : public tink::BaseRouter {
         char *str = new char[20] {0};
         strcpy(str, "ping....\n");
         std::shared_ptr<byte> data(str);
-        int e_code = request.GetConnection().SendMsg(1, data, strlen(str)+1);
+        int e_code = request.GetConnection()->SendMsg(1, data, strlen(str)+1);
         if (e_code != E_OK) {
             printf("send msg error:%d",e_code);
         }
@@ -31,7 +31,7 @@ class HiRouter : public tink::BaseRouter {
         char *str = new char[20] {0};
         strcpy(str, "ping....\n");
         std::shared_ptr<byte> data(str);
-        int e_code = request.GetConnection().SendMsg(1, data, strlen(str)+1);
+        int e_code = request.GetConnection()->SendMsg(1, data, strlen(str)+1);
         if (e_code != E_OK) {
             printf("send msg error:%d",e_code);
         }
@@ -50,8 +50,10 @@ int main(int argc, char** argv) {
     std::shared_ptr<tink::IRouter> hi_br(new HiRouter());
     std::shared_ptr<std::string> name(new std::string("tink"));
     std::shared_ptr<std::string> ip(new std::string("0.0.0.0"));
-    std::shared_ptr<tink::IMessageHandler> handler(new tink::MessageHandler());
-    s->Init(globalObj->GetName(), AF_INET, globalObj->GetHost(), globalObj->getPort(), handler);
+    std::shared_ptr<tink::MessageHandler> handler(new tink::MessageHandler());
+    handler->Init();
+    s->Init(globalObj->GetName(), AF_INET, globalObj->GetHost(), globalObj->getPort(),
+            std::dynamic_pointer_cast<tink::IMessageHandler>(handler));
     s->AddRouter(0, br);
     s->AddRouter(1, hi_br);
     s->Run();

@@ -17,7 +17,7 @@ namespace tink {
     typedef MessageQueue<IMessagePtr> IMessageQueue;
 
     class Connection : public IConnection
-    //        , public std::enable_shared_from_this<Connection>
+            , public std::enable_shared_from_this<Connection>
         {
 
 
@@ -25,7 +25,7 @@ namespace tink {
         static void* StartWriter(void* conn_ptr);
         static void* StartReader(void* conn_ptr);
 
-        int Init(int conn_fd, int id, std::shared_ptr<IMessageHandler> &msg_handler);
+        int Init(int conn_fd, int id, IMessageHandlerPtr &msg_handler, RemoteAddrPtr &addr);
 
         int Start();
         // 停止链接
@@ -34,10 +34,6 @@ namespace tink {
         int GetTcpConn();
         // 获取链接id
         int GetConnId();
-        // 开启读进程
-//        int StartReader();
-        // 开启写进程
-//        int StartWriter();
 
         void SetReaderPid(pid_t readerPid);
 
@@ -61,6 +57,7 @@ namespace tink {
         // 消息管理器
         std::shared_ptr<IMessageHandler> msg_handler_;
     };
+    typedef std::shared_ptr<Connection> ConnectionPtr;
 }
 
 
