@@ -17,7 +17,6 @@
 
 namespace tink {
 
-
     int Server::Start() {
         std::shared_ptr<GlobalMng> globalObj = GlobalInstance;
         logger->info("[tink] Server Name:%v, listener at IP:%v, Port:%v, is starting.\n",
@@ -94,7 +93,5 @@ namespace tink {
         this->msg_handler_ = msg_handler;
         return 0;
     }
-
-
 
 }

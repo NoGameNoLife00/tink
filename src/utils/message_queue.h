@@ -1,7 +1,3 @@
-//
-// Created by admin on 2020/7/15.
-//
-
 #ifndef TINK_MESSAGE_QUEUE_H
 #define TINK_MESSAGE_QUEUE_H
 #include <queue>
@@ -68,8 +64,4 @@ namespace tink {
         std::condition_variable condition_;//实现同步式获取消息
     };
 }
-
-
-
-
 #endif //TINK_MESSAGE_QUEUE_H

@@ -1,7 +1,6 @@
 #ifndef TINK_BASE_ROUTER_H
 #define TINK_BASE_ROUTER_H
 
-
 #include <irouter.h>
 namespace tink {
     //

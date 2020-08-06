@@ -1,7 +1,3 @@
-//
-// Created by admin on 2020/6/1.
-//
-
 #include <error_code.h>
 #include <message.h>
 

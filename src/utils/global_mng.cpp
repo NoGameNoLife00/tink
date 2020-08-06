@@ -42,14 +42,12 @@ namespace tink {
             if (item != nullptr) {
                 name_->clear();
                 name_->append(item->valuestring);
-//                name_ = std::shared_ptr<std::string>(new std::string(item->valuestring));
             }
 
             item = cJSON_GetObjectItem(json, "host");
             if (item != nullptr) {
                 host_->clear();
                 host_->append(item->valuestring);
-//                host_ = std::shared_ptr<std::string>(new std::string(item->valuestring));
             }
             item = cJSON_GetObjectItem(json, "port");
             if (item != nullptr) {

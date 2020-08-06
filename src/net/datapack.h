@@ -1,7 +1,3 @@
-//
-// Created by admin on 2020/6/1.
-//
-
 #ifndef TINK_DATAPACK_H
 #define TINK_DATAPACK_H
 

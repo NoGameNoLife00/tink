@@ -1,7 +1,3 @@
-//
-// Created by admin on 2020/5/20.
-//
-
 #ifndef TINK_CONNECTION_H
 #define TINK_CONNECTION_H
 

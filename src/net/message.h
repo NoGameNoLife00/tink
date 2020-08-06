@@ -1,7 +1,3 @@
-//
-// Created by admin on 2020/6/1.
-//
-
 #ifndef TINK_MESSAGE_H
 #define TINK_MESSAGE_H
 

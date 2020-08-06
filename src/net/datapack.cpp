@@ -30,7 +30,6 @@ namespace tink {
         // 写data
         ptr += sizeof(len);
         memcpy(ptr, msg.GetData().get(), len);
-//        data->reset(buff);
         return 0;
     }
 
@@ -43,18 +42,10 @@ namespace tink {
         // 读数据长度
         uint32_t data_len = 0;
         memcpy(&data_len, ptr, sizeof(data_len));
-//        ptr += sizeof(data_len);
         // 读数据
-//        std::shared_ptr<byte> in_data(new byte[data_len]);
-//        memcpy(in_data.get(), ptr, data_len);
-
         msg.SetId(id);
         msg.SetDataLen(data_len);
-//        logger->info("unpack data id =%v", id);
-//        logger->info("unpack data len =%v", data_len);
-//        msg.SetData(in_data);
-        std::shared_ptr<GlobalMng> globalObj = Singleton<GlobalMng>::GetInstance();
-        if (globalObj->GetMaxPackageSize() > 0 && data_len > globalObj->GetMaxPackageSize()) {
+        if (GlobalInstance->GetMaxPackageSize() > 0 && data_len > GlobalInstance->GetMaxPackageSize()) {
             return E_PACKET_SIZE;
         }
         return E_OK;

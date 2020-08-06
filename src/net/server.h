@@ -1,6 +1,3 @@
-//
-// Created by admin on 2020/5/14.
-//
 #ifndef SERVER_H
 #define SERVER_H
 

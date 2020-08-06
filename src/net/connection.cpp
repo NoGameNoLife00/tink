@@ -53,11 +53,6 @@ namespace tink {
     int Connection::Start() {
         logger->info("conn_ Start; conn_id:%v\n", conn_id_);
         // 开启读写线程
-//        if (pipe(fds_) < 0) {
-//            logger->info("read msg head error:%v\n", strerror(errno));
-//            return E_FAILED;
-//        }
-
         if (pthread_create(&writer_pid, NULL, StartWriter, new ConnectionPtr(shared_from_this())) != 0) {
             logger->error("create writer thread error:%v\n", strerror(errno));
             return E_FAILED;
@@ -73,10 +68,7 @@ namespace tink {
         if (is_close_) {
             return E_CONN_CLOSED;
         }
-        DataPack dp;
         std::shared_ptr<Message> msg = std::make_shared<Message>();
-        byte *buf;
-        uint32_t buf_len;
         msg->Init(msg_id, data_len, data);
         msg_queue.Push(msg);
         return 0;
@@ -98,21 +90,12 @@ namespace tink {
         int conn_id = conn->GetConnId();
         int conn_fd = conn->GetTcpConn();
         logger->info("[writer] thread is running, conn_id=%v, client addr=%v\n", conn->GetConnId(), addr_str);
-        int buf_size = GlobalInstance->GetMaxPackageSize();
-//        byte *read_buf = new byte[buf_size];
         DataPack dp;
-//        Message msg;
-        int read_len = 0;
         while (true) {
             byte *read_buf;
             uint32_t buf_size;
             IMessagePtr msg;
             msg_queue.Pop(msg, true);
-//            memset(read_buf, 0, buf_size);
-//            if ((read_len = read(fds_[0], read_buf, buf_size)) == -1) {
-//                logger->info("[writer] read pipe error %v\n", strerror(errno));
-//                break;
-//            }
             dp.Pack(*msg, &read_buf, &buf_size);
 
             if (msg->GetId() == -1) {
@@ -172,18 +155,8 @@ namespace tink {
             } else {
 //                msg_handler_->DoMsgHandle(req);
             }
-//            req.conn_ = std::shared_ptr<IConnection>(this);
-//            msg_handler_->DoMsgHandle(req);
-//        int ret = handle_api(conn_fd, buf, recv_size);
-//        if (ret != E_OK) {
-//            logger->info("handle is error, conn_id:%v error_code:%v \n", conn_id, ret);
-//            break;
-//        }
         }
-        // 发消息关闭写进程
-//        byte *close_buf;
-//        uint32_t close_msg_len;
-        std::shared_ptr<Message> close_msg(new Message);
+        IMessagePtr close_msg(new Message);
         close_msg->SetId(-1);
         close_msg->SetDataLen(0);
         msg_queue.Push(close_msg);

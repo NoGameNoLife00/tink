@@ -1,7 +1,3 @@
-//
-// Created by admin on 2020/5/27.
-//
-
 #include "base_router.h"
 namespace tink {
     int BaseRouter::PreHandle(IRequest &request) {
