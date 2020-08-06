@@ -1,9 +1,4 @@
-//
-// Created by admin on 2020/5/14.
-//
-
 #include <server.h>
-#include <stdio.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -13,12 +8,12 @@
 #include <connection.h>
 #include <global_mng.h>
 #include <scope_guard.h>
-
+#include <type.h>
 
 namespace tink {
 
     int Server::Start() {
-        std::shared_ptr<GlobalMng> globalObj = GlobalInstance;
+        auto globalObj = GlobalInstance;
         logger->info("[tink] Server Name:%v, listener at IP:%v, Port:%v, is starting.\n",
                 name_->c_str(), ip_->c_str(), port_);
         logger->info("[tink] Version: %v, MaxConn:%v, MaxPacketSize:%v\n", globalObj->GetVersion()->c_str(),
@@ -83,9 +78,9 @@ namespace tink {
         return 0;
     }
 
-    int Server::Init(std::shared_ptr<std::string> name, int ip_version,
-                     std::shared_ptr<std::string> ip, int port,
-                     std::shared_ptr<IMessageHandler> &&msg_handler) {
+    int Server::Init(StringPtr &name, int ip_version,
+                     StringPtr &ip, int port,
+                     IMessageHandlerPtr &&msg_handler) {
         this->name_ = name;
         this->ip_ = ip;
         this->ip_version_ = ip_version;

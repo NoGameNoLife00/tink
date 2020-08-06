@@ -22,15 +22,15 @@ namespace tink {
         // ≈‰÷√≥ı ºªØ
         int Init();
         int Reload();
-        std::shared_ptr<IServer> GetServer() const;
+        const std::shared_ptr<IServer>& GetServer() const;
 
-        std::shared_ptr<std::string> GetHost() const;
+        const StringPtr& GetHost() const;
 
-        const std::shared_ptr<std::string> GetName() const;
+        const StringPtr& GetName() const;
 
         int getPort() const;
 
-        std::shared_ptr<std::string> GetVersion() const;
+        const StringPtr& GetVersion() const;
 
         int GetMaxConn() const;
 

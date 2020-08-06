@@ -64,7 +64,7 @@ namespace tink {
         return 0;
     }
 
-    int Connection::SendMsg(uint32_t msg_id, std::shared_ptr<byte> &data, uint32_t data_len) {
+    int Connection::SendMsg(uint32_t msg_id, BytePtr &data, uint32_t data_len) {
         if (is_close_) {
             return E_CONN_CLOSED;
         }
@@ -163,7 +163,7 @@ namespace tink {
         return nullptr;
     }
 
-    const std::shared_ptr<IMessageHandler> &Connection::GetMsgHandler() const {
+    const IMessageHandlerPtr &Connection::GetMsgHandler() const {
         return msg_handler_;
     }
 

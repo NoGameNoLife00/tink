@@ -9,4 +9,5 @@
 
 typedef char byte;
 typedef std::shared_ptr<byte> BytePtr;
+typedef std::shared_ptr<std::string> StringPtr;
 #endif //TINK_TYPE_H

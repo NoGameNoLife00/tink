@@ -40,19 +40,21 @@ class HiRouter : public tink::BaseRouter {
 
 };
 int main(int argc, char** argv) {
-//    START_EASYLOGGINGPP(argc, argv);
+    START_EASYLOGGINGPP(argc, argv);
     setbuf(stdout, NULL); // debug
-    std::shared_ptr<tink::GlobalMng> globalObj = GlobalInstance;
+    auto globalObj = GlobalInstance;
     globalObj->Init();
 
     tink::Server *s = new tink::Server();
-    std::shared_ptr<tink::IRouter> br(new PingRouter());
-    std::shared_ptr<tink::IRouter> hi_br(new HiRouter());
-    std::shared_ptr<std::string> name(new std::string("tink"));
-    std::shared_ptr<std::string> ip(new std::string("0.0.0.0"));
-    std::shared_ptr<tink::MessageHandler> handler(new tink::MessageHandler());
+    tink::IRouterPtr br(new PingRouter());
+    tink::IRouterPtr hi_br(new HiRouter());
+    StringPtr name(new std::string("tink"));
+    StringPtr ip(new std::string("0.0.0.0"));
+
+    std::shared_ptr<tink::MessageHandler>  handler(new tink::MessageHandler());
     handler->Init();
-    s->Init(globalObj->GetName(), AF_INET, globalObj->GetHost(), globalObj->getPort(),
+    s->Init(const_cast<StringPtr &>(globalObj->GetName()), AF_INET,
+            const_cast<StringPtr &>(globalObj->GetHost()), globalObj->getPort(),
             std::dynamic_pointer_cast<tink::IMessageHandler>(handler));
     s->AddRouter(0, br);
     s->AddRouter(1, hi_br);

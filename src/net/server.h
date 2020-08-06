@@ -10,19 +10,19 @@ namespace tink {
 
     class Server : public IServer {
     public:
-        int Init(std::shared_ptr<std::string> name, int ip_version,
-                 std::shared_ptr<std::string> ip, int port,
-                 std::shared_ptr<IMessageHandler> &&msg_handler);
+        int Init(StringPtr &name, int ip_version,
+                 StringPtr &ip, int port,
+                 IMessageHandlerPtr &&msg_handler);
         int Start();
         int Run();
         int Stop();
         int AddRouter(uint32_t msg_id, std::shared_ptr<IRouter> &router);
     private:
-        std::shared_ptr<std::string> name_;
-        std::shared_ptr<std::string> ip_;
+        StringPtr name_;
+        StringPtr ip_;
         int ip_version_;
         int port_;
-        std::shared_ptr<IMessageHandler> msg_handler_;
+        IMessageHandlerPtr msg_handler_;
     };
 }
 

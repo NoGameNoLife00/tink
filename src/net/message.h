@@ -8,7 +8,7 @@
 namespace tink {
     class Message : public IMessage{
     public:
-        int Init(uint32_t id, uint32_t len, const std::shared_ptr<byte> &data);
+        int Init(uint32_t id, uint32_t len, const BytePtr &data);
         int32_t GetId() const;
 
         void SetId(uint32_t id);
@@ -19,7 +19,7 @@ namespace tink {
 
         std::shared_ptr<byte> &GetData();
 
-        void SetData(const std::shared_ptr<byte> &data);
+        void SetData(const BytePtr &data);
 
     private:
         uint32_t id_; // ÏûÏ¢ID

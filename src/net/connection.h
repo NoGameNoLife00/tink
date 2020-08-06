@@ -33,14 +33,14 @@ namespace tink {
 
         void SetReaderPid(pid_t readerPid);
 
-        const std::shared_ptr<IMessageHandler> &GetMsgHandler() const;
+        const IMessageHandlerPtr &GetMsgHandler() const;
 
     // 获取客户端的tcp状态 ip port
         RemoteAddrPtr GetRemoteAddr();
 //        // 发送数据到客户端
 //        int Send(char *buf, int len);
         // 发送Msg包到写线程
-        int SendMsg(uint32_t msg_id, std::shared_ptr<byte> &data, uint32_t data_len);
+        int SendMsg(uint32_t msg_id, BytePtr &data, uint32_t data_len);
     private:
         static IMessageQueue msg_queue;
         pthread_t writer_pid;
@@ -48,10 +48,9 @@ namespace tink {
         int conn_fd_;
         int conn_id_;
         bool is_close_;
-        int fds_[2];
         RemoteAddrPtr remote_addr_;
         // 消息管理器
-        std::shared_ptr<IMessageHandler> msg_handler_;
+        IMessageHandlerPtr msg_handler_;
     };
     typedef std::shared_ptr<Connection> ConnectionPtr;
 }

@@ -23,11 +23,11 @@ namespace tink {
         return data_;
     }
 
-    void Message::SetData(const std::shared_ptr<byte> &data) {
+    void Message::SetData(const BytePtr &data) {
         Message::data_ = data;
     }
 
-    int Message::Init(uint32_t id, uint32_t len, const std::shared_ptr<byte> &data) {
+    int Message::Init(uint32_t id, uint32_t len, const BytePtr &data) {
         id_ = id;
         data_len_ = len;
         data_ = data;
