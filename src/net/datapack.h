@@ -3,13 +3,13 @@
 
 #include <idatapack.h>
 namespace tink {
-    class DataPack: public IDataPack {
+    class DataPack {
     public:
-        uint32_t GetHeadLen();
+        static uint32_t GetHeadLen();
 
-        int Unpack(byte *data, IMessage &msg);
+        static int Unpack(byte *data, IMessage &msg);
 
-        int Pack(IMessage &msg, byte **data, uint32_t *data_len);
+        static int Pack(IMessage &msg, byte **data, uint32_t *data_len);
     };
 }
 

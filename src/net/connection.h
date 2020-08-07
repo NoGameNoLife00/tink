@@ -8,6 +8,7 @@
 #include <imessage_handler.h>
 #include <message_queue.h>
 #include <imessage.h>
+#include <atomic>
 
 namespace tink {
     typedef MessageQueue<IMessagePtr> IMessageQueue;
@@ -37,8 +38,7 @@ namespace tink {
 
     // 获取客户端的tcp状态 ip port
         RemoteAddrPtr GetRemoteAddr();
-//        // 发送数据到客户端
-//        int Send(char *buf, int len);
+
         // 发送Msg包到写线程
         int SendMsg(uint32_t msg_id, BytePtr &data, uint32_t data_len);
     private:
@@ -47,7 +47,7 @@ namespace tink {
         pthread_t reader_pid;
         int conn_fd_;
         int conn_id_;
-        bool is_close_;
+        std::atomic<bool> is_close_;
         RemoteAddrPtr remote_addr_;
         // 消息管理器
         IMessageHandlerPtr msg_handler_;

@@ -9,8 +9,93 @@
 #include <global_mng.h>
 #include <scope_guard.h>
 #include <type.h>
+#include <message.h>
+#include "datapack.h"
 
+#define EPOLL_EVENTS_NUM 100
+#define MAX_BUF_SIZE 2048
 namespace tink {
+
+    static void add_event(int epoll_fd, int fd, int state)
+    {
+        struct epoll_event ev;
+        ev.events = state;
+        ev.data.fd = fd;
+        epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &ev);
+    }
+
+    static void delete_event(int epoll_fd, int fd, int state)
+    {
+        struct epoll_event ev;
+        ev.events = state;
+        ev.data.fd = fd;
+        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, &ev);
+    }
+
+    static void modify_event(int epoll_fd, int fd, int state)
+    {
+        struct epoll_event ev;
+        ev.events = state;
+        ev.data.fd = fd;
+        epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &ev);
+    }
+
+    static void do_read(int epoll_fd, int fd, char *buf)
+    {
+        int head_len = DataPack::GetHeadLen();
+        byte head_data[head_len];
+        // 读取客户端的数据到buf中
+        IMessagePtr msg(new Message);
+        memset(head_data, 0, head_len);
+        // 读取客户端发送的包头
+        int ret = read(fd, head_data, head_len);
+        if (ret == -1) {
+            logger->error("[reader] msg head error:%v\n", strerror(errno));
+            close(fd);
+            delete_event(epoll_fd, fd, EPOLLIN);
+            return;
+        } else if (ret == 0) {
+            logger->error("[reader] client close");
+            close(fd);
+            delete_event(epoll_fd, fd, EPOLLIN);
+            return;
+        }
+        ret = DataPack::Unpack(head_data, *msg.get());
+        if (ret != E_OK) {
+            logger->warn("[reader] unpack error: %v\n", ret);
+            close(fd);
+            delete_event(epoll_fd, fd, EPOLLIN);
+            return;
+        }
+        // 根据dataLen，再读取Data,放入msg中
+        if (msg->GetDataLen() > 0) {
+            BytePtr buf(new byte[msg->GetDataLen()] {0});
+            if ((read(fd, buf.get(), msg->GetDataLen()) == -1)) {
+                logger->warn("[reader] msg data error:%v\n", strerror(errno));
+                return;
+            }
+            msg->SetData(buf);
+        }
+        modify_event(epoll_fd, fd, EPOLLOUT);
+
+
+    }
+
+    static void do_write(int epollfd,int fd,char *buf)
+    {
+        int nwrite;
+        nwrite = write(fd,buf,strlen(buf));
+        if (nwrite == -1)
+        {
+            perror("write error:");
+            close(fd);
+            delete_event(epollfd,fd,EPOLLOUT);
+        }
+        else
+            modify_event(epollfd,fd,EPOLLIN);
+        memset(buf,0,MAX_BUF_SIZE);
+    }
+
 
     int Server::Start() {
         auto globalObj = GlobalInstance;
@@ -33,7 +118,8 @@ namespace tink {
 
         struct sockaddr_in srv_addr;
         srv_addr.sin_family = ip_version_;
-        srv_addr.sin_addr.s_addr = inet_addr("0.0.0.0");
+        inet_pton(ip_version_, "0.0.0.0", &srv_addr.sin_addr);
+//        srv_addr.sin_addr.s_addr = inet_addr("0.0.0.0");
         srv_addr.sin_port = htons(port_);
         if (bind(srv_fd, (struct sockaddr*)&srv_addr, sizeof(srv_addr)) == -1) {
             logger->info("bind socket error: %v(code:%v)\n", strerror(errno), errno);
@@ -48,7 +134,18 @@ namespace tink {
 
         u_int cid = 0;
 
-        while (true) {
+        int epoll_fd;
+        epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+        struct epoll_event events[EPOLL_EVENTS_NUM];
+        byte *buf = new byte [MAX_BUF_SIZE];
+        add_event(epoll_fd, srv_fd, EPOLLIN);
+        int fd_num;
+        for ( ; ; ) {
+            fd_num = epoll_wait(epoll_fd, events, EPOLL_EVENTS_NUM, -1);
+            handle_events(epoll_fd, events, fd_num, srv_fd, buf);
+        }
+
+        for(;;) {
             RemoteAddrPtr cli_addr(new sockaddr);
              socklen_t cli_add_size = sizeof(sockaddr);
             int cli_fd = accept(srv_fd, cli_addr.get(), &cli_add_size);
@@ -87,6 +184,40 @@ namespace tink {
         this->port_ = port;
         this->msg_handler_ = msg_handler;
         return 0;
+    }
+
+    void Server::handle_events(int epoll_fd, struct epoll_event *events, int event_num, int listen_fd, char *buf) {
+        int fd;
+        for (int i = 0; i < event_num; i++) {
+            fd = events[i].data.fd;
+            if ((fd == listen_fd) && (events[i].events & EPOLLIN)) {
+                handle_accept(epoll_fd,listen_fd);
+            } else if (events[i].events & EPOLLIN) {
+                do_read(epoll_fd, fd,buf);
+            } else if (events[i].events & EPOLLOUT) {
+                do_write(epoll_fd, fd,buf);
+            }
+        }
+    }
+
+    void Server::handle_accept(int epoll_fd, int listen_fd)
+    {
+        static int cid = 0;
+
+        int clifd;
+        RemoteAddrPtr cli_addr(new sockaddr);
+        socklen_t  cli_addr_len;
+        clifd = accept(listen_fd, (struct sockaddr*)&cli_addr, &cli_addr_len);
+        if (clifd == -1)
+            logger->warn("accept socket error: %v(code:%v)\n", strerror(errno), errno);
+        else
+        {
+            cid++;
+            ConnectionPtr conn(new Connection);
+            conn->Init(clifd, cid, msg_handler_, cli_addr);
+            //添加一个客户描述符和事件
+            add_event(epoll_fd, clifd, EPOLLIN);
+        }
     }
 
 }

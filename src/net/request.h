@@ -14,7 +14,7 @@ namespace tink {
         int32_t GetMsgId();
     private:
         IConnectionPtr conn_;
-        std::shared_ptr<IMessage> msg_;
+        IMessagePtr msg_;
     };
 
 }

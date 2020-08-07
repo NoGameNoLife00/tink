@@ -5,6 +5,7 @@
 #include <string>
 #include <memory>
 #include <imessage_handler.h>
+#include <sys/epoll.h>
 
 namespace tink {
 
@@ -17,7 +18,10 @@ namespace tink {
         int Run();
         int Stop();
         int AddRouter(uint32_t msg_id, std::shared_ptr<IRouter> &router);
+
     private:
+        void handle_accept(int epoll_fd, int listen_fd);
+        void handle_events(int epoll_fd, struct epoll_event *events, int event_num, int listen_fd, char *buf);
         StringPtr name_;
         StringPtr ip_;
         int ip_version_;
