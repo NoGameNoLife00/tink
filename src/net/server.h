@@ -6,6 +6,7 @@
 #include <memory>
 #include <imessage_handler.h>
 #include <sys/epoll.h>
+#include <unordered_map>
 
 namespace tink {
 
@@ -22,11 +23,14 @@ namespace tink {
     private:
         void handle_accept(int epoll_fd, int listen_fd);
         void handle_events(int epoll_fd, struct epoll_event *events, int event_num, int listen_fd, char *buf);
+        void do_read(int epoll_fd, int fd);
         StringPtr name_;
         StringPtr ip_;
         int ip_version_;
         int port_;
         IMessageHandlerPtr msg_handler_;
+        typedef std::unordered_map<int, IConnectionPtr> ConnectionMap;
+        ConnectionMap conn_map_;
     };
 }
 

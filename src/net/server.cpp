@@ -11,6 +11,7 @@
 #include <type.h>
 #include <message.h>
 #include "datapack.h"
+#include "request.h"
 
 #define EPOLL_EVENTS_NUM 100
 #define MAX_BUF_SIZE 2048
@@ -40,46 +41,7 @@ namespace tink {
         epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &ev);
     }
 
-    static void do_read(int epoll_fd, int fd, char *buf)
-    {
-        int head_len = DataPack::GetHeadLen();
-        byte head_data[head_len];
-        // 读取客户端的数据到buf中
-        IMessagePtr msg(new Message);
-        memset(head_data, 0, head_len);
-        // 读取客户端发送的包头
-        int ret = read(fd, head_data, head_len);
-        if (ret == -1) {
-            logger->error("[reader] msg head error:%v\n", strerror(errno));
-            close(fd);
-            delete_event(epoll_fd, fd, EPOLLIN);
-            return;
-        } else if (ret == 0) {
-            logger->error("[reader] client close");
-            close(fd);
-            delete_event(epoll_fd, fd, EPOLLIN);
-            return;
-        }
-        ret = DataPack::Unpack(head_data, *msg.get());
-        if (ret != E_OK) {
-            logger->warn("[reader] unpack error: %v\n", ret);
-            close(fd);
-            delete_event(epoll_fd, fd, EPOLLIN);
-            return;
-        }
-        // 根据dataLen，再读取Data,放入msg中
-        if (msg->GetDataLen() > 0) {
-            BytePtr buf(new byte[msg->GetDataLen()] {0});
-            if ((read(fd, buf.get(), msg->GetDataLen()) == -1)) {
-                logger->warn("[reader] msg data error:%v\n", strerror(errno));
-                return;
-            }
-            msg->SetData(buf);
-        }
-        modify_event(epoll_fd, fd, EPOLLOUT);
 
-
-    }
 
     static void do_write(int epollfd,int fd,char *buf)
     {
@@ -193,7 +155,7 @@ namespace tink {
             if ((fd == listen_fd) && (events[i].events & EPOLLIN)) {
                 handle_accept(epoll_fd,listen_fd);
             } else if (events[i].events & EPOLLIN) {
-                do_read(epoll_fd, fd,buf);
+                do_read(epoll_fd, fd);
             } else if (events[i].events & EPOLLOUT) {
                 do_write(epoll_fd, fd,buf);
             }
@@ -203,21 +165,78 @@ namespace tink {
     void Server::handle_accept(int epoll_fd, int listen_fd)
     {
         static int cid = 0;
-
-        int clifd;
+        int cli_fd;
         RemoteAddrPtr cli_addr(new sockaddr);
         socklen_t  cli_addr_len;
-        clifd = accept(listen_fd, (struct sockaddr*)&cli_addr, &cli_addr_len);
-        if (clifd == -1)
+        cli_fd = accept(listen_fd, (struct sockaddr*)&cli_addr, &cli_addr_len);
+        if (cli_fd == -1)
             logger->warn("accept socket error: %v(code:%v)\n", strerror(errno), errno);
         else
         {
             cid++;
             ConnectionPtr conn(new Connection);
-            conn->Init(clifd, cid, msg_handler_, cli_addr);
+            conn->Init(cli_fd, cid, msg_handler_, cli_addr);
             //添加一个客户描述符和事件
-            add_event(epoll_fd, clifd, EPOLLIN);
+            add_event(epoll_fd, cli_fd, EPOLLIN);
+            conn_map_.insert(std::pair<int, ConnectionPtr>(cli_fd, conn));
         }
     }
 
+    void Server::do_read(int epoll_fd, int fd)
+    {
+        int head_len = DataPack::GetHeadLen();
+        byte head_data[head_len];
+        // 读取客户端的数据到buf中
+        IMessagePtr msg(new Message);
+        memset(head_data, 0, head_len);
+
+        auto on_error = [&fd, &epoll_fd]  {
+            close(fd);
+            delete_event(epoll_fd, fd, EPOLLIN);
+        };
+
+        auto it = conn_map_.find(fd);
+        if (it == conn_map_.end()) {
+            logger->error("[reader] not find connect:%v");
+            on_error();
+            return;
+        }
+        IConnectionPtr conn = it->second;
+        // 读取客户端发送的包头
+        int ret = read(fd, head_data, head_len);
+        if (ret == -1) {
+            logger->error("[reader] msg head error:%v\n", strerror(errno));
+            on_error();
+            return;
+        } else if (ret == 0) {
+            logger->error("[reader] client close");
+            on_error();
+            return;
+        }
+        ret = DataPack::Unpack(head_data, *msg.get());
+        if (ret != E_OK) {
+            logger->warn("[reader] unpack error: %v\n", ret);
+            on_error();
+            return;
+        }
+        // 根据dataLen，再读取Data,放入msg中
+        if (msg->GetDataLen() > 0) {
+            BytePtr buf(new byte[msg->GetDataLen()] {0});
+            if ((read(fd, buf.get(), msg->GetDataLen()) == -1)) {
+                logger->warn("[reader] msg data error:%v\n", strerror(errno));
+                on_error();
+                return;
+            }
+            msg->SetData(buf);
+        }
+        modify_event(epoll_fd, fd, EPOLLOUT);
+
+        IRequestPtr req_ptr = std::make_shared<Request>(conn, msg);
+        if (GlobalInstance->GetWorkerPoolSize() > 0) {
+            conn->GetMsgHandler()->SendMsgToTaskQueue(req_ptr);
+        } else {
+            //msg_handler_->DoMsgHandle(req);
+        }
+
+    }
 }

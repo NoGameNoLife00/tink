@@ -8,7 +8,7 @@
 namespace tink {
     class Request : public IRequest {
     public:
-        Request(IConnectionPtr&& conn, IMessagePtr& msg);
+        Request(std::shared_ptr<IConnection> conn, IMessagePtr& msg);
         IConnectionPtr & GetConnection();
         BytePtr& GetData();
         int32_t GetMsgId();

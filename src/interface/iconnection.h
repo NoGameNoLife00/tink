@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <memory>
 #include <type.h>
+#include <imessage_handler.h>
 
 namespace tink {
 //    typedef int (*conn_handle_func)(int, char*, int);
@@ -34,6 +35,8 @@ namespace tink {
         virtual int GetTcpConn() {
             return 0;
         };
+
+        virtual const IMessageHandlerPtr &GetMsgHandler() {};
         virtual ~IConnection(){};
     };
 
