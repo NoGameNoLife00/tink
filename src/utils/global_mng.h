@@ -24,11 +24,13 @@ namespace tink {
         int Reload();
         const std::shared_ptr<IServer>& GetServer() const;
 
+        void SetServer(std::shared_ptr<IServer>&& s);
+
         const StringPtr& GetHost() const;
 
         const StringPtr& GetName() const;
 
-        int getPort() const;
+        int GetPort() const;
 
         const StringPtr& GetVersion() const;
 

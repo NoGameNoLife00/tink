@@ -62,19 +62,19 @@ namespace tink {
             HandleEvents_(events, fd_num);
         }
 
-        for(;;) {
-            RemoteAddrPtr cli_addr(new sockaddr);
-             socklen_t cli_add_size = sizeof(sockaddr);
-            int cli_fd = accept(listen_fd_, cli_addr.get(), &cli_add_size);
-            if (cli_fd == -1) {
-                logger->info("accept socket error: %v(code:%v)\n", strerror(errno), errno);
-                continue;
-            }
-            cid++;
-            std::shared_ptr<Connection> conn(new Connection);
-            conn->Init(cli_fd, cid, this->msg_handler_, cli_addr);
-            conn->Start();
-        }
+//        for(;;) {
+//            RemoteAddrPtr cli_addr(new sockaddr);
+//             socklen_t cli_add_size = sizeof(sockaddr);
+//            int cli_fd = accept(listen_fd_, cli_addr.get(), &cli_add_size);
+//            if (cli_fd == -1) {
+//                logger->info("accept socket error: %v(code:%v)\n", strerror(errno), errno);
+//                continue;
+//            }
+//            cid++;
+//            std::shared_ptr<Connection> conn(new Connection);
+//            conn->Init(cli_fd, cid, this->msg_handler_, cli_addr);
+//            conn->Start();
+//        }
         return 0;
     }
 
@@ -131,6 +131,7 @@ namespace tink {
             cid++;
             ConnectionPtr conn(new Connection);
             conn->Init(cli_fd, cid, msg_handler_, cli_addr);
+            conn->Start();
             //添加一个客户描述符和事件
             OperateEvent(cli_fd, EPOLL_CTL_ADD, EPOLLIN);
             conn_map_.insert(std::pair<int, ConnectionPtr>(cli_fd, conn));

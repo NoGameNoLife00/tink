@@ -6,6 +6,7 @@
 #include <cstring>
 #include <error_code.h>
 #include <message_handler.h>
+
 //#include <easylogging++.h>
 
 class PingRouter : public tink::BaseRouter {
@@ -45,20 +46,22 @@ int main(int argc, char** argv) {
     auto globalObj = GlobalInstance;
     globalObj->Init();
 
-    tink::Server *s = new tink::Server();
+    std::shared_ptr<tink::Server> s(new tink::Server());
+
     tink::IRouterPtr br(new PingRouter());
     tink::IRouterPtr hi_br(new HiRouter());
     StringPtr name(new std::string("tink"));
     StringPtr ip(new std::string("0.0.0.0"));
 
     std::shared_ptr<tink::MessageHandler>  handler(new tink::MessageHandler());
+
+    globalObj->SetServer(std::dynamic_pointer_cast<tink::IServer>(s));
     handler->Init();
     s->Init(const_cast<StringPtr &>(globalObj->GetName()), AF_INET,
-            const_cast<StringPtr &>(globalObj->GetHost()), globalObj->getPort(),
+            const_cast<StringPtr &>(globalObj->GetHost()), globalObj->GetPort(),
             std::dynamic_pointer_cast<tink::IMessageHandler>(handler));
     s->AddRouter(0, br);
     s->AddRouter(1, hi_br);
     s->Run();
-    delete  s;
     return 0;
 }

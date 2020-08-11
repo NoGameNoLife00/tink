@@ -81,7 +81,7 @@ namespace tink {
         return name_;
     }
 
-    int GlobalMng::getPort() const {
+    int GlobalMng::GetPort() const {
         return port_;
     }
 
@@ -99,6 +99,10 @@ namespace tink {
 
     uint32_t GlobalMng::GetWorkerPoolSize() const {
         return worker_pool_size_;
+    }
+
+    void GlobalMng::SetServer(std::shared_ptr<IServer>&& s) {
+        server_ = s;
     }
 
 }

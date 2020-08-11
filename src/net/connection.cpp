@@ -78,7 +78,7 @@ namespace tink {
         buffer_ = std::make_shared<byte>(len);
         memcpy(buffer_.get(), buff, len);
         buffer_size_ = len;
-        GlobalInstance->GetServer()->OperateEvent(conn_fd_, EPOLL_CTL_ADD, EPOLLOUT);
+        GlobalInstance->GetServer()->OperateEvent(conn_fd_, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
         return 0;
     }
 
