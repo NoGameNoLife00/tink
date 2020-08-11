@@ -16,49 +16,6 @@
 #define EPOLL_EVENTS_NUM 100
 #define MAX_BUF_SIZE 2048
 namespace tink {
-
-    static void add_event(int epoll_fd, int fd, int state)
-    {
-        struct epoll_event ev;
-        ev.events = state;
-        ev.data.fd = fd;
-        epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &ev);
-    }
-
-    static void delete_event(int epoll_fd, int fd, int state)
-    {
-        struct epoll_event ev;
-        ev.events = state;
-        ev.data.fd = fd;
-        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, &ev);
-    }
-
-    static void modify_event(int epoll_fd, int fd, int state)
-    {
-        struct epoll_event ev;
-        ev.events = state;
-        ev.data.fd = fd;
-        epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &ev);
-    }
-
-
-
-    static void do_write(int epollfd,int fd,char *buf)
-    {
-        int nwrite;
-        nwrite = write(fd,buf,strlen(buf));
-        if (nwrite == -1)
-        {
-            perror("write error:");
-            close(fd);
-            delete_event(epollfd,fd,EPOLLOUT);
-        }
-        else
-            modify_event(epollfd,fd,EPOLLIN);
-        memset(buf,0,MAX_BUF_SIZE);
-    }
-
-
     int Server::Start() {
         auto globalObj = GlobalInstance;
         logger->info("[tink] Server Name:%v, listener at IP:%v, Port:%v, is starting.\n",
@@ -69,13 +26,13 @@ namespace tink {
         // 开启worker工作池
         msg_handler_->StartWorkerPool();
 
-        int srv_fd = socket(ip_version_, SOCK_STREAM, 0);
-        if (srv_fd == -1) {
+        listen_fd_ = socket(ip_version_, SOCK_STREAM, 0);
+        if (listen_fd_ == -1) {
             logger->info("Server create socket error: %v (code:%v)\n", strerror(errno), errno);
             exit(0);
         }
         ON_SCOPE_EXIT([&]{
-            close(srv_fd);
+            close(listen_fd_);
         });
 
         struct sockaddr_in srv_addr;
@@ -83,12 +40,12 @@ namespace tink {
         inet_pton(ip_version_, "0.0.0.0", &srv_addr.sin_addr);
 //        srv_addr.sin_addr.s_addr = inet_addr("0.0.0.0");
         srv_addr.sin_port = htons(port_);
-        if (bind(srv_fd, (struct sockaddr*)&srv_addr, sizeof(srv_addr)) == -1) {
+        if (bind(listen_fd_, (struct sockaddr*)&srv_addr, sizeof(srv_addr)) == -1) {
             logger->info("bind socket error: %v(code:%v)\n", strerror(errno), errno);
             exit(1);
         }
 
-        if (listen(srv_fd, 20) == -1) {
+        if (listen(listen_fd_, 20) == -1) {
             logger->info("listen socket error: %v(code:%v)\n", strerror(errno), errno);
             exit(1);
         }
@@ -96,21 +53,19 @@ namespace tink {
 
         u_int cid = 0;
 
-        int epoll_fd;
-        epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+        epoll_fd_ = epoll_create1(EPOLL_CLOEXEC);
         struct epoll_event events[EPOLL_EVENTS_NUM];
-        byte *buf = new byte [MAX_BUF_SIZE];
-        add_event(epoll_fd, srv_fd, EPOLLIN);
+        OperateEvent(listen_fd_, EPOLL_CTL_ADD, EPOLLIN);
         int fd_num;
         for ( ; ; ) {
-            fd_num = epoll_wait(epoll_fd, events, EPOLL_EVENTS_NUM, -1);
-            handle_events(epoll_fd, events, fd_num, srv_fd, buf);
+            fd_num = epoll_wait(epoll_fd_, events, EPOLL_EVENTS_NUM, -1);
+            HandleEvents_(events, fd_num);
         }
 
         for(;;) {
             RemoteAddrPtr cli_addr(new sockaddr);
              socklen_t cli_add_size = sizeof(sockaddr);
-            int cli_fd = accept(srv_fd, cli_addr.get(), &cli_add_size);
+            int cli_fd = accept(listen_fd_, cli_addr.get(), &cli_add_size);
             if (cli_fd == -1) {
                 logger->info("accept socket error: %v(code:%v)\n", strerror(errno), errno);
                 continue;
@@ -148,21 +103,21 @@ namespace tink {
         return 0;
     }
 
-    void Server::handle_events(int epoll_fd, struct epoll_event *events, int event_num, int listen_fd, char *buf) {
+    void Server::HandleEvents_(struct epoll_event *events, int event_num) {
         int fd;
         for (int i = 0; i < event_num; i++) {
             fd = events[i].data.fd;
-            if ((fd == listen_fd) && (events[i].events & EPOLLIN)) {
-                handle_accept(epoll_fd,listen_fd);
+            if ((fd == listen_fd_) && (events[i].events & EPOLLIN)) {
+                HandleAccept_(listen_fd_);
             } else if (events[i].events & EPOLLIN) {
-                do_read(epoll_fd, fd);
+                DoRead_(fd);
             } else if (events[i].events & EPOLLOUT) {
-                do_write(epoll_fd, fd,buf);
+                DoWrite_(fd);
             }
         }
     }
 
-    void Server::handle_accept(int epoll_fd, int listen_fd)
+    void Server::HandleAccept_(int listen_fd)
     {
         static int cid = 0;
         int cli_fd;
@@ -177,12 +132,12 @@ namespace tink {
             ConnectionPtr conn(new Connection);
             conn->Init(cli_fd, cid, msg_handler_, cli_addr);
             //添加一个客户描述符和事件
-            add_event(epoll_fd, cli_fd, EPOLLIN);
+            OperateEvent(cli_fd, EPOLL_CTL_ADD, EPOLLIN);
             conn_map_.insert(std::pair<int, ConnectionPtr>(cli_fd, conn));
         }
     }
 
-    void Server::do_read(int epoll_fd, int fd)
+    void Server::DoRead_(int fd)
     {
         int head_len = DataPack::GetHeadLen();
         byte head_data[head_len];
@@ -190,9 +145,9 @@ namespace tink {
         IMessagePtr msg(new Message);
         memset(head_data, 0, head_len);
 
-        auto on_error = [&fd, &epoll_fd]  {
+        auto on_error = [&fd, this]  {
             close(fd);
-            delete_event(epoll_fd, fd, EPOLLIN);
+            OperateEvent(fd, EPOLL_CTL_DEL, EPOLLIN);
         };
 
         auto it = conn_map_.find(fd);
@@ -229,7 +184,7 @@ namespace tink {
             }
             msg->SetData(buf);
         }
-        modify_event(epoll_fd, fd, EPOLLOUT);
+//        modify_event(epoll_fd_, fd, EPOLLOUT);
 
         IRequestPtr req_ptr = std::make_shared<Request>(conn, msg);
         if (GlobalInstance->GetWorkerPoolSize() > 0) {
@@ -238,5 +193,33 @@ namespace tink {
             //msg_handler_->DoMsgHandle(req);
         }
 
+    }
+
+    void Server::DoWrite_(int fd)
+    {
+        int ret;
+        auto it = conn_map_.find(fd);
+        if (it == conn_map_.end()) {
+            return;
+        }
+        auto conn = it->second;
+        std::lock_guard<std::mutex> guard(conn->GetMutex());
+        ret = write(fd, conn->GetBuffer().get(), conn->GetBufferLen());
+        if (ret == -1)
+        {
+            logger->error("[writer] error:%v\n", strerror(errno));
+            close(fd);
+            OperateEvent(fd, EPOLL_CTL_DEL, EPOLLOUT);
+        }
+        else
+            OperateEvent(fd, EPOLL_CTL_MOD, EPOLLIN);
+        // delete buff???
+    }
+
+    void Server::OperateEvent(int fd, int op, int state) {
+        struct epoll_event ev;
+        ev.events = state;
+        ev.data.fd = fd;
+        epoll_ctl(epoll_fd_, op, fd, &ev);
     }
 }

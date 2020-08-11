@@ -2,13 +2,11 @@
 // Created by admin on 2020/5/20.
 //
 
-#include <cstdio>
 #include <unistd.h>
 #include <cstring>
 #include <connection.h>
 #include <server.h>
 #include <request.h>
-#include <connection.h>
 #include <global_mng.h>
 #include <arpa/inet.h>
 #include "datapack.h"
@@ -53,14 +51,14 @@ namespace tink {
     int Connection::Start() {
         logger->info("conn_ Start; conn_id:%v\n", conn_id_);
         // ¿ªÆô¶ÁÐ´Ïß³Ì
-        if (pthread_create(&writer_pid, NULL, StartWriter, new ConnectionPtr(shared_from_this())) != 0) {
-            logger->error("create writer thread error:%v\n", strerror(errno));
-            return E_FAILED;
-        }
-        if (pthread_create(&reader_pid, NULL, StartReader, new ConnectionPtr(shared_from_this())) != 0) {
-            logger->error("create reader thread error:%v\n", strerror(errno));
-            return E_FAILED;
-        }
+        //        if (pthread_create(&writer_pid, NULL, StartWriter, new ConnectionPtr(shared_from_this())) != 0) {
+        //            logger->error("create writer thread error:%v\n", strerror(errno));
+        //            return E_FAILED;
+        //        }
+        //        if (pthread_create(&reader_pid, NULL, StartReader, new ConnectionPtr(shared_from_this())) != 0) {
+        //            logger->error("create reader thread error:%v\n", strerror(errno));
+        //            return E_FAILED;
+        //        }
         return 0;
     }
 
@@ -68,9 +66,19 @@ namespace tink {
         if (is_close_) {
             return E_CONN_CLOSED;
         }
-        std::shared_ptr<Message> msg = std::make_shared<Message>();
-        msg->Init(msg_id, data_len, data);
-        msg_queue.Push(msg);
+//        std::shared_ptr<Message> msg = std::make_shared<Message>();
+//        msg->Init(msg_id, data_len, data);
+//        msg_queue.Push(msg);
+        std::lock_guard<std::mutex> guard(mutex_);
+        Message msg;
+        msg.Init(msg_id, data_len, data);
+        byte *buff;
+        uint32_t len;
+        DataPack::Pack(msg, &buff, &len);
+        buffer_ = std::make_shared<byte>(len);
+        memcpy(buffer_.get(), buff, len);
+        buffer_size_ = len;
+        GlobalInstance->GetServer()->OperateEvent(conn_fd_, EPOLL_CTL_ADD, EPOLLOUT);
         return 0;
     }
 
@@ -163,8 +171,20 @@ namespace tink {
         return nullptr;
     }
 
-    const IMessageHandlerPtr &Connection::GetMsgHandler() const {
+    const IMessageHandlerPtr &Connection::GetMsgHandler() {
         return msg_handler_;
+    }
+
+    BytePtr &Connection::GetBuffer() {
+        return buffer_;
+    }
+
+    uint32_t Connection::GetBufferLen() {
+        return buffer_size_;
+    }
+
+    std::mutex &Connection::GetMutex() {
+        return mutex_;
     }
 
 }

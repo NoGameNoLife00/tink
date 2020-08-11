@@ -7,6 +7,7 @@
 
 #include "irequest.h"
 namespace  tink{
+    class IRequest;
     class IRouter {
     public:
         // 处理conn业务之前的hook
@@ -16,7 +17,7 @@ namespace  tink{
         // 处理conn业务之后的hook
         virtual int PostHandle(IRequest &request) = 0;
     };
-    typedef std::shared_ptr<IRouter> IRouterPtr;
+
 }
 
 

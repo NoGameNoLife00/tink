@@ -19,11 +19,12 @@ namespace tink {
         int Run();
         int Stop();
         int AddRouter(uint32_t msg_id, std::shared_ptr<IRouter> &router);
-
+        void OperateEvent(int fd, int op, int state);
     private:
-        void handle_accept(int epoll_fd, int listen_fd);
-        void handle_events(int epoll_fd, struct epoll_event *events, int event_num, int listen_fd, char *buf);
-        void do_read(int epoll_fd, int fd);
+        void HandleAccept_(int listen_fd);
+        void HandleEvents_(struct epoll_event *events, int event_num);
+        void DoRead_(int fd);
+        void DoWrite_(int fd);
         StringPtr name_;
         StringPtr ip_;
         int ip_version_;
@@ -31,6 +32,8 @@ namespace tink {
         IMessageHandlerPtr msg_handler_;
         typedef std::unordered_map<int, IConnectionPtr> ConnectionMap;
         ConnectionMap conn_map_;
+        int epoll_fd_;
+        int listen_fd_;
     };
 }
 

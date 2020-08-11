@@ -9,6 +9,9 @@
 #include <type.h>
 
 namespace tink {
+    class IConnection;
+    typedef std::shared_ptr<IConnection> IConnectionPtr;
+
     class IRequest {
     public:
         // 获取当前连接
@@ -23,7 +26,6 @@ namespace tink {
         virtual ~IRequest() {};
     };
 
-    typedef std::shared_ptr<IRequest> IRequestPtr;
 }
 
 
