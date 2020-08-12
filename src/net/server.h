@@ -7,6 +7,7 @@
 #include <imessage_handler.h>
 #include <sys/epoll.h>
 #include <unordered_map>
+#include <map>
 
 namespace tink {
 
@@ -30,7 +31,7 @@ namespace tink {
         int ip_version_;
         int port_;
         IMessageHandlerPtr msg_handler_;
-        typedef std::unordered_map<int, IConnectionPtr> ConnectionMap;
+        typedef std::map<int, IConnectionPtr> ConnectionMap;
         ConnectionMap conn_map_;
         int epoll_fd_;
         int listen_fd_;

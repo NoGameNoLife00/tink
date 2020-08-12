@@ -199,8 +199,10 @@ namespace tink {
     void Server::DoWrite_(int fd)
     {
         int ret;
-        logger->info("conn_map size:%v", conn_map_);
-
+        logger->info("conn_map size:%v", conn_map_.size());
+        for (auto&& conn : conn_map_) {
+            logger->info("conn %v", conn.second->GetConnId());
+        }
         auto it = conn_map_.find(fd);
         if (it == conn_map_.end()) {
             return;
