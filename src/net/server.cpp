@@ -199,13 +199,17 @@ namespace tink {
     void Server::DoWrite_(int fd)
     {
         int ret;
+        logger->info("conn_map size:%v", conn_map_);
+
         auto it = conn_map_.find(fd);
         if (it == conn_map_.end()) {
             return;
         }
         auto conn = it->second;
         std::lock_guard<std::mutex> guard(conn->GetMutex());
-        ret = write(fd, conn->GetBuffer().get(), conn->GetBufferLen());
+        ret = write(fd, conn->GetBuffer().get(), conn->GetBuffOffset());
+        conn->SetBuffOffset(0);
+        memset(conn->GetBuffer().get(), 0, conn->GetBufferLen());
         if (ret == -1)
         {
             logger->error("[writer] error:%v\n", strerror(errno));

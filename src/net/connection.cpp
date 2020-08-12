@@ -13,6 +13,7 @@
 #include "message.h"
 #include <pthread.h>
 
+#define BUFF_MAX_SIZE_COUNt 1
 namespace tink {
     IMessageQueue Connection::msg_queue;
     int Connection::Init(int conn_fd, int id, IMessageHandlerPtr &msg_handler, RemoteAddrPtr &addr) {
@@ -21,6 +22,8 @@ namespace tink {
         this->msg_handler_ = msg_handler;
         this->is_close_ = false;
         this->remote_addr_ = addr;
+        this->buffer_size_ = GlobalInstance->GetMaxPackageSize() * BUFF_MAX_SIZE_COUNt;
+        this->buffer_ = std::make_shared<byte>(buffer_size_);
         return 0;
     }
 
@@ -31,21 +34,9 @@ namespace tink {
         }
         // 关闭读写线程
         is_close_ = true;
-        // 回收socket
+        // 回收sockets
         close(conn_fd_);
         return E_OK;
-    }
-
-    int Connection::GetTcpConn() {
-        return this->conn_fd_;
-    }
-
-    int Connection::GetConnId() {
-        return  this->conn_id_;
-    }
-
-    RemoteAddrPtr Connection::GetRemoteAddr() {
-        return this->remote_addr_;
     }
 
     int Connection::Start() {
@@ -75,11 +66,14 @@ namespace tink {
         byte *buff;
         uint32_t len;
         DataPack::Pack(msg, &buff, &len);
-        buffer_ = std::make_shared<byte>(len);
-        memcpy(buffer_.get(), buff, len);
-        buffer_size_ = len;
+        if (len + buff_offset_ > buffer_size_) {
+            return E_CONN_BUFF_OVERSIZE;
+        }
+        memcpy(buffer_.get() + buff_offset_, buff, len);
+        buff_offset_ += len;
+        delete buff;
         GlobalInstance->GetServer()->OperateEvent(conn_fd_, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
-        return 0;
+        return E_OK;
     }
 
     void Connection::SetReaderPid(pid_t readerPid) {
@@ -171,20 +165,7 @@ namespace tink {
         return nullptr;
     }
 
-    const IMessageHandlerPtr &Connection::GetMsgHandler() {
-        return msg_handler_;
+    Connection::~Connection() {
+        logger->info("conn %v is destruction", conn_id_);
     }
-
-    BytePtr &Connection::GetBuffer() {
-        return buffer_;
-    }
-
-    uint32_t Connection::GetBufferLen() {
-        return buffer_size_;
-    }
-
-    std::mutex &Connection::GetMutex() {
-        return mutex_;
-    }
-
 }

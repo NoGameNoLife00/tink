@@ -38,6 +38,10 @@ namespace tink {
 
         virtual uint32_t GetBufferLen() {return 0;};
 
+        virtual uint32_t GetBuffOffset() {return 0;};
+
+        virtual void SetBuffOffset(uint32_t offset) {};
+
         virtual const IMessageHandlerPtr &GetMsgHandler() = 0;
 
         virtual std::mutex& GetMutex() = 0;

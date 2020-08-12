@@ -26,26 +26,33 @@ namespace tink {
         // 停止链接
         int Stop();
         // 获取链接的socket
-        int GetTcpConn();
+        int GetTcpConn() {return conn_fd_;};
         // 获取链接id
-        int GetConnId();
+        int GetConnId() {return conn_id_;};
 
-        BytePtr& GetBuffer();
+        BytePtr& GetBuffer() {return buffer_;};
 
-        uint32_t GetBufferLen();
+        uint32_t GetBufferLen() {return buffer_size_;};
+
+        uint32_t GetBuffOffset() {return buff_offset_;};
+
+        void SetBuffOffset(uint32_t offset) {
+            buff_offset_ = offset;
+        };
 
         void SetReaderPid(pid_t readerPid);
 
-        const IMessageHandlerPtr &GetMsgHandler();
+        const IMessageHandlerPtr &GetMsgHandler() { return msg_handler_;};
 
         // 获取客户端的tcp状态 ip port
-        RemoteAddrPtr GetRemoteAddr();
+        RemoteAddrPtr GetRemoteAddr() { return remote_addr_;};
 
         // 发送Msg包到写线程
         int SendMsg(uint32_t msg_id, BytePtr &data, uint32_t data_len);
 
-        std::mutex &GetMutex();
+        std::mutex &GetMutex() { return mutex_;};
 
+        ~Connection();
     private:
         static IMessageQueue msg_queue;
         pthread_t writer_pid;
@@ -59,6 +66,7 @@ namespace tink {
 
         uint32_t buffer_size_;
         BytePtr buffer_;
+        uint32_t buff_offset_;
         std::mutex mutex_;
     };
     typedef std::shared_ptr<Connection> ConnectionPtr;

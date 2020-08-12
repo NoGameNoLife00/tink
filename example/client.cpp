@@ -13,6 +13,7 @@
 #define MAX_BUF_SIZE 1024
 int main() {
     printf("client Start...");
+    setbuf(stdout, NULL); // debug
     sleep(1);
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in addr;

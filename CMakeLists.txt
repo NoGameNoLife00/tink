@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.1)
 
 
 
@@ -22,6 +22,7 @@ add_subdirectory(libs/googletest)
 add_subdirectory(test)
 add_subdirectory(example)
 add_subdirectory(app)
+
 #file(GLOB_RECURSE SOURCES LIST_DIRECTORIES true *.h *.cpp)
 
 

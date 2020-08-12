@@ -13,7 +13,8 @@ include_directories(utils)
 
 file(GLOB_RECURSE SOURCES LIST_DIRECTORIES true *.h *.cpp)
 set(SOURCES  ../libs/cjson/cJSON.c ../libs/easyloggingpp/easylogging++.cc ${SOURCES})
-add_definitions(-D_ELPP_THREAD_SAFE)
+add_definitions(-D_ELPP_THREAD_SAFE -D_ELPP_STL_LOGGING)
+add_definitions(-std=c++11)
 #add_executable(${BINARY}_run ${SOURCES})
 # 将框架代码作为静态链接库使用
 add_library(${BINARY}_lib STATIC ${SOURCES})
