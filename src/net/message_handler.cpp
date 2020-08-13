@@ -74,7 +74,7 @@ namespace tink {
         // 平均分配给TaskQueue (暂时按客户端connId分配
         int conn_id = request->GetConnection()->GetConnId();
         int workerId = conn_id % worker_pool_size;
-        logger->info("add conn_id = %v, request msg_id =%v to worker_id=%v", conn_id, request->GetMsgId(), workerId);
+//        logger->info("add conn_id = %v, request msg_id =%v to worker_id=%v", conn_id, request->GetMsgId(), workerId);
         task_queue[workerId]->Push(request);
         return 0;
     }

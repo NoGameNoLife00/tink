@@ -23,7 +23,7 @@ namespace tink {
         this->is_close_ = false;
         this->remote_addr_ = addr;
         this->buffer_size_ = GlobalInstance->GetMaxPackageSize() * BUFF_MAX_SIZE_COUNt;
-        this->buffer_ = std::make_shared<byte>(buffer_size_);
+        this->buffer_ = std::make_unique<byte>(buffer_size_);
         return 0;
     }
 
@@ -81,91 +81,91 @@ namespace tink {
     }
 
     void *Connection::StartWriter(void *ptr) {
-        ConnectionPtr conn = *static_cast<ConnectionPtr*>(ptr);
-        delete static_cast<ConnectionPtr*>(ptr);
-//        Connection *conn = static_cast<Connection*>(conn_ptr);
-        if (!conn) {
-            logger->error("[writer] thread run error, conn_ptr is null\n");
-            return nullptr;
-        }
-        char *addr_str = inet_ntoa(((struct sockaddr_in*) conn->GetRemoteAddr().get())->sin_addr);
-        int conn_id = conn->GetConnId();
-        int conn_fd = conn->GetTcpConn();
-        logger->info("[writer] thread is running, conn_id=%v, client addr=%v\n", conn->GetConnId(), addr_str);
-        DataPack dp;
-        while (true) {
-            byte *read_buf;
-            uint32_t buf_size;
-            IMessagePtr msg;
-            msg_queue.Pop(msg, true);
-            dp.Pack(*msg, &read_buf, &buf_size);
-
-            if (msg->GetId() == -1) {
-                logger->warn("[writer] read exit msg: conn_id=%v", conn->GetConnId() );
-                break;
-            }
-
-            if (send(conn_fd, read_buf, buf_size, 0) == -1) {
-                logger->error("[writer] send msg error %v\n", strerror(errno));
-                break;
-            }
-        }
-
-        logger->info("[writer] thread exit, conn_id=%v, client_addr=%v", conn_id, addr_str);
+//        ConnectionPtr conn = *static_cast<ConnectionPtr*>(ptr);
+//        delete static_cast<ConnectionPtr*>(ptr);
+////        Connection *conn = static_cast<Connection*>(conn_ptr);
+//        if (!conn) {
+//            logger->error("[writer] thread run error, conn_ptr is null\n");
+//            return nullptr;
+//        }
+//        char *addr_str = inet_ntoa(((struct sockaddr_in*) conn->GetRemoteAddr().get())->sin_addr);
+//        int conn_id = conn->GetConnId();
+//        int conn_fd = conn->GetTcpConn();
+//        logger->info("[writer] thread is running, conn_id=%v, client addr=%v\n", conn->GetConnId(), addr_str);
+//        DataPack dp;
+//        while (true) {
+//            byte *read_buf;
+//            uint32_t buf_size;
+//            IMessagePtr msg;
+//            msg_queue.Pop(msg, true);
+//            dp.Pack(*msg, &read_buf, &buf_size);
+//
+//            if (msg->GetId() == -1) {
+//                logger->warn("[writer] read exit msg: conn_id=%v", conn->GetConnId() );
+//                break;
+//            }
+//
+//            if (send(conn_fd, read_buf, buf_size, 0) == -1) {
+//                logger->error("[writer] send msg error %v\n", strerror(errno));
+//                break;
+//            }
+//        }
+//
+//        logger->info("[writer] thread exit, conn_id=%v, client_addr=%v", conn_id, addr_str);
         return nullptr;
     }
 
     void *Connection::StartReader(void *ptr) {
-        ConnectionPtr conn = *static_cast<ConnectionPtr*>(ptr);
-        delete static_cast<ConnectionPtr*>(ptr);
-        if (!conn) {
-            logger->info("[reader] thread run error, conn_ptr is null\n");
-            return nullptr;
-        }
-
-        logger->info("[reader] thread is running\n");
-        DataPack dp;
-        std::shared_ptr<byte> head_data(new byte[dp.GetHeadLen()] {0});
-        int conn_fd = conn->GetTcpConn();
-        while (true) {
-            // 读取客户端的数据到buf中
-            std::shared_ptr<IMessage> msg(new Message);
-            // 读取客户端发送的包头
-            memset(head_data.get(), 0, dp.GetHeadLen());
-            if ((read(conn_fd, head_data.get(), dp.GetHeadLen())) == -1) {
-                logger->warn("[reader] msg head error:%v\n", strerror(errno));
-                break;
-            }
-            int e_code = dp.Unpack(head_data.get(), *msg.get());
-            if (e_code != E_OK) {
-                logger->warn("[reader] unpack error: %v\n", e_code);
-                break;
-            }
-            // 根据dataLen，再读取Data,放入msg中
-            if (msg->GetDataLen() > 0) {
-                std::shared_ptr<byte> buf(new byte[msg->GetDataLen()] {0});
-                if ((read(conn_fd, buf.get(), msg->GetDataLen()) == -1)) {
-                    logger->warn("[reader] msg data error:%v\n", strerror(errno));
-                    break;
-                }
-                msg->SetData(buf);
-            }
-
-            IRequestPtr req_ptr = std::make_shared<Request>(conn, msg);
-            if (GlobalInstance->GetWorkerPoolSize() > 0) {
-                conn->GetMsgHandler()->SendMsgToTaskQueue(req_ptr);
-            } else {
-//                msg_handler_->DoMsgHandle(req);
-            }
-        }
-        IMessagePtr close_msg(new Message);
-        close_msg->SetId(-1);
-        close_msg->SetDataLen(0);
-        msg_queue.Push(close_msg);
+//        ConnectionPtr conn = *static_cast<ConnectionPtr*>(ptr);
+//        delete static_cast<ConnectionPtr*>(ptr);
+//        if (!conn) {
+//            logger->info("[reader] thread run error, conn_ptr is null\n");
+//            return nullptr;
+//        }
+//
+//        logger->info("[reader] thread is running\n");
+//        DataPack dp;
+//        std::shared_ptr<byte> head_data(new byte[dp.GetHeadLen()] {0});
+//        int conn_fd = conn->GetTcpConn();
+//        while (true) {
+//            // 读取客户端的数据到buf中
+//            std::shared_ptr<IMessage> msg(new Message);
+//            // 读取客户端发送的包头
+//            memset(head_data.get(), 0, dp.GetHeadLen());
+//            if ((read(conn_fd, head_data.get(), dp.GetHeadLen())) == -1) {
+//                logger->warn("[reader] msg head error:%v\n", strerror(errno));
+//                break;
+//            }
+//            int e_code = dp.Unpack(head_data.get(), *msg.get());
+//            if (e_code != E_OK) {
+//                logger->warn("[reader] unpack error: %v\n", e_code);
+//                break;
+//            }
+//            // 根据dataLen，再读取Data,放入msg中
+//            if (msg->GetDataLen() > 0) {
+//                std::shared_ptr<byte> buf(new byte[msg->GetDataLen()] {0});
+//                if ((read(conn_fd, buf.get(), msg->GetDataLen()) == -1)) {
+//                    logger->warn("[reader] msg data error:%v\n", strerror(errno));
+//                    break;
+//                }
+//                msg->SetData(buf);
+//            }
+//
+//            IRequestPtr req_ptr = std::make_shared<Request>(std::dynamic_pointer_cast<IConnection>(conn), msg);
+//            if (GlobalInstance->GetWorkerPoolSize() > 0) {
+//                conn->GetMsgHandler()->SendMsgToTaskQueue(req_ptr);
+//            } else {
+////                msg_handler_->DoMsgHandle(req);
+//            }
+//        }
+//        IMessagePtr close_msg(new Message);
+//        close_msg->SetId(-1);
+//        close_msg->SetDataLen(0);
+//        msg_queue.Push(close_msg);
         return nullptr;
     }
 
     Connection::~Connection() {
-        logger->info("conn %v is destruction", conn_id_);
+        logger->debug("conn %v is destruction", conn_id_);
     }
 }

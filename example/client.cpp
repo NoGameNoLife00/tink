@@ -26,7 +26,7 @@ int main() {
         printf("client connect error %s\n", strerror(errno));
         return 0;
     }
-    std::shared_ptr<char> str_buf(new char[MAX_BUF_SIZE]);
+    BytePtr str_buf(new char[MAX_BUF_SIZE]);
     int recv_size = 0;
     tink::DataPack dp;
     while (true) {
@@ -54,7 +54,7 @@ int main() {
         }
         dp.Unpack(msg_head, recv_msg);
         if (recv_msg.GetDataLen() > 0) {
-            std::shared_ptr<char> data(new char[recv_msg.GetDataLen()]);
+            BytePtr data(new char[recv_msg.GetDataLen()]);
             if ((recv(fd, data.get(), recv_msg.GetDataLen(), 0)) == -1) {
                 printf("client recv msg data error %s\n", strerror(errno));
                 return 0;

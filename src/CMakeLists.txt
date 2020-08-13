@@ -20,7 +20,7 @@ add_definitions(-D_ELPP_THREAD_SAFE
         -D_ELPP_LOG_STD_ARRAY
         -D_ELPP_LOG_UNORDERED_SET)
 
-add_definitions(-std=c++11)
+#add_definitions(-std=c++11)
 #add_executable(${BINARY}_run ${SOURCES})
 # 将框架代码作为静态链接库使用
 add_library(${BINARY}_lib STATIC ${SOURCES})

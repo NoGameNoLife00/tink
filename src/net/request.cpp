@@ -1,8 +1,9 @@
 #include <request.h>
+#include <global_mng.h>
+
 namespace tink {
-    Request::Request(std::shared_ptr<IConnection> conn, IMessagePtr &msg) {
-        this->conn_ = conn;
-        this->msg_ = msg;
+    Request::Request(IConnectionPtr &conn, IMessagePtr& msg) :conn_(conn) {
+        msg_ = std::move(msg);
     }
 
     IConnectionPtr & Request::GetConnection() {
@@ -15,6 +16,10 @@ namespace tink {
 
     int32_t Request::GetMsgId() {
         return msg_->GetId();
+    }
+
+    Request::~Request() {
+        logger->debug("request destruction msg_id:%v, conn_id:%v", GetMsgId(), conn_->GetConnId());
     }
 }
 

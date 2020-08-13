@@ -143,7 +143,11 @@ namespace tink {
         int head_len = DataPack::GetHeadLen();
         byte head_data[head_len];
         // 读取客户端的数据到buf中
-        IMessagePtr msg(new Message);
+//        IMessagePtr msg(new Message(), [](IMessage *r){
+//            logger->debug("request delete %v", r->GetId());
+//            delete r;
+//        });
+        IMessagePtr msg = std::make_unique<Message>();
         memset(head_data, 0, head_len);
 
         auto on_error = [&fd, this]  {
@@ -177,7 +181,7 @@ namespace tink {
         }
         // 根据dataLen，再读取Data,放入msg中
         if (msg->GetDataLen() > 0) {
-            BytePtr buf(new byte[msg->GetDataLen()] {0});
+            BytePtr buf = std::make_unique<byte>(msg->GetDataLen());
             if ((read(fd, buf.get(), msg->GetDataLen()) == -1)) {
                 logger->warn("[reader] msg data error:%v\n", strerror(errno));
                 on_error();
@@ -187,7 +191,7 @@ namespace tink {
         }
 //        modify_event(epoll_fd_, fd, EPOLLOUT);
 
-        IRequestPtr req_ptr = std::make_shared<Request>(conn, msg);
+        IRequestPtr req_ptr = std::make_shared<Request>(conn,msg);
         if (GlobalInstance->GetWorkerPoolSize() > 0) {
             conn->GetMsgHandler()->SendMsgToTaskQueue(req_ptr);
         } else {
@@ -199,10 +203,6 @@ namespace tink {
     void Server::DoWrite_(int fd)
     {
         int ret;
-        logger->info("conn_map size:%v", conn_map_.size());
-        for (auto&& conn : conn_map_) {
-            logger->info("conn %v", conn.second->GetConnId());
-        }
         auto it = conn_map_.find(fd);
         if (it == conn_map_.end()) {
             return;

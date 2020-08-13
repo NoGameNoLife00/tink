@@ -8,7 +8,9 @@
 #include <memory>
 
 typedef char byte;
-typedef std::shared_ptr<byte> BytePtr;
+//typedef std::shared_ptr<byte> BytePtr;
+typedef std::unique_ptr<byte> BytePtr;
+
 typedef std::shared_ptr<std::string> StringPtr;
 typedef std::shared_ptr<struct sockaddr> RemoteAddrPtr;
 #endif //TINK_TYPE_H
