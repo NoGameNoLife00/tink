@@ -12,7 +12,7 @@
 
 #define MAX_BUF_SIZE 1024
 int main() {
-    printf("client Start...");
+    printf("client Start...\n");
     setbuf(stdout, NULL); // debug
     sleep(1);
     int fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -26,11 +26,11 @@ int main() {
         printf("client connect error %s\n", strerror(errno));
         return 0;
     }
-    BytePtr str_buf(new char[MAX_BUF_SIZE]);
+
     int recv_size = 0;
     tink::DataPack dp;
     while (true) {
-        memset(str_buf.get(), 0, MAX_BUF_SIZE);
+        BytePtr str_buf(new char[MAX_BUF_SIZE]);
         scanf("%s", str_buf.get());
 //        strcpy(str_buf.get(), "hello world");
         // 发送msg给客户端

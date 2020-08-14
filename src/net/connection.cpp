@@ -23,7 +23,7 @@ namespace tink {
         this->is_close_ = false;
         this->remote_addr_ = addr;
         this->buffer_size_ = GlobalInstance->GetMaxPackageSize() * BUFF_MAX_SIZE_COUNt;
-        this->buffer_ = std::make_unique<byte>(buffer_size_);
+        this->buffer_ = std::make_unique<byte[]>(buffer_size_);
         return 0;
     }
 

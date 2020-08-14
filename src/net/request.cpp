@@ -20,6 +20,7 @@ namespace tink {
 
     Request::~Request() {
         logger->debug("request destruction msg_id:%v, conn_id:%v", GetMsgId(), conn_->GetConnId());
+//        logger->debug("request destruction");
     }
 }
 

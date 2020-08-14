@@ -141,14 +141,10 @@ namespace tink {
     void Server::DoRead_(int fd)
     {
         int head_len = DataPack::GetHeadLen();
-        byte head_data[head_len];
+        BytePtr head_data = std::make_unique<byte[]>(head_len);
+        memset(head_data.get(), 0, head_len);
         // 读取客户端的数据到buf中
-//        IMessagePtr msg(new Message(), [](IMessage *r){
-//            logger->debug("request delete %v", r->GetId());
-//            delete r;
-//        });
         IMessagePtr msg = std::make_unique<Message>();
-        memset(head_data, 0, head_len);
 
         auto on_error = [&fd, this]  {
             close(fd);
@@ -163,7 +159,7 @@ namespace tink {
         }
         IConnectionPtr conn = it->second;
         // 读取客户端发送的包头
-        int ret = read(fd, head_data, head_len);
+        int ret = read(fd, head_data.get(), head_len);
         if (ret == -1) {
             logger->error("[reader] msg head error:%v\n", strerror(errno));
             on_error();
@@ -173,7 +169,7 @@ namespace tink {
             on_error();
             return;
         }
-        ret = DataPack::Unpack(head_data, *msg.get());
+        ret = DataPack::Unpack(head_data.get(), *msg.get());
         if (ret != E_OK) {
             logger->warn("[reader] unpack error: %v\n", ret);
             on_error();
@@ -181,7 +177,8 @@ namespace tink {
         }
         // 根据dataLen，再读取Data,放入msg中
         if (msg->GetDataLen() > 0) {
-            BytePtr buf = std::make_unique<byte>(msg->GetDataLen());
+            logger->debug("msg data len:%v", msg->GetDataLen());
+            BytePtr buf = std::make_unique<byte[]>(msg->GetDataLen());
             if ((read(fd, buf.get(), msg->GetDataLen()) == -1)) {
                 logger->warn("[reader] msg data error:%v\n", strerror(errno));
                 on_error();
