@@ -68,6 +68,8 @@ namespace tink {
         BytePtr buffer_;
         uint32_t buff_offset_;
         std::mutex mutex_;
+        BytePtr tmp_buffer_;
+        uint32_t tmp_buffer_size_;
     };
     typedef std::shared_ptr<Connection> ConnectionPtr;
 }

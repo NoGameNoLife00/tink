@@ -26,7 +26,8 @@ int main() {
         printf("client connect error %s\n", strerror(errno));
         return 0;
     }
-
+    BytePtr out = std::make_unique<byte[]>(MAX_BUF_SIZE);
+    uint32_t out_len;
     int recv_size = 0;
     tink::DataPack dp;
     while (true) {
@@ -36,19 +37,17 @@ int main() {
         // 发送msg给客户端
         tink::Message msg;
         msg.Init(0,strlen(str_buf.get())+1, str_buf);
-        char *out;
-        uint out_len;
-        dp.Pack(msg, &out, &out_len);
-        if (send(fd, out, out_len, 0) == -1) {
+
+        dp.Pack(msg, out, out_len);
+        if (send(fd, out.get(), out_len, 0) == -1) {
             printf("client Send msg error %s\n", strerror(errno));
             break;
         }
-        delete [] out;
 
-        char * msg_head = new char[dp.GetHeadLen()];
+        BytePtr msg_head = std::make_unique<byte[]>(dp.GetHeadLen());
         tink::Message recv_msg;
 
-        if ((recv(fd, msg_head, dp.GetHeadLen(), 0)) == -1) {
+        if ((recv(fd, msg_head.get(), dp.GetHeadLen(), 0)) == -1) {
             printf("client recv msg head error %s\n", strerror(errno));
             return 0;
         }

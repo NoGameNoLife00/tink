@@ -13,7 +13,7 @@
 #include "message.h"
 #include <pthread.h>
 
-#define BUFF_MAX_SIZE_COUNt 1
+#define BUFF_MAX_SIZE_COUNt 16
 namespace tink {
     IMessageQueue Connection::msg_queue;
     int Connection::Init(int conn_fd, int id, IMessageHandlerPtr &msg_handler, RemoteAddrPtr &addr) {
@@ -24,6 +24,8 @@ namespace tink {
         this->remote_addr_ = addr;
         this->buffer_size_ = GlobalInstance->GetMaxPackageSize() * BUFF_MAX_SIZE_COUNt;
         this->buffer_ = std::make_unique<byte[]>(buffer_size_);
+        this->tmp_buffer_size_ = GlobalInstance->GetMaxPackageSize()+DataPack::GetHeadLen();
+        this->tmp_buffer_ = std::make_unique<byte[]>(tmp_buffer_size_);
         return 0;
     }
 
@@ -63,15 +65,14 @@ namespace tink {
         std::lock_guard<std::mutex> guard(mutex_);
         Message msg;
         msg.Init(msg_id, data_len, data);
-        byte *buff;
         uint32_t len;
-        DataPack::Pack(msg, &buff, &len);
+        memset(tmp_buffer_.get(), 0, tmp_buffer_size_);
+        DataPack::Pack(msg, tmp_buffer_, len);
         if (len + buff_offset_ > buffer_size_) {
             return E_CONN_BUFF_OVERSIZE;
         }
-        memcpy(buffer_.get() + buff_offset_, buff, len);
+        memcpy(buffer_.get() + buff_offset_, tmp_buffer_.get(), len);
         buff_offset_ += len;
-        delete buff;
         GlobalInstance->GetServer()->OperateEvent(conn_fd_, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
         return E_OK;
     }

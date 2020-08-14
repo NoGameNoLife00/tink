@@ -5,12 +5,13 @@
 #include <global_mng.h>
 #include <imessage_handler.h>
 #include <message_handler.h>
+#include <memory>
 
 TEST(datapackTest, test1) {
     auto globalObj = GlobalInstance;
     tink::DataPack dp;
     tink::Message msg;
-    std::shared_ptr<byte> buf(new byte[5] {'t','i','n','k','\0'});
+    BytePtr buf(new byte[5] {'t','i','n','k','\0'});
     std::shared_ptr<tink::IMessageHandler> msg_handler(new tink::MessageHandler);
 
     msg.SetId(1);
@@ -18,9 +19,9 @@ TEST(datapackTest, test1) {
     msg.SetData(buf);
 
 //    std::shared_ptr<tink::Message> msg_ptr(&msg);
-    byte * out;
+    BytePtr out(new byte[1024]);
     uint out_len;
-    dp.Pack(msg, &out, &out_len);
+    dp.Pack(msg, out, out_len);
 
 
     tink::Message out_msg;

@@ -10,8 +10,8 @@
 #include <scope_guard.h>
 #include <type.h>
 #include <message.h>
-#include "datapack.h"
-#include "request.h"
+#include <datapack.h>
+#include <request.h>
 
 #define EPOLL_EVENTS_NUM 100
 #define MAX_BUF_SIZE 2048
@@ -169,7 +169,7 @@ namespace tink {
             on_error();
             return;
         }
-        ret = DataPack::Unpack(head_data.get(), *msg.get());
+        ret = DataPack::Unpack(head_data, *msg.get());
         if (ret != E_OK) {
             logger->warn("[reader] unpack error: %v\n", ret);
             on_error();

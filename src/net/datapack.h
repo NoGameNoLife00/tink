@@ -7,9 +7,9 @@ namespace tink {
     public:
         static uint32_t GetHeadLen();
 
-        static int Unpack(byte *data, IMessage &msg);
+        static int Unpack(BytePtr &data, IMessage &msg);
 
-        static int Pack(IMessage &msg, byte **data, uint32_t *data_len);
+        static int Pack(IMessage &msg, BytePtr &data, uint32_t &data_len);
     };
 }
 
