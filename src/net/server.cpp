@@ -60,6 +60,7 @@ namespace tink {
             // 判断最大连接数
             if (conn_mng_->Size() >= GlobalInstance->GetMaxConn()) {
                 // TODO 发送连接失败消息
+                logger->warn("too many connections max_conn=%v", GlobalInstance->GetMaxConn());
                 close(cli_fd);
                 continue;
             }
