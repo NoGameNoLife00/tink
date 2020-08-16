@@ -4,7 +4,7 @@
 #include "conn_manager.h"
 
 namespace tink {
-    void ConnManager::Add(tink::IConnectionPtr &conn) {
+    void ConnManager::Add(IConnectionPtr &&conn) {
         {
             std::lock_guard<std::mutex> guard(mutex_);
             conn_map_.insert(std::pair<uint32_t, IConnectionPtr>(conn->GetConnId(), conn));
@@ -12,7 +12,7 @@ namespace tink {
         logger->info("conn add to mgr successfully: conn_id =%v, size=%v", conn->GetConnId(), Size());
     }
 
-    void ConnManager::Remove(tink::IConnectionPtr &conn) {
+    void ConnManager::Remove(IConnectionPtr &&conn) {
         {
             std::lock_guard<std::mutex> guard(mutex_);
             conn_map_.erase(conn->GetConnId());

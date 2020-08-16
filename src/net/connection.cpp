@@ -17,12 +17,14 @@
 
 namespace tink {
     IMessageQueue Connection::msg_queue;
-    int Connection::Init(int conn_fd, int id, IMessageHandlerPtr &msg_handler, RemoteAddrPtr &addr) {
+    int Connection::Init(IServerPtr &&server, int conn_fd, int id, IMessageHandlerPtr &msg_handler, RemoteAddrPtr &addr) {
+        this->server = server;
         this->conn_fd_ = conn_fd;
         this->conn_id_ = id;
         this->msg_handler_ = msg_handler;
         this->is_close_ = false;
         this->remote_addr_ = addr;
+        this->server->GetConnMng()->Add(std::dynamic_pointer_cast<IConnection>(shared_from_this()));
         return 0;
     }
 
@@ -33,6 +35,9 @@ namespace tink {
         }
         // 关闭读写线程
         is_close_ = true;
+
+        server->GetConnMng()->Remove(std::dynamic_pointer_cast<IConnection>(shared_from_this()));
+
         // 回收socket
         close(conn_fd_);
         return E_OK;

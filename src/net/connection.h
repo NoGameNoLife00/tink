@@ -8,6 +8,7 @@
 #include <imessage_handler.h>
 #include <message_queue.h>
 #include <imessage.h>
+#include <iserver.h>
 
 namespace tink {
     typedef MessageQueue<IMessagePtr> IMessageQueue;
@@ -21,7 +22,7 @@ namespace tink {
         static void* StartWriter(void* conn_ptr);
         static void* StartReader(void* conn_ptr);
 
-        int Init(int conn_fd, int id, IMessageHandlerPtr &msg_handler, RemoteAddrPtr &addr);
+        int Init(IServerPtr &&server, int conn_fd, int id, IMessageHandlerPtr &msg_handler, RemoteAddrPtr &addr);
 
         int Start();
         // 停止链接
@@ -51,6 +52,8 @@ namespace tink {
         RemoteAddrPtr remote_addr_;
         // 消息管理器
         IMessageHandlerPtr msg_handler_;
+        // 所属server
+        IServerPtr server;
     };
     typedef std::shared_ptr<Connection> ConnectionPtr;
 }

@@ -6,6 +6,8 @@
 
 #include <memory>
 #include "irouter.h"
+#include "iconn_manager.h"
+
 namespace tink {
     class IServer {
     public:
@@ -20,8 +22,10 @@ namespace tink {
         virtual int Run() = 0;
         // 给当前服务注册一个路由方法，供客户端链接处理使用
         virtual int AddRouter(uint32_t msg_id, std::shared_ptr<IRouter> &router) = 0;
-//    virtual ~IServer() = 0;
+        virtual IConnManagerPtr& GetConnMng() =0;
+        virtual ~IServer() {};
     };
+    typedef std::shared_ptr<IServer> IServerPtr;
 }
 
 

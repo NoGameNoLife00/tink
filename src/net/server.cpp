@@ -9,6 +9,7 @@
 #include <global_mng.h>
 #include <scope_guard.h>
 #include <type.h>
+#include "conn_manager.h"
 
 namespace tink {
 
@@ -50,15 +51,22 @@ namespace tink {
 
         while (true) {
             RemoteAddrPtr cli_addr(new sockaddr);
-             socklen_t cli_add_size = sizeof(sockaddr);
+            socklen_t cli_add_size = sizeof(sockaddr);
             int cli_fd = accept(srv_fd, cli_addr.get(), &cli_add_size);
             if (cli_fd == -1) {
                 logger->info("accept socket error: %v(code:%v)\n", strerror(errno), errno);
                 continue;
             }
+            // 判断最大连接数
+            if (conn_mng_->Size() >= GlobalInstance->GetMaxConn()) {
+                // TODO 发送连接失败消息
+                close(cli_fd);
+                continue;
+            }
+
             cid++;
             std::shared_ptr<Connection> conn(new Connection);
-            conn->Init(cli_fd, cid, this->msg_handler_, cli_addr);
+            conn->Init(std::dynamic_pointer_cast<IServer>(shared_from_this()), cli_fd, cid, this->msg_handler_, cli_addr);
             conn->Start();
         }
         return 0;
@@ -70,6 +78,8 @@ namespace tink {
     }
 
     int Server::Stop() {
+        logger->info("[Stop] tink server name %s", name_);
+        conn_mng_->ClearConn();
         return 0;
     }
 
@@ -86,6 +96,8 @@ namespace tink {
         this->ip_version_ = ip_version;
         this->port_ = port;
         this->msg_handler_ = msg_handler;
+        this->conn_mng_ = std::make_shared<ConnManager>();
+
         return 0;
     }
 

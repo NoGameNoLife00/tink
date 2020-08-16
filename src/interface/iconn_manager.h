@@ -11,9 +11,9 @@ namespace tink {
     class IConnManager {
     public:
         // 添加连接
-        virtual void Add(IConnectionPtr &conn) = 0;
+        virtual void Add(IConnectionPtr &&conn) = 0;
         // 删除连接
-        virtual void Remove(IConnectionPtr &conn) = 0;
+        virtual void Remove(IConnectionPtr &&conn) = 0;
         // 根据connID获取连接
         virtual int32_t Get(const uint32_t conn_id, IConnectionPtr &conn) = 0;
         // 得到当前连接数
@@ -21,6 +21,7 @@ namespace tink {
         // 清除终止所以连接
         virtual void ClearConn() = 0;
     };
+    typedef std::shared_ptr<IConnManager> IConnManagerPtr;
 }
 
 #endif //TINK_ICONN_MANAGER_H

@@ -14,9 +14,9 @@
 namespace tink {
     class ConnManager : public IConnManager{
     public:
-        void Add(IConnectionPtr &conn) override;
+        void Add(IConnectionPtr &&conn) override;
 
-        void Remove(IConnectionPtr &conn) override;
+        void Remove(IConnectionPtr &&conn) override;
 
         int32_t Get(const uint32_t conn_id, IConnectionPtr &conn) override;
 
