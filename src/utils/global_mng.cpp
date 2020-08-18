@@ -10,7 +10,7 @@ namespace tink {
     GlobalMng::GlobalMng() {
         name_ = std::make_shared<std::string>("tink_server");
         host_ = std::make_shared<std::string>("0.0.0.0");
-        version_ = std::make_shared<std::string>("v0.6");
+        version_ = std::make_shared<std::string>("v0.9");
         port_ = 8896;
         max_conn_ = 10000;
         max_package_size_ = 2048;

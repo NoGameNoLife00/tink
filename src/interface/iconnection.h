@@ -12,7 +12,7 @@
 namespace tink {
 //    typedef int (*conn_handle_func)(int, char*, int);
     typedef  std::shared_ptr<struct sockaddr> RemoteAddrPtr;
-
+    typedef std::shared_ptr<byte> BytePtr;
     class IConnection {
     public:
         // Æô¶¯Á´½Ó
@@ -36,8 +36,8 @@ namespace tink {
         };
         virtual ~IConnection(){};
     };
-
     typedef std::shared_ptr<IConnection> IConnectionPtr;
+
 }
 
 

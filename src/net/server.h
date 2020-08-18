@@ -9,6 +9,8 @@
 
 namespace tink {
 
+
+
     class Server : public IServer
     , public std::enable_shared_from_this<Server>
             {
@@ -21,6 +23,10 @@ namespace tink {
         int Stop();
         int AddRouter(uint32_t msg_id, std::shared_ptr<IRouter> &router);
         IConnManagerPtr& GetConnMng() {return conn_mng_;};
+        void SetOnConnStart(ConnHookFunc &&func);
+        void SetOnConnStop(ConnHookFunc &&func);
+        void CallOnConnStart(IConnectionPtr &&conn);
+        void CallOnConnStop(IConnectionPtr &&conn);
     private:
         StringPtr name_;
         StringPtr ip_;
@@ -30,6 +36,10 @@ namespace tink {
         IMessageHandlerPtr msg_handler_;
         // server的连接管理器
         IConnManagerPtr conn_mng_;
+
+        // 连接启动和停止的钩子函数
+        ConnHookFunc on_conn_start_;
+        ConnHookFunc on_conn_stop_;
     };
 }
 

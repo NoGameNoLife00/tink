@@ -30,9 +30,11 @@ namespace tink {
 
     int Connection::Stop() {
         logger->info("conn_ stop, conn_id:%v\n", conn_id_);
+
         if (is_close_) {
             return 0;
         }
+        server->CallOnConnStop(std::dynamic_pointer_cast<IConnection>(shared_from_this()));
         // ¹Ø±Õ¶ÁÐ´Ïß³Ì
         is_close_ = true;
 
@@ -66,6 +68,7 @@ namespace tink {
             logger->error("create reader thread error:%v\n", strerror(errno));
             return E_FAILED;
         }
+        server->CallOnConnStart(std::dynamic_pointer_cast<IConnection>(shared_from_this()));
         return 0;
     }
 
