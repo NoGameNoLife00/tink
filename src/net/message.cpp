@@ -1,5 +1,6 @@
 #include <error_code.h>
 #include <message.h>
+#include <global_mng.h>
 
 namespace tink {
 
@@ -19,19 +20,23 @@ namespace tink {
         data_len_ = dataLen;
     }
 
-    std::shared_ptr<byte> &Message::GetData() {
+    BytePtr &Message::GetData() {
         return data_;
     }
 
-    void Message::SetData(const BytePtr &data) {
-        Message::data_ = data;
+    void Message::SetData(BytePtr &data) {
+        data_ = std::move(data);
     }
 
-    int Message::Init(uint32_t id, uint32_t len, const BytePtr &data) {
+    int Message::Init(uint32_t id, uint32_t len, BytePtr &data) {
         id_ = id;
         data_len_ = len;
-        data_ = data;
+        data_ = std::move(data);
         return E_OK;
+    }
+
+    Message::~Message() {
+        logger->debug("message destruction id:%v", id_);
     }
 
 }

@@ -20,14 +20,13 @@ namespace tink {
         logger->info("conn remove from mgr successfully: conn_id =%v, size=%v", conn->GetConnId(), Size());
     }
 
-    int32_t ConnManager::Get(const uint32_t conn_id, IConnectionPtr &conn) {
+    IConnectionPtr ConnManager::Get(const uint32_t conn_id) {
         std::lock_guard<std::mutex> guard(mutex_);
         auto it = conn_map_.find(conn_id);
         if (it != conn_map_.end()){
-            conn = it->second;
-            return E_OK;
+            return it->second;
         }
-        return E_CONN_NOT_FIND;
+        return IConnectionPtr();
     }
 
     uint32_t ConnManager::Size() {

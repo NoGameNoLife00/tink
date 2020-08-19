@@ -15,7 +15,7 @@ namespace tink {
         // 删除连接
         virtual void Remove(IConnectionPtr &&conn) = 0;
         // 根据connID获取连接
-        virtual int32_t Get(const uint32_t conn_id, IConnectionPtr &conn) = 0;
+        virtual IConnectionPtr Get(const uint32_t conn_id) = 0;
         // 得到当前连接数
         virtual uint32_t Size() = 0;
         // 清除终止所以连接

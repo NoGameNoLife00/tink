@@ -8,7 +8,7 @@
 namespace tink {
     class Message : public IMessage{
     public:
-        int Init(uint32_t id, uint32_t len, const BytePtr &data);
+        int Init(uint32_t id, uint32_t len, BytePtr &data);
         int32_t GetId() const;
 
         void SetId(uint32_t id);
@@ -17,16 +17,16 @@ namespace tink {
 
         void SetDataLen(uint32_t dataLen);
 
-        std::shared_ptr<byte> &GetData();
+        BytePtr &GetData();
 
-        void SetData(const BytePtr &data);
-
+        void SetData(BytePtr &data);
+        ~Message();
     private:
         uint32_t id_; // 消息ID
         uint32_t data_len_; // 消息长度
-        std::shared_ptr<byte> data_; // 消息数据
+        BytePtr data_; // 消息数据
 
-        LEAK_DETECTOR(Message);
+//        LEAK_DETECTOR(Message);
     };
 }
 

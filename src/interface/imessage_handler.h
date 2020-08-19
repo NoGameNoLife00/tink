@@ -6,6 +6,10 @@
 #include "irouter.h"
 
 namespace tink {
+    class IRequest;
+    class IRouter;
+    typedef std::shared_ptr<IRouter> IRouterPtr;
+    typedef std::shared_ptr<IRequest> IRequestPtr;
     class IMessageHandler {
     public:
         // 调度执行Router消息处理方法

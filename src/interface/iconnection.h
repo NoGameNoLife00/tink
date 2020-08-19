@@ -8,11 +8,10 @@
 #include <sys/socket.h>
 #include <memory>
 #include <type.h>
+#include <imessage_handler.h>
+#include <mutex>
 
 namespace tink {
-//    typedef int (*conn_handle_func)(int, char*, int);
-    typedef  std::shared_ptr<struct sockaddr> RemoteAddrPtr;
-
     class IConnection {
     public:
         // Æô¶¯Á´½Ó
@@ -34,10 +33,21 @@ namespace tink {
         virtual int GetTcpConn() {
             return 0;
         };
+
+        virtual BytePtr& GetBuffer() = 0;
+
+        virtual uint32_t GetBufferLen() {return 0;};
+
+        virtual uint32_t GetBuffOffset() {return 0;};
+
+        virtual void SetBuffOffset(uint32_t offset) {};
+
+        virtual const IMessageHandlerPtr &GetMsgHandler() = 0;
+
+        virtual std::mutex& GetMutex() = 0;
         virtual ~IConnection(){};
     };
 
-    typedef std::shared_ptr<IConnection> IConnectionPtr;
 }
 
 

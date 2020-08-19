@@ -18,7 +18,7 @@ namespace tink {
 
         void Remove(IConnectionPtr &&conn) override;
 
-        int32_t Get(const uint32_t conn_id, IConnectionPtr &conn) override;
+        IConnectionPtr Get(const uint32_t conn_id) override;
 
         uint32_t Size() override;
 

@@ -64,6 +64,7 @@ namespace tink {
             if (req->GetMsgId() == MSG_ID_EXIT)
                 break;
             handler->DoMsgHandle(*req);
+            logger->debug("req msg %v", req->GetMsgId());
         }
         logger->info("work id = %v, is stopped...\n", worker_id);
         delete info;

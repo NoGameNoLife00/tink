@@ -7,19 +7,19 @@
 
 #include <type.h>
 #include "imessage.h"
-namespace tink {
-    // 处理TCP流的数据包
-    class IDataPack {
-    public:
-        // 获取包的头的长度
-        virtual uint32_t GetHeadLen() = 0;
-        // 序列化
-        virtual int Pack(IMessage &msg, byte **data, uint32_t *data_len) = 0;
-        // 反序列化
-        virtual int Unpack(byte *data, IMessage &msg) { return 0;};
-    };
-
-}
+//namespace tink {
+//    // 处理TCP流的数据包
+//    class IDataPack {
+//    public:
+//        // 获取包的头的长度
+//        virtual uint32_t GetHeadLen() = 0;
+//        // 序列化
+//        virtual int Pack(IMessage &msg, byte **data, uint32_t *data_len) = 0;
+//        // 反序列化
+//        virtual int Unpack(byte *data, IMessage &msg) { return 0;};
+//    };
+//
+//}
 
 
 
