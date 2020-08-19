@@ -13,7 +13,7 @@
 
 namespace tink {
 
-
+    class Server : public IServer
     , public std::enable_shared_from_this<Server>
             {
     public:
