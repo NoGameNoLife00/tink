@@ -5,10 +5,12 @@
 #define I_SERVER_H
 
 #include <memory>
+#include <functional>
 #include "irouter.h"
 #include "iconn_manager.h"
 
 namespace tink {
+    typedef std::function<void(IConnectionPtr&)> ConnHookFunc;
     class IServer {
     public:
         // ≥ı ºªØ
@@ -28,6 +30,10 @@ namespace tink {
 
         virtual IConnManagerPtr& GetConnMng() =0;
         virtual ~IServer() {};
+        virtual void SetOnConnStart(ConnHookFunc &&func) {};
+        virtual void SetOnConnStop(ConnHookFunc &&func) {};
+        virtual void CallOnConnStart(IConnectionPtr &&conn) {};
+        virtual void CallOnConnStop(IConnectionPtr &&conn) {};
     };
     typedef std::shared_ptr<IServer> IServerPtr;
 }

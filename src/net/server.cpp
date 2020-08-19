@@ -109,6 +109,29 @@ namespace tink {
         return 0;
     }
 
+    void Server::CallOnConnStop(IConnectionPtr &&conn) {
+        if (on_conn_stop_) {
+            logger->info("[call] on_conn_stop ..");
+            on_conn_stop_(conn);
+        }
+
+    }
+
+    void Server::CallOnConnStart(IConnectionPtr &&conn) {
+        if (on_conn_start_) {
+            logger->info("[call] on_conn_start ..");
+            on_conn_start_(conn);
+        }
+    }
+
+    void Server::SetOnConnStop(ConnHookFunc &&func) {
+        on_conn_stop_ = std::forward<ConnHookFunc>(func);
+    }
+
+    void Server::SetOnConnStart(ConnHookFunc &&func) {
+        on_conn_start_ = std::forward<ConnHookFunc>(func);
+    }
+
     void Server::HandleEvents_(struct epoll_event *events, int event_num) {
         int id;
         for (int i = 0; i < event_num; i++) {

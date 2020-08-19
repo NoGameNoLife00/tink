@@ -12,6 +12,7 @@
 #include <mutex>
 
 namespace tink {
+
     class IConnection {
     public:
         // Æô¶¯Á´½Ó
@@ -47,6 +48,7 @@ namespace tink {
         virtual std::mutex& GetMutex() = 0;
         virtual ~IConnection(){};
     };
+    typedef std::shared_ptr<IConnection> IConnectionPtr;
 
 }
 

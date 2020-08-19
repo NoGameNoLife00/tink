@@ -13,7 +13,7 @@
 
 namespace tink {
 
-    class Server : public IServer 
+
     , public std::enable_shared_from_this<Server>
             {
     public:
@@ -26,6 +26,10 @@ namespace tink {
         int AddRouter(uint32_t msg_id, std::shared_ptr<IRouter> &router);
         void OperateEvent(uint32_t fd, uint32_t id, int op, int state);
         IConnManagerPtr& GetConnMng() {return conn_mng_;};
+        void SetOnConnStart(ConnHookFunc &&func);
+        void SetOnConnStop(ConnHookFunc &&func);
+        void CallOnConnStart(IConnectionPtr &&conn);
+        void CallOnConnStop(IConnectionPtr &&conn);
     private:
         void HandleAccept_(int listen_fd);
         void HandleEvents_(struct epoll_event *events, int event_num);
@@ -36,14 +40,18 @@ namespace tink {
         StringPtr ip_;
         int ip_version_;
         int port_;
-        // serverµÄÏûÏ¢¹ÜÀíÄ£¿é
+        // serverçš„æ¶ˆæ¯ç®¡ç†æ¨¡å—
         IMessageHandlerPtr msg_handler_;
-        // serverµÄÁ¬½Ó¹ÜÀíÆ÷
+        // serverçš„è¿æ¥ç®¡ç†å™¨
         IConnManagerPtr conn_mng_;
+
         int epoll_fd_;
         int listen_fd_;
         static const int ListenID = 0;
         static const int ConnStartID = 1000;
+        // è¿æ¥å¯åŠ¨å’Œåœæ­¢çš„é’©å­å‡½æ•°
+        ConnHookFunc on_conn_start_;
+        ConnHookFunc on_conn_stop_;
     };
 }
 

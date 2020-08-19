@@ -8,6 +8,8 @@
 #include "iconnection.h"
 
 namespace tink {
+    class IConnection;
+
     class IConnManager {
     public:
         // 添加连接
