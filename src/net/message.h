@@ -26,7 +26,7 @@ namespace tink {
         uint32_t data_len_; // 消息长度
         BytePtr data_; // 消息数据
 
-//        LEAK_DETECTOR(Message);
+        LEAK_DETECTOR(Message);
     };
 }
 

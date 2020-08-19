@@ -63,20 +63,6 @@ namespace tink {
             fd_num = epoll_wait(epoll_fd_, events, EPOLL_EVENTS_NUM, -1);
             HandleEvents_(events, fd_num);
         }
-
-//        for(;;) {
-//            RemoteAddrPtr cli_addr(new sockaddr);
-//             socklen_t cli_add_size = sizeof(sockaddr);
-//            int cli_fd = accept(listen_fd_, cli_addr.get(), &cli_add_size);
-//            if (cli_fd == -1) {
-//                logger->info("accept socket error: %v(code:%v)\n", strerror(errno), errno);
-//                continue;
-//            }
-//            cid++;
-//            std::shared_ptr<Connection> conn(new Connection);
-//            conn->Init(cli_fd, cid, this->msg_handler_, cli_addr);
-//            conn->Start();
-//        }
         return 0;
     }
 
@@ -253,7 +239,6 @@ namespace tink {
         }
         else
             OperateEvent(fd, id, EPOLL_CTL_MOD, EPOLLIN);
-        // delete buff???
     }
 
     void Server::OperateEvent(uint32_t fd, uint32_t id, int op, int state) {

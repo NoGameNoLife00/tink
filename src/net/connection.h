@@ -18,9 +18,6 @@ namespace tink {
             , public std::enable_shared_from_this<Connection>
         {
     public:
-        static void* StartWriter(void* conn_ptr);
-        static void* StartReader(void* conn_ptr);
-
         int Init(IServerPtr &&server, int conn_fd, int id, IMessageHandlerPtr &msg_handler, RemoteAddrPtr &addr);
 
         int Start();
@@ -41,8 +38,6 @@ namespace tink {
             buff_offset_ = offset;
         };
 
-        void SetReaderPid(pid_t readerPid);
-
         const IMessageHandlerPtr &GetMsgHandler() { return msg_handler_;};
 
         // 获取客户端的tcp状态 ip port
@@ -55,9 +50,6 @@ namespace tink {
 
         ~Connection();
     private:
-        static IMessageQueue msg_queue;
-        pthread_t writer_pid;
-        pthread_t reader_pid;
         int conn_fd_;
         int conn_id_;
         std::atomic<bool> is_close_;
