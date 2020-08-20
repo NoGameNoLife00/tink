@@ -163,9 +163,9 @@ namespace tink {
             logger->warn("close not find conn, id=%v", id);
             return;
         }
+        logger->warn("conn error, id=%v", id);
         OperateEvent(conn->GetTcpConn(), id, EPOLL_CTL_DEL, EPOLLIN);
         conn->Stop();
-
     }
 
     void Server::DoRead_(int id)
