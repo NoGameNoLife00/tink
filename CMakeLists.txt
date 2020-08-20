@@ -12,7 +12,7 @@ project(tink)
 
 include_directories(src/interface)
 include_directories(src/net)
-include_directories(src/utils)
+include_directories(src/base)
 include_directories(libs/cjson)
 include_directories(libs/easyloggingpp)
 include_directories(src)

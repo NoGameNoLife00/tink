@@ -9,7 +9,7 @@ include_directories(../libs/cjson)
 include_directories(../libs/easyloggingpp)
 include_directories(interface)
 include_directories(net)
-include_directories(utils)
+include_directories(base)
 
 file(GLOB_RECURSE SOURCES LIST_DIRECTORIES true *.h *.cpp)
 set(SOURCES  ../libs/cjson/cJSON.c ../libs/easyloggingpp/easylogging++.cc ${SOURCES})

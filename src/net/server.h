@@ -45,7 +45,6 @@ namespace tink {
         // server的连接管理器
         IConnManagerPtr conn_mng_;
 
-
         static const int ListenID = 0;
         static const int ConnStartID = 1000;
         static const int InitEvenListCount = 32;
