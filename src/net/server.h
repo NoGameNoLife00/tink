@@ -8,8 +8,8 @@
 #include <sys/epoll.h>
 #include <unordered_map>
 #include <map>
-
 #include <iconn_manager.h>
+#include <vector>
 
 namespace tink {
 
@@ -32,10 +32,10 @@ namespace tink {
         void CallOnConnStop(IConnectionPtr &&conn);
     private:
         void HandleAccept_(int listen_fd);
-        void HandleEvents_(struct epoll_event *events, int event_num);
-        void DoRead_(int fd);
-        void DoWrite_(int fd);
-
+        void HandleEvents_(int event_num);
+        void DoRead_(int id);
+        void DoWrite_(int id);
+        void DoError_(int id);
         StringPtr name_;
         StringPtr ip_;
         int ip_version_;
@@ -45,10 +45,15 @@ namespace tink {
         // server的连接管理器
         IConnManagerPtr conn_mng_;
 
-        int epoll_fd_;
-        int listen_fd_;
+
         static const int ListenID = 0;
         static const int ConnStartID = 1000;
+        static const int InitEvenListCount = 32;
+        typedef std::array<struct epoll_event, InitEvenListCount> EventList;
+        int epoll_fd_;
+        int listen_fd_;
+        EventList events_;
+
         // 连接启动和停止的钩子函数
         ConnHookFunc on_conn_start_;
         ConnHookFunc on_conn_stop_;

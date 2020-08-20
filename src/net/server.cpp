@@ -9,12 +9,12 @@
 #include <global_mng.h>
 #include <scope_guard.h>
 #include <type.h>
-#include "conn_manager.h"
+#include <conn_manager.h>
 #include <message.h>
 #include <datapack.h>
 #include <request.h>
 
-#define EPOLL_EVENTS_NUM 100
+
 #define MAX_BUF_SIZE 2048
 namespace tink {
     int Server::Start() {
@@ -51,17 +51,12 @@ namespace tink {
             exit(1);
         }
         logger->info("Start tink Server %v listening\n", name_.get()->c_str());
-
-
-
-
         epoll_fd_ = epoll_create1(EPOLL_CLOEXEC);
-        struct epoll_event events[EPOLL_EVENTS_NUM];
         OperateEvent(listen_fd_, ListenID, EPOLL_CTL_ADD, EPOLLIN);
         int fd_num;
         for ( ; ; ) {
-            fd_num = epoll_wait(epoll_fd_, events, EPOLL_EVENTS_NUM, -1);
-            HandleEvents_(events, fd_num);
+            fd_num = epoll_wait(epoll_fd_, &*events_.begin(), events_.size(), -1);
+            HandleEvents_(fd_num);
         }
         return 0;
     }
@@ -118,15 +113,18 @@ namespace tink {
         on_conn_start_ = std::forward<ConnHookFunc>(func);
     }
 
-    void Server::HandleEvents_(struct epoll_event *events, int event_num) {
+    void Server::HandleEvents_(int event_num) {
         int id;
         for (int i = 0; i < event_num; i++) {
-            id = events[i].data.u32;
-            if ((id == ListenID) && (events[i].events & EPOLLIN)) {
+            id = events_[i].data.u32;
+            uint32_t e = events_[i].events;
+            if ((id == ListenID) && (e & EPOLLIN)) {
                 HandleAccept_(listen_fd_);
-            } else if (events[i].events & EPOLLIN) {
+            } else if( e & EPOLLERR || e & EPOLLHUP || e & EPOLLRDHUP || (!e & EPOLLIN)) {
+                DoError_(id);
+            } else if (e & EPOLLIN) {
                 DoRead_(id);
-            } else if (events[i].events & EPOLLOUT) {
+            } else if (e & EPOLLOUT) {
                 DoWrite_(id);
             }
         }
@@ -136,13 +134,13 @@ namespace tink {
     {
         static int cid = ConnStartID;
         int cli_fd;
-        RemoteAddrPtr cli_addr(new sockaddr);
+        RemoteAddrPtr cli_addr = std::make_shared<sockaddr>();
         socklen_t  cli_addr_len;
-        cli_fd = accept(listen_fd, (struct sockaddr*)&cli_addr, &cli_addr_len);
-        if (cli_fd == -1)
+        memset(cli_addr.get(), 0, sizeof(sockaddr));
+        cli_fd = accept(listen_fd, cli_addr.get(), &cli_addr_len);
+        if (cli_fd == -1) {
             logger->warn("accept socket error: %v(code:%v)\n", strerror(errno), errno);
-        else
-        {
+        } else {
             // 判断最大连接数
             if (conn_mng_->Size() >= GlobalInstance->GetMaxConn()) {
                 // TODO 发送连接失败消息
@@ -155,8 +153,19 @@ namespace tink {
 			conn->Init(std::dynamic_pointer_cast<IServer>(shared_from_this()), cli_fd, cid, this->msg_handler_, cli_addr);
             conn->Start();
             //添加一个客户描述符和事件
-            OperateEvent(cli_fd, 0, EPOLL_CTL_ADD, EPOLLIN);
+            OperateEvent(cli_fd, cid, EPOLL_CTL_ADD, EPOLLIN);
         }
+    }
+
+    void Server::DoError_(int id) {
+        auto conn = conn_mng_->Get(id);
+        if (!conn) {
+            logger->warn("close not find conn, id=%v", id);
+            return;
+        }
+        OperateEvent(conn->GetTcpConn(), id, EPOLL_CTL_DEL, EPOLLIN);
+        conn->Stop();
+
     }
 
     void Server::DoRead_(int id)
@@ -175,9 +184,9 @@ namespace tink {
         }
         int fd = conn->GetTcpConn();
 
-        auto on_error = [&fd, &id, this]  {
-            close(fd);
+        auto on_error = [&fd, &id, &conn, this]  {
             OperateEvent(fd, id, EPOLL_CTL_DEL, EPOLLIN);
+            conn->Stop();
         };
         // 读取客户端发送的包头
         int ret = read(fd, head_data.get(), head_len);
@@ -186,7 +195,7 @@ namespace tink {
             on_error();
             return;
         } else if (ret == 0) {
-            logger->error("[reader] client close");
+            logger->warn("[reader] client close");
             on_error();
             return;
         }
@@ -247,4 +256,6 @@ namespace tink {
         ev.data.u32 = id;
         epoll_ctl(epoll_fd_, op, fd, &ev);
     }
+
+
 }

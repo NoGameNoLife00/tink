@@ -67,7 +67,7 @@ namespace tink {
         }
         memcpy(buffer_.get() + buff_offset_, tmp_buffer_.get(), len);
         buff_offset_ += len;
-        GlobalInstance->GetServer()->OperateEvent(conn_fd_, 0, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
+        GlobalInstance->GetServer()->OperateEvent(conn_fd_, conn_id_, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
         return E_OK;
     }
 
