@@ -2,6 +2,8 @@
 #include <message_handler.h>
 #include <global_mng.h>
 #include <cstring>
+#include <thread.h>
+#include <assert.h>
 
 namespace tink {
     int MessageHandler::DoMsgHandle(IRequest &request) {
@@ -32,30 +34,26 @@ namespace tink {
     }
 
     int MessageHandler::StartWorkerPool() {
+        assert(threads_.empty());
+        threads_.reserve(worker_pool_size);
         for (int i = 0; i < worker_pool_size; i++) {
             // 创建一个消息队列和启动worker线程
             task_queue.push_back(std::make_shared<IRequestMsgQueue>());
-            pthread_t pid = 0;
-            WorkerInfo * info = new WorkerInfo{this, i};
-            if (pthread_create(&pid, NULL, StartOneWorker, info) != 0) {
-                logger->info("create writer thread error:%v\n", strerror(errno));
-                return E_FAILED;
-            }
-            worker_pid_list.push_back(pid);
+            threads_.emplace_back(std::make_unique<Thread>(std::bind(StartOneWorker, std::ref(*this),  i), "worker"+i+1));
+            threads_[i]->Start();
         }
-
         return 0;
     }
 
-    void* MessageHandler::StartOneWorker(void* worker_info_ptr) {
-        WorkerInfo* info = static_cast<WorkerInfo*>(worker_info_ptr);
-        if (!info) {
-            logger->info("worker thread run error, info_ptr is null\n");
-            return nullptr;
-        }
-        MessageHandler *handler = info->msg_handler;
-        int worker_id = info->worker_id;
-        IRequestMsgQueuePtr msg_queue = handler->task_queue[worker_id];
+    void MessageHandler::StartOneWorker(MessageHandler& handler, int worker_id) {
+//        WorkerInfo* info = static_cast<WorkerInfo*>(worker_info_ptr);
+//        if (!info) {
+//            logger->info("worker thread run error, info_ptr is null\n");
+//            return nullptr;
+//        }
+//        MessageHandler *handler = info->msg_handler;
+//        int worker_id = info->worker_id;
+        IRequestMsgQueuePtr msg_queue = handler.task_queue[worker_id];
         logger->info("work id = %v, is started...\n", worker_id);
         while (true) {
             IRequestPtr req;
@@ -63,12 +61,10 @@ namespace tink {
             msg_queue->Pop(req, true);
             if (req->GetMsgId() == MSG_ID_EXIT)
                 break;
-            handler->DoMsgHandle(*req);
+            handler.DoMsgHandle(*req);
             logger->debug("req msg %v", req->GetMsgId());
         }
         logger->info("work id = %v, is stopped...\n", worker_id);
-        delete info;
-        return nullptr;
     }
 
     int MessageHandler::SendMsgToTaskQueue(IRequestPtr &request) {

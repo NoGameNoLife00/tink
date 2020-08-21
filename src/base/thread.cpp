@@ -67,9 +67,11 @@ namespace tink {
         }
     }
 
-
+    std::atomic_uint Thread::num_created_;
     Thread::Thread(tink::Thread::ThreadFunc func, const std::string &name)
-        : started_(false), joined_(false), pid_(0), func_(std::move(func)), name_(name)
+        : started_(false), joined_(false),
+        pid_(0), func_(std::move(func)),
+        name_(name), latch_(1)
     {
         Create_();
     }
@@ -84,11 +86,13 @@ namespace tink {
     void Thread::Start() {
         assert(!started_);
         started_ = true;
-        ThreadData *data = new ThreadData {func_, name_};
+        ThreadData *data = new ThreadData {func_, name_, &latch_};
         if (pthread_create(&pid_, NULL, &StartThread, data)) {
             started_ = false;
             delete data;
             logger->error("pthread_create failed %v:", errno, strerror(errno));
+        } else {
+            latch_.Wait();
         }
     }
 
@@ -113,6 +117,8 @@ namespace tink {
     }
 
     void Thread::ThreadData::RunThread() {
+        latch->CountDown();
+        latch = nullptr;
         CurrentThread::t_thread_name = name.empty() ? "tinkThread" : name.c_str();
         prctl(PR_SET_NAME, CurrentThread::t_thread_name);
         try {

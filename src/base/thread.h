@@ -7,6 +7,7 @@
 
 #include <functional>
 #include <atomic>
+#include <count_down_latch.h>
 
 namespace tink{
 
@@ -19,7 +20,7 @@ namespace tink{
     }
 
 
-    class Thread {
+    class Thread : noncopyable {
     public:
         typedef std::function<void()> ThreadFunc;
         explicit Thread(ThreadFunc func, const std::string& name = "");
@@ -38,10 +39,11 @@ namespace tink{
         bool       joined_;
         pthread_t      pid_;
         std::string     name_;
-
+        CountDownLatch latch_;
         struct ThreadData {
             ThreadFunc thread_func;
             std::string name;
+            CountDownLatch* latch;
             void RunThread();
         };
     };

@@ -9,6 +9,7 @@
 #include <vector>
 #include <message_queue.h>
 #include <irequest.h>
+#include <thread.h>
 
 namespace tink {
 
@@ -18,7 +19,6 @@ namespace tink {
 
     class MessageHandler : public IMessageHandler {
     public:
-
 //        virtual ~MessageHandler();
         // 存放每个MsgId对应的方法
         std::map<uint32_t, std::shared_ptr<IRouter>> apis;
@@ -26,8 +26,8 @@ namespace tink {
         MsgQueueList task_queue;
         // worker 池数量
         uint32_t worker_pool_size;
-        // worker pid
-        std::vector<pthread_t> worker_pid_list;
+
+
 
         int Init();
         // 调度执行Router消息处理方法
@@ -36,15 +36,14 @@ namespace tink {
         virtual int AddRouter(uint32_t msg_id, IRouterPtr &router);
 
         virtual int StartWorkerPool();
-        static void* StartOneWorker(void* worker_info_ptr);
+
+        static void StartOneWorker(MessageHandler& handler, int worker_id);
         // 将消息发送给任务队列
         int SendMsgToTaskQueue(IRequestPtr &request);
-    };
 
-    typedef struct WorkerInfo_ {
-        MessageHandler * msg_handler;
-        int worker_id;
-    } WorkerInfo;
+    private:
+        std::vector<std::unique_ptr<Thread>> threads_;
+    };
 }
 
 #endif //TINK_MESSAGE_HANDLER_H
