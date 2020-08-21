@@ -62,7 +62,7 @@ namespace tink {
         uint32_t buffer_size_;
         BytePtr buffer_;
         uint32_t buff_offset_;
-        std::mutex mutex_;
+        mutable std::mutex mutex_;
         BytePtr tmp_buffer_;
         uint32_t tmp_buffer_size_;
     };
