@@ -9,14 +9,23 @@
 #include <atomic>
 
 namespace tink{
-    typedef pid_t tid_t;
+
+    namespace CurrentThread {
+        extern thread_local const char * t_thread_name;
+        inline const char* name() {
+            return t_thread_name;
+        }
+        std::string StackTrace(bool demangle);
+    }
+
+
     class Thread {
     public:
         typedef std::function<void()> ThreadFunc;
         explicit Thread(ThreadFunc func, const std::string& name = "");
-
+        ~Thread();
         void Start();
-        void Join();
+        int Join();
         bool Started() const {return started_;};
         const std::string& Name() const {return name_;};
         static uint32_t NumCrated() {return num_created_.load();};
@@ -33,6 +42,7 @@ namespace tink{
         struct ThreadData {
             ThreadFunc thread_func;
             std::string name;
+            void RunThread();
         };
     };
 }
