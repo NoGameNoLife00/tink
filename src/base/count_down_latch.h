@@ -1,7 +1,7 @@
 #ifndef TINK_COUNT_DOWN_LATCH_H
 #define TINK_COUNT_DOWN_LATCH_H
 
-#include <mutex>
+#include <type.h>
 #include <condition_variable>
 #include <noncopyadble.h>
 
@@ -14,7 +14,7 @@ namespace tink {
         int GetCount() const;
 
     private:
-        mutable std::mutex mutex_;
+        mutable Mutex mutex_;
         std::condition_variable condition_;
         int count_;
     };

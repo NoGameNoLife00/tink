@@ -27,7 +27,7 @@ namespace tink {
     private:
         typedef std::unordered_map<uint32_t, IConnectionPtr> ConnectionMap;
         ConnectionMap conn_map_;
-        std::mutex mutex_;
+        Mutex mutex_;
     };
 }
 

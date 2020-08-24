@@ -1,7 +1,7 @@
 #ifndef TINK_MESSAGE_QUEUE_H
 #define TINK_MESSAGE_QUEUE_H
 #include <queue>
-#include <mutex>
+#include <type.h>
 #include <condition_variable>
 
 namespace tink {
@@ -13,7 +13,7 @@ namespace tink {
         MessageQueue() : queue_(), mutex_(), condition_(){}
         virtual ~MessageQueue(){}
         void Push(Type msg){
-            std::lock_guard <std::mutex> lock(mutex_);
+            std::lock_guard <Mutex> lock(mutex_);
             queue_.push(msg);
             //当使用阻塞模式从消息队列中获取消息时，由condition在新消息到达时提醒等待线程
             condition_.notify_one();
@@ -23,7 +23,7 @@ namespace tink {
         bool Pop(Type& msg, bool isBlocked = true){
             if (isBlocked)
             {
-                std::unique_lock <std::mutex> lock(mutex_);
+                std::unique_lock <Mutex> lock(mutex_);
                 while (queue_.empty())
                 {
                     condition_.wait(lock);
@@ -37,10 +37,9 @@ namespace tink {
             }
             else
             {
-                std::lock_guard<std::mutex> lock(mutex_);
+                std::lock_guard<Mutex> lock(mutex_);
                 if (queue_.empty())
                     return false;
-
 
                 msg = std::move(queue_.front());
                 queue_.pop();
@@ -50,17 +49,17 @@ namespace tink {
         }
 
         int32_t Size(){
-            std::lock_guard<std::mutex> lock(mutex_);
+            std::lock_guard<Mutex> lock(mutex_);
             return queue_.size();
         }
 
         bool Empty(){
-            std::lock_guard<std::mutex> lock(mutex_);
+            std::lock_guard<Mutex> lock(mutex_);
             return queue_.empty();
         }
     private:
         std::queue<Type> queue_;//存储消息的队列
-        mutable std::mutex mutex_;//同步锁
+        mutable Mutex mutex_;//同步锁
         std::condition_variable condition_;//实现同步式获取消息
     };
 }

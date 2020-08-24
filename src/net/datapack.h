@@ -10,6 +10,8 @@ namespace tink {
         static int Unpack(BytePtr &data, IMessage &msg);
 
         static int Pack(IMessage &msg, BytePtr &data, uint32_t &data_len);
+
+        static int Pack(IMessage &msg, byte *buff, uint32_t &data_len);
     };
 }
 

@@ -5,14 +5,14 @@ namespace tink {
     }
 
     void CountDownLatch::Wait() {
-        std::unique_lock<std::mutex> lock(mutex_);
+        std::unique_lock<Mutex> lock(mutex_);
         while (count_ > 0) {
             condition_.wait(lock);
         }
     }
 
     void CountDownLatch::CountDown() {
-        std::unique_lock<std::mutex> lock(mutex_);
+        std::unique_lock<Mutex> lock(mutex_);
         --count_;
         if (count_ == 0) {
             condition_.notify_all();
@@ -20,7 +20,7 @@ namespace tink {
     }
 
     int CountDownLatch::GetCount() const {
-        std::lock_guard<std::mutex> guard(mutex_);
+        std::lock_guard<Mutex> guard(mutex_);
         return count_;
     }
 

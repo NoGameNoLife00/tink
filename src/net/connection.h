@@ -10,6 +10,7 @@
 #include <imessage.h>
 #include <iserver.h>
 #include <atomic>
+#include <buffer.h>
 
 namespace tink {
     typedef MessageQueue<IMessagePtr> IMessageQueue;
@@ -28,15 +29,7 @@ namespace tink {
         // 获取链接id
         int GetConnId() {return conn_id_;};
 
-        BytePtr& GetBuffer() {return buffer_;};
-
-        uint32_t GetBufferLen() {return buffer_size_;};
-
-        uint32_t GetBuffOffset() {return buff_offset_;};
-
-        void SetBuffOffset(uint32_t offset) {
-            buff_offset_ = offset;
-        };
+        FixBufferPtr& GetBuffer() {return buffer_;};
 
         const IMessageHandlerPtr &GetMsgHandler() { return msg_handler_;};
 
@@ -46,23 +39,26 @@ namespace tink {
         // 发送Msg包到写线程
         int SendMsg(uint32_t msg_id, BytePtr &data, uint32_t data_len);
 
-        std::mutex &GetMutex() { return mutex_;};
+        Mutex &GetMutex() { return mutex_;};
 
         ~Connection();
     private:
+        static const int BUFFER_SIZE = 40960;
         int conn_fd_;
         int conn_id_;
-        std::atomic<bool> is_close_;
+        std::atomic_bool is_close_;
         RemoteAddrPtr remote_addr_;
         // 消息管理器
         IMessageHandlerPtr msg_handler_;
         // 所属server
         IServerPtr server;
 
-        uint32_t buffer_size_;
-        BytePtr buffer_;
-        uint32_t buff_offset_;
-        mutable std::mutex mutex_;
+//        uint32_t buffer_size_;
+//        BytePtr buffer_;
+//        uint32_t buff_offset_;
+
+        FixBufferPtr buffer_;
+        mutable Mutex mutex_;
         BytePtr tmp_buffer_;
         uint32_t tmp_buffer_size_;
     };

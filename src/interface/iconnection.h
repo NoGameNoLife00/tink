@@ -10,6 +10,7 @@
 #include <type.h>
 #include <imessage_handler.h>
 #include <mutex>
+#include <buffer.h>
 
 namespace tink {
 
@@ -35,17 +36,17 @@ namespace tink {
             return 0;
         };
 
-        virtual BytePtr& GetBuffer() = 0;
+        virtual FixBufferPtr& GetBuffer() = 0;
 
-        virtual uint32_t GetBufferLen() {return 0;};
-
-        virtual uint32_t GetBuffOffset() {return 0;};
+//        virtual uint32_t GetBufferLen() {return 0;};
+//
+//        virtual uint32_t GetBuffOffset() {return 0;};
 
         virtual void SetBuffOffset(uint32_t offset) {};
 
         virtual const IMessageHandlerPtr &GetMsgHandler() = 0;
 
-        virtual std::mutex& GetMutex() = 0;
+        virtual Mutex& GetMutex() = 0;
         virtual ~IConnection(){};
     };
     typedef std::shared_ptr<IConnection> IConnectionPtr;

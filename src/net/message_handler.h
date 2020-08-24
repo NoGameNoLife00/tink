@@ -27,8 +27,6 @@ namespace tink {
         // worker 池数量
         uint32_t worker_pool_size;
 
-
-
         int Init();
         // 调度执行Router消息处理方法
         virtual int DoMsgHandle(IRequest &request);

@@ -236,10 +236,10 @@ namespace tink {
             return;
         }
         int fd = conn->GetTcpConn();
-        std::lock_guard<std::mutex> guard(conn->GetMutex());
-        ret = write(fd, conn->GetBuffer().get(), conn->GetBuffOffset());
-        conn->SetBuffOffset(0);
-        memset(conn->GetBuffer().get(), 0, conn->GetBufferLen());
+        std::lock_guard<Mutex> guard(conn->GetMutex());
+        auto& buffer = conn->GetBuffer();
+        ret = write(fd, buffer->Data(), buffer->Length());
+        buffer->Reset();
         if (ret == -1)
         {
             logger->error("[writer] error:%v\n", strerror(errno));

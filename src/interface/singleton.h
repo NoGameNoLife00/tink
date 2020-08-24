@@ -16,7 +16,7 @@ namespace tink {
         template<typename ...Args>
         static std::shared_ptr<T> GetInstance(Args&&... args) {
             if (!instance_) {
-                std::lock_guard<std::mutex> gLock(mutex_);
+                std::lock_guard<Mutex> gLock(mutex_);
                 if (nullptr == instance_) {
                     instance_ = std::make_shared<T>(std::forward<Args>(args)...);
                 }
@@ -34,7 +34,7 @@ namespace tink {
 
     private:
         static std::shared_ptr<T> instance_;
-        static std::mutex mutex_;
+        static Mutex mutex_;
 
         explicit Singleton();
         Singleton(const Singleton&) = delete;
@@ -46,7 +46,7 @@ namespace tink {
     std::shared_ptr<T> Singleton<T>::instance_ = nullptr;
 
     template<typename T>
-    std::mutex Singleton<T>::mutex_;
+    Mutex Singleton<T>::mutex_;
 }
 
 #endif //TINK_SINGLETON_H

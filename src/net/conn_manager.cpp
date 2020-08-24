@@ -6,7 +6,7 @@
 namespace tink {
     void ConnManager::Add(IConnectionPtr &&conn) {
         {
-            std::lock_guard<std::mutex> guard(mutex_);
+            std::lock_guard<Mutex> guard(mutex_);
             conn_map_.insert(std::pair<uint32_t, IConnectionPtr>(conn->GetConnId(), conn));
         }
         logger->info("conn add to mgr successfully: conn_id =%v, size=%v", conn->GetConnId(), Size());
@@ -14,14 +14,14 @@ namespace tink {
 
     void ConnManager::Remove(IConnectionPtr &&conn) {
         {
-            std::lock_guard<std::mutex> guard(mutex_);
+            std::lock_guard<Mutex> guard(mutex_);
             conn_map_.erase(conn->GetConnId());
         }
         logger->info("conn remove from mgr successfully: conn_id =%v, size=%v", conn->GetConnId(), Size());
     }
 
     IConnectionPtr ConnManager::Get(const uint32_t conn_id) {
-        std::lock_guard<std::mutex> guard(mutex_);
+        std::lock_guard<Mutex> guard(mutex_);
         auto it = conn_map_.find(conn_id);
         if (it != conn_map_.end()){
             return it->second;
@@ -34,7 +34,7 @@ namespace tink {
     }
 
     void ConnManager::ClearConn() {
-        std::lock_guard<std::mutex> guard(mutex_);
+        std::lock_guard<Mutex> guard(mutex_);
         for (auto && conn : conn_map_) {
             conn.second->Stop();
         }
