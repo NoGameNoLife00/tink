@@ -17,7 +17,7 @@ namespace tink {
     int Connection::Init(IServerPtr &&server, int conn_fd, int id, IMessageHandlerPtr &msg_handler, RemoteAddrPtr &addr) {
         int package_size = (GlobalInstance->GetMaxPackageSize() + DataPack::GetHeadLen());
         this->server = server;
-        this->conn_fd_ = conn_fd;
+        this->socket_ = std::make_unique<Socket>(conn_fd);
         this->conn_id_ = id;
         this->msg_handler_ = msg_handler;
         this->is_close_ = false;
