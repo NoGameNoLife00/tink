@@ -68,7 +68,7 @@ namespace tink {
             return ret;
         }
         GlobalInstance->GetServer()->OperateEvent(conn_fd_, conn_id_, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
-        return E_OK;
+        return ret;
     }
 
     Connection::~Connection() {
