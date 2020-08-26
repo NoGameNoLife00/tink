@@ -11,7 +11,7 @@
 #include <iserver.h>
 #include <atomic>
 #include <buffer.h>
-#include "socket.h"
+#include <socket.h>
 
 namespace tink {
     typedef MessageQueue<IMessagePtr> IMessageQueue;
@@ -20,7 +20,7 @@ namespace tink {
             , public std::enable_shared_from_this<Connection>
         {
     public:
-        int Init(IServerPtr &&server, int conn_fd, int id, IMessageHandlerPtr &msg_handler, RemoteAddrPtr &addr);
+        int Init(IServerPtr &&server, int conn_fd, int id, IMessageHandlerPtr &msg_handler, SockAddressPtr &addr);
 
         int Start();
         // 停止链接
@@ -35,7 +35,7 @@ namespace tink {
         const IMessageHandlerPtr &GetMsgHandler() { return msg_handler_;}
 
         // 获取客户端的tcp状态 ip port
-        RemoteAddrPtr GetRemoteAddr() { return remote_addr_; }
+        SockAddressPtr GetRemoteAddr() { return remote_addr_; }
 
         // 发送Msg包到写线程
         int SendMsg(uint32_t msg_id, BytePtr &data, uint32_t data_len);
@@ -47,7 +47,7 @@ namespace tink {
         int conn_id_;
         std::unique_ptr<Socket> socket_;
         std::atomic_bool is_close_;
-        RemoteAddrPtr remote_addr_;
+        SockAddressPtr remote_addr_;
         // 消息管理器
         IMessageHandlerPtr msg_handler_;
         // 所属server

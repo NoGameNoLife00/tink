@@ -1,7 +1,3 @@
-//
-// Created by admin on 2020/5/20.
-//
-
 #include <unistd.h>
 #include <cstring>
 #include <connection.h>
@@ -9,13 +5,13 @@
 #include <request.h>
 #include <global_mng.h>
 #include <arpa/inet.h>
-#include "datapack.h"
-#include "message.h"
+#include <datapack.h>
+#include <message.h>
 
 #define BUFF_MAX_SIZE_COUNt 16
 namespace tink {
-    int Connection::Init(IServerPtr &&server, int conn_fd, int id, IMessageHandlerPtr &msg_handler, RemoteAddrPtr &addr) {
-        int package_size = (GlobalInstance->GetMaxPackageSize() + DataPack::GetHeadLen());
+    int Connection::Init(IServerPtr &&server, int conn_fd, int id, IMessageHandlerPtr &msg_handler, SockAddressPtr &addr) {
+        uint32_t package_size = (GlobalInstance->GetMaxPackageSize() + DataPack::GetHeadLen());
         this->server = server;
         this->socket_ = std::make_unique<Socket>(conn_fd);
         this->conn_id_ = id;
@@ -42,7 +38,7 @@ namespace tink {
         server->GetConnMng()->Remove(std::dynamic_pointer_cast<IConnection>(shared_from_this()));
 
         // »ØÊÕsocket
-        close(conn_fd_);
+        // close(conn_fd_);
         return E_OK;
     }
 
@@ -67,7 +63,7 @@ namespace tink {
         if (ret) {
             return ret;
         }
-        GlobalInstance->GetServer()->OperateEvent(conn_fd_, conn_id_, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
+        GlobalInstance->GetServer()->OperateEvent(socket_->GetSockFd(), conn_id_, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
         return ret;
     }
 

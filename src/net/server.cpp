@@ -1,7 +1,6 @@
 #include <server.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 #include <errno.h>
 #include <cstring>
 #include <unistd.h>
@@ -17,42 +16,53 @@
 
 #define MAX_BUF_SIZE 2048
 namespace tink {
+    int Server::Init(StringPtr &name, int ip_version,
+                     StringPtr &ip, int port,
+                     IMessageHandlerPtr &&msg_handler) {
+        name_ = name;
+        listen_addr_ = std::make_shared<SockAddress>(ip->c_str(), port, ip_version == AF_INET6);
+        msg_handler_ = msg_handler;
+        conn_mng_ = std::make_shared<ConnManager>();
+        return 0;
+    }
+
+
     int Server::Start() {
         auto globalObj = GlobalInstance;
         logger->info("[tink] Server Name:%v, listener at IP:%v, Port:%v, is starting.\n",
-                name_->c_str(), ip_->c_str(), port_);
+                name_->c_str(), listen_addr_->ToIp(), listen_addr_->ToPort());
         logger->info("[tink] Version: %v, MaxConn:%v, MaxPacketSize:%v\n", globalObj->GetVersion()->c_str(),
                globalObj->GetMaxConn(), globalObj->GetMaxPackageSize());
 
         // 开启worker工作池
         msg_handler_->StartWorkerPool();
 
-        listen_fd_ = socket(ip_version_, SOCK_STREAM, 0);
-        if (listen_fd_ == -1) {
-            logger->info("Server create socket error: %v (code:%v)\n", strerror(errno), errno);
-            exit(0);
-        }
-        ON_SCOPE_EXIT([&]{
-            close(listen_fd_);
-        });
+//        listen_fd_ = socket(ip_version_, SOCK_STREAM, 0);
 
-        struct sockaddr_in srv_addr;
-        srv_addr.sin_family = ip_version_;
-        inet_pton(ip_version_, "0.0.0.0", &srv_addr.sin_addr);
-//        srv_addr.sin_addr.s_addr = inet_addr("0.0.0.0");
-        srv_addr.sin_port = htons(port_);
-        if (bind(listen_fd_, (struct sockaddr*)&srv_addr, sizeof(srv_addr)) == -1) {
-            logger->info("bind socket error: %v(code:%v)\n", strerror(errno), errno);
-            exit(1);
-        }
+//        SockAddress listen_addr(port_, false,ip_version_ == AF_INET6);
+        listen_socket_ = std::make_unique<Socket>(SocketApi::Create(listen_addr_->Family()));
+        listen_socket_->BindAddress(*listen_addr_);
+        listen_socket_->Listen();
+//        ON_SCOPE_EXIT([&]{
+//            close(listen_fd_);
+//        });
 
-        if (listen(listen_fd_, 20) == -1) {
-            logger->info("listen socket error: %v(code:%v)\n", strerror(errno), errno);
-            exit(1);
-        }
+//        struct sockaddr_in srv_addr;
+//        srv_addr.sin_family = ip_version_;
+//        inet_pton(ip_version_, "0.0.0.0", &srv_addr.sin_addr);
+//        srv_addr.sin_port = htons(port_);
+//        if (bind(listen_fd_, (struct sockaddr*)&srv_addr, sizeof(srv_addr)) == -1) {
+//            logger->info("bind socket error: %v(code:%v)\n", strerror(errno), errno);
+//            exit(1);
+//        }
+
+//        if (listen(listen_fd_, 20) == -1) {
+//            logger->info("listen socket error: %v(code:%v)\n", strerror(errno), errno);
+//            exit(1);
+//        }
         logger->info("Start tink Server %v listening\n", name_.get()->c_str());
         epoll_fd_ = epoll_create1(EPOLL_CLOEXEC);
-        OperateEvent(listen_fd_, ListenID, EPOLL_CTL_ADD, EPOLLIN);
+        OperateEvent(listen_socket_->GetSockFd(), ListenID, EPOLL_CTL_ADD, EPOLLIN);
         int fd_num;
         for ( ; ; ) {
             fd_num = epoll_wait(epoll_fd_, &*events_.begin(), events_.size(), -1);
@@ -77,18 +87,6 @@ namespace tink {
         return 0;
     }
 
-    int Server::Init(StringPtr &name, int ip_version,
-                     StringPtr &ip, int port,
-                     IMessageHandlerPtr &&msg_handler) {
-        this->name_ = name;
-        this->ip_ = ip;
-        this->ip_version_ = ip_version;
-        this->port_ = port;
-        this->msg_handler_ = msg_handler;
-        this->conn_mng_ = std::make_shared<ConnManager>();
-
-        return 0;
-    }
 
     void Server::CallOnConnStop(IConnectionPtr &&conn) {
         if (on_conn_stop_) {
@@ -119,7 +117,7 @@ namespace tink {
             id = events_[i].data.u32;
             uint32_t e = events_[i].events;
             if ((id == ListenID) && (e & EPOLLIN)) {
-                HandleAccept_(listen_fd_);
+                HandleAccept_();
             } else if( e & EPOLLERR || e & EPOLLHUP || e & EPOLLRDHUP || (!e & EPOLLIN)) {
                 DoError_(id);
             } else if (e & EPOLLIN) {
@@ -130,14 +128,16 @@ namespace tink {
         }
     }
 
-    void Server::HandleAccept_(int listen_fd)
+    void Server::HandleAccept_()
     {
         static int cid = ConnStartID;
         int cli_fd;
-        RemoteAddrPtr cli_addr = std::make_shared<sockaddr>();
-        socklen_t  cli_addr_len;
-        memset(cli_addr.get(), 0, sizeof(sockaddr));
-        cli_fd = accept(listen_fd, cli_addr.get(), &cli_addr_len);
+//        RemoteAddrPtr cli_addr = std::make_shared<sockaddr>();
+        SockAddressPtr cli_addr = std::make_shared<SockAddress>();
+//        socklen_t  cli_addr_len;
+//        memset(cli_addr.get(), 0, sizeof(sockaddr));
+//        cli_fd = accept(listen_fd, cli_addr.get(), &cli_addr_len);
+        cli_fd = listen_socket_->Accept(*cli_addr);
         if (cli_fd == -1) {
             logger->warn("accept socket error: %v(code:%v)\n", strerror(errno), errno);
         } else {
@@ -251,7 +251,7 @@ namespace tink {
     }
 
     void Server::OperateEvent(uint32_t fd, uint32_t id, int op, int state) {
-        struct epoll_event ev;
+        struct epoll_event ev {0};
         ev.events = state;
         ev.data.u32 = id;
         epoll_ctl(epoll_fd_, op, fd, &ev);

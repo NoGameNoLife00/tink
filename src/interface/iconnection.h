@@ -11,6 +11,7 @@
 #include <imessage_handler.h>
 #include <mutex>
 #include <buffer.h>
+#include <socket.h>
 
 namespace tink {
 
@@ -26,7 +27,7 @@ namespace tink {
             return 0;
         };
         // 获取客户端的tcp状态 ip port
-        virtual RemoteAddrPtr GetRemoteAddr() = 0;
+        virtual SockAddressPtr GetRemoteAddr() = 0;
         // 发送msg包到客户端
         virtual int SendMsg(uint32_t msg_id, BytePtr &data, uint32_t data_len) {
             return 0;

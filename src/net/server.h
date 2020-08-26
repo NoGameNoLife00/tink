@@ -10,6 +10,7 @@
 #include <map>
 #include <iconn_manager.h>
 #include <vector>
+#include <socket.h>
 
 namespace tink {
 
@@ -31,14 +32,14 @@ namespace tink {
         void CallOnConnStart(IConnectionPtr &&conn);
         void CallOnConnStop(IConnectionPtr &&conn);
     private:
-        void HandleAccept_(int listen_fd);
+        void HandleAccept_();
         void HandleEvents_(int event_num);
         void DoRead_(int id);
         void DoWrite_(int id);
         void DoError_(int id);
         StringPtr name_;
-        StringPtr ip_;
-        int ip_version_;
+//        StringPtr ip_;
+//        int ip_version_;
         int port_;
         // server的消息管理模块
         IMessageHandlerPtr msg_handler_;
@@ -50,7 +51,9 @@ namespace tink {
         static const int InitEvenListCount = 32;
         typedef std::array<struct epoll_event, InitEvenListCount> EventList;
         int epoll_fd_;
-        int listen_fd_;
+//        int listen_fd_;
+        std::unique_ptr<Socket> listen_socket_;
+        SockAddressPtr listen_addr_;
         EventList events_;
 
         // 连接启动和停止的钩子函数

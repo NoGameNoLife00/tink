@@ -3,7 +3,7 @@
 #include <global_mng.h>
 #include <assert.h>
 #include <arpa/inet.h>
-#include "socket_api.h"
+#include <socket_api.h>
 
 namespace tink {
     int SocketApi::Connect(int fd, const struct sockaddr *addr) {
@@ -152,13 +152,13 @@ namespace tink {
 
     void SocketApi::Bind(int fd, const struct sockaddr *addr) {
         if (::bind(fd, addr, static_cast<socklen_t>(sizeof(struct sockaddr_in6))) < 0) {
-            logger->fatal("socket.bind ");
+            logger->fatal("socket.bind %v:%v", strerror(errno), errno);
         }
     }
 
     void SocketApi::Listen(int fd) {
         if (::listen(fd, SOMAXCONN) < 0) {
-            logger->fatal("socket.listen");
+            logger->fatal("socket.listen %v:%v", strerror(errno), errno);
         }
     }
 
@@ -198,4 +198,23 @@ namespace tink {
         }
         return conn_fd;
     }
+
+    int SocketApi::Create(sa_family_t family, bool nonblock) {
+        int sock_fd = 0;
+        if (nonblock) {
+            sock_fd = ::socket(family, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, IPPROTO_TCP);
+            if (sock_fd < 0)
+            {
+                logger->fatal("sockets.Create %v:%v",strerror(errno), errno);
+            }
+        } else {
+            sock_fd = ::socket(family, SOCK_STREAM, IPPROTO_TCP);
+            if (sock_fd < 0)
+            {
+                logger->fatal("sockets.create %v:%v", strerror(errno), errno);
+            }
+        }
+        return sock_fd;
+    }
+
 }

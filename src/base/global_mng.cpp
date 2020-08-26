@@ -36,7 +36,7 @@ namespace tink {
             char* buff = new char[f_size];
             rewind(fp);
             fread(buff, sizeof(char), f_size, fp);
-            buff[f_size] = '\0';
+            buff[f_size-1] = '\0';
             json = cJSON_Parse(buff);
             cJSON *item = cJSON_GetObjectItem(json, "name");
             if (item != nullptr) {
