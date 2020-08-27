@@ -6,7 +6,7 @@
 #include <cstring>
 #include <error_code.h>
 #include <message_handler.h>
-
+#include <pbtest.pb.h>
 //#include <easylogging++.h>
 
 class PingRouter : public tink::BaseRouter {
