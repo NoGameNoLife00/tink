@@ -16,11 +16,11 @@
 
 #define MAX_BUF_SIZE 2048
 namespace tink {
-    int Server::Init(StringPtr &name, int ip_version,
-                     StringPtr &ip, int port,
+    int Server::Init(string &name, int ip_version,
+                     string &ip, int port,
                      IMessageHandlerPtr &&msg_handler) {
         name_ = name;
-        listen_addr_ = std::make_shared<SockAddress>(ip->c_str(), port, ip_version == AF_INET6);
+        listen_addr_ = std::make_shared<SockAddress>(ip.c_str(), port, ip_version == AF_INET6);
         msg_handler_ = msg_handler;
         conn_mng_ = std::make_shared<ConnManager>();
         return 0;
@@ -30,8 +30,8 @@ namespace tink {
     int Server::Start() {
         auto globalObj = GlobalInstance;
         logger->info("[tink] Server Name:%v, listener at IP:%v, Port:%v, is starting.\n",
-                name_->c_str(), listen_addr_->ToIp(), listen_addr_->ToPort());
-        logger->info("[tink] Version: %v, MaxConn:%v, MaxPacketSize:%v\n", globalObj->GetVersion()->c_str(),
+                name_.c_str(), listen_addr_->ToIp(), listen_addr_->ToPort());
+        logger->info("[tink] Version: %v, MaxConn:%v, MaxPacketSize:%v\n", globalObj->GetVersion().c_str(),
                globalObj->GetMaxConn(), globalObj->GetMaxPackageSize());
 
         // 开启worker工作池
@@ -60,7 +60,7 @@ namespace tink {
 //            logger->info("listen socket error: %v(code:%v)\n", strerror(errno), errno);
 //            exit(1);
 //        }
-        logger->info("Start tink Server %v listening\n", name_.get()->c_str());
+        logger->info("Start tink Server %v listening\n", name_.c_str());
         epoll_fd_ = epoll_create1(EPOLL_CLOEXEC);
         OperateEvent(listen_socket_->GetSockFd(), ListenID, EPOLL_CTL_ADD, EPOLLIN);
         int fd_num;

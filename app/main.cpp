@@ -6,7 +6,6 @@
 #include <cstring>
 #include <error_code.h>
 #include <message_handler.h>
-#include <pbtest.pb.h>
 //#include <easylogging++.h>
 
 class PingRouter : public tink::BaseRouter {
@@ -57,8 +56,8 @@ int main(int argc, char** argv) {
 
     globalObj->SetServer(std::dynamic_pointer_cast<tink::IServer>(s));
     handler->Init();
-    s->Init(const_cast<StringPtr &>(globalObj->GetName()), AF_INET,
-            const_cast<StringPtr &>(globalObj->GetHost()), globalObj->GetPort(),
+    s->Init(const_cast<std::string &>(globalObj->GetName()), AF_INET,
+            const_cast<std::string &>(globalObj->GetHost()), globalObj->GetPort(),
             std::dynamic_pointer_cast<tink::IMessageHandler>(handler));
     s->AddRouter(0, br);
     s->AddRouter(1, hi_br);

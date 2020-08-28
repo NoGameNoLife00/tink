@@ -1,7 +1,12 @@
 cmake_minimum_required(VERSION 3.1)
-project(tink)
+
+include(cmake/utils.cmake)
+tink_extract_version()
+project(tink VERSION ${TINK_VERSION})
+
+MESSAGE(** INFO "------------------------------------------------")
+MESSAGE(** STATUS "Build tink ${TINK_VERSION}")
 #include(ExternalProject)
-#
 #ExternalProject_Add(libhello
 #        URL    "sharelib.zip"
 #        DOWNLOAD_DIR ${libhello_download}
@@ -15,17 +20,18 @@ project(tink)
 #set(CMAKE_CXX_STANDARD 14)
 #include_directories(D:\\DEV\\cygwin\\usr\\include)
 #link_directories(D:\\DEV\\cygwin\\lib)
+
 include_directories(src/interface)
 include_directories(src/net)
 include_directories(src/base)
-include_directories(libs/cjson)
-include_directories(libs/easyloggingpp)
+include_directories(3rdparty/cjson)
+include_directories(3rdparty/easyloggingpp)
 include_directories(src)
 include_directories(protobuf)
 
 
 add_subdirectory(src)
-add_subdirectory(libs/googletest)
+add_subdirectory(3rdparty/googletest)
 add_subdirectory(test)
 add_subdirectory(example)
 add_subdirectory(app)

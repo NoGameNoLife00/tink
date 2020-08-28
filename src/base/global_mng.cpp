@@ -3,19 +3,20 @@
 #include <stdio.h>
 #include <cJSON.h>
 #include <sys/unistd.h>
+#include <version.h>
+
 INITIALIZE_EASYLOGGINGPP
 namespace tink {
     el::Logger* logger = el::Loggers::getLogger("default");
 
-    GlobalMng::GlobalMng() {
-        name_ = std::make_shared<std::string>("tink_server");
-        host_ = std::make_shared<std::string>("0.0.0.0");
-        version_ = std::make_shared<std::string>("v0.9");
-        port_ = 8896;
-        max_conn_ = 10000;
-        max_package_size_ = 2048;
-        worker_pool_size_ = 10;
-        max_worker_task_len_ = 1024;
+    GlobalMng::GlobalMng() : name_("tink_server"),
+        host_("0.0.0.0"),
+        version_(TINK_VERSION_STR),
+        port_(8896),
+        max_conn_(10000),
+        max_package_size_(2048),
+        worker_pool_size_(10),
+        max_worker_task_len_(1024) {
     }
 
     int GlobalMng::Init() {
@@ -40,14 +41,12 @@ namespace tink {
             json = cJSON_Parse(buff);
             cJSON *item = cJSON_GetObjectItem(json, "name");
             if (item != nullptr) {
-                name_->clear();
-                name_->append(item->valuestring);
+                name_ = (item->valuestring);
             }
 
             item = cJSON_GetObjectItem(json, "host");
             if (item != nullptr) {
-                host_->clear();
-                host_->append(item->valuestring);
+                host_ = (item->valuestring);
             }
             item = cJSON_GetObjectItem(json, "port");
             if (item != nullptr) {
@@ -73,11 +72,11 @@ namespace tink {
         return server_;
     }
 
-    const StringPtr& GlobalMng::GetHost() const {
+    const string& GlobalMng::GetHost() const {
         return host_;
     }
 
-    const StringPtr& GlobalMng::GetName() const {
+    const string& GlobalMng::GetName() const {
         return name_;
     }
 
@@ -85,7 +84,7 @@ namespace tink {
         return port_;
     }
 
-    const StringPtr& GlobalMng::GetVersion() const {
+    const string& GlobalMng::GetVersion() const {
         return version_;
     }
 

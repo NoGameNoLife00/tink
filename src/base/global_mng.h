@@ -26,28 +26,27 @@ namespace tink {
 
         void SetServer(std::shared_ptr<IServer>&& s);
 
-        const StringPtr& GetHost() const;
+        const string& GetHost() const;
 
-        const StringPtr& GetName() const;
+        const string& GetName() const;
 
         int GetPort() const;
 
-        const StringPtr& GetVersion() const;
+        const string& GetVersion() const;
 
         int GetMaxConn() const;
 
         uint32_t GetMaxPackageSize() const;
         uint32_t GetWorkerPoolSize() const;
     private:
-        // 框架
-        std::shared_ptr<std::string> version_;
         int max_conn_;
         uint32_t max_package_size_;
 
         // 全局Server对象
         std::shared_ptr<IServer> server_;
-        std::shared_ptr<std::string> host_;
-        std::shared_ptr<std::string> name_;
+        string version_;
+        string host_;
+        string name_;
         int port_;
         uint32_t worker_pool_size_;
         // 框架允许的最大任务数量

@@ -3798,7 +3798,7 @@ class Loggers : base::StaticClass {
     return ELPP->registeredLoggers()->loggerRegistrationCallback<T>(id);
   }
   /// @brief Unregisters logger - use it only when you know what you are doing, you may unregister
-  ///        loggers initialized / used by third-party libs.
+  ///        loggers initialized / used by third-party 3rdparty.
   static bool unregisterLogger(const std::string& identity);
   /// @brief Whether or not logger with id is registered
   static bool hasLogger(const std::string& identity);

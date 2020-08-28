@@ -18,8 +18,8 @@ namespace tink {
     , public std::enable_shared_from_this<Server>
             {
     public:
-        int Init(StringPtr &name, int ip_version,
-                 StringPtr &ip, int port,
+        int Init(string &name, int ip_version,
+                 string &ip, int port,
                  IMessageHandlerPtr &&msg_handler);
         int Start();
         int Run();
@@ -37,10 +37,7 @@ namespace tink {
         void DoRead_(int id);
         void DoWrite_(int id);
         void DoError_(int id);
-        StringPtr name_;
-//        StringPtr ip_;
-//        int ip_version_;
-        int port_;
+        string name_;
         // server的消息管理模块
         IMessageHandlerPtr msg_handler_;
         // server的连接管理器
