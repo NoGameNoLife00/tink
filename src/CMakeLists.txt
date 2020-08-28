@@ -2,14 +2,14 @@
 #设置 BINARY 为项目名IndexProject
 set(BINARY ${CMAKE_PROJECT_NAME})
 
-include_directories(../3rdparty/cjson)
-include_directories(../3rdparty/easyloggingpp)
+#include_directories(../3rdparty/cjson)
+#include_directories(../3rdparty/easyloggingpp/src)
 include_directories(interface)
 include_directories(base)
 include_directories(net)
 
 file(GLOB_RECURSE SOURCES LIST_DIRECTORIES true *.h *.cpp)
-set(SOURCES ../3rdparty/cjson/cJSON.c ../3rdparty/easyloggingpp/easylogging++.cc ${SOURCES})
+set(SOURCES ${SOURCES} ../3rdparty/easyloggingpp/src/easylogging++.cc ../3rdparty/cjson/cJSON.c)
 add_definitions(-DELPP_THREAD_SAFE
         -DELPP_STL_LOGGING
         -DELPP_LOG_UNORDERED_MAP

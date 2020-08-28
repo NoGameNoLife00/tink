@@ -2,10 +2,15 @@ cmake_minimum_required(VERSION 3.1)
 
 include(cmake/utils.cmake)
 tink_extract_version()
-project(tink VERSION ${TINK_VERSION})
+project(tink VERSION ${TINK_VERSION} LANGUAGES CXX C)
+
 
 MESSAGE(** INFO "------------------------------------------------")
 MESSAGE(** STATUS "Build tink ${TINK_VERSION}")
+
+#INCLUDE(cmake/load_3rdparty.cmake)
+
+add_subdirectory(3rdparty)
 #include(ExternalProject)
 #ExternalProject_Add(libhello
 #        URL    "sharelib.zip"
@@ -25,13 +30,12 @@ include_directories(src/interface)
 include_directories(src/net)
 include_directories(src/base)
 include_directories(3rdparty/cjson)
-include_directories(3rdparty/easyloggingpp)
+include_directories(3rdparty/easyloggingpp/src)
 include_directories(src)
 include_directories(protobuf)
 
 
 add_subdirectory(src)
-add_subdirectory(3rdparty/googletest)
 add_subdirectory(test)
 add_subdirectory(example)
 add_subdirectory(app)
