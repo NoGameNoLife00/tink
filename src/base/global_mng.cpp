@@ -2,7 +2,6 @@
 #include "scope_guard.h"
 #include <stdio.h>
 #include <cJSON.h>
-#include <sys/unistd.h>
 #include <version.h>
 
 INITIALIZE_EASYLOGGINGPP

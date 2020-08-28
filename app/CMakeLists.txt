@@ -4,6 +4,6 @@ file(GLOB_RECURSE APP_SOURCES LIST_DIRECTORIES false *.h *.cpp)
 set(SOURCES ${APP_SOURCES})
 
 add_executable(${BINARY} ${APP_SOURCES})
-target_link_libraries(${BINARY} PUBLIC ${CMAKE_PROJECT_NAME}_lib ${CMAKE_PROJECT_NAME}_proto)
 
 SET(EXECUTABLE_OUTPUT_PATH  ${PROJECT_SOURCE_DIR}/bin)
+target_link_libraries(${BINARY} PUBLIC ${CMAKE_PROJECT_NAME}_lib ${CMAKE_PROJECT_NAME}_proto)

@@ -1,12 +1,19 @@
 cmake_minimum_required(VERSION 3.1)
 
 include(cmake/utils.cmake)
+include(cmake/messagecolor.cmake)
 tink_extract_version()
 project(tink VERSION ${TINK_VERSION} LANGUAGES CXX C)
 
+IF(NOT CMAKE_BUILD_TYPE)
+    SET(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose Release or Debug" FORCE)
+ENDIF()
 
-MESSAGE(** INFO "------------------------------------------------")
-MESSAGE(** STATUS "Build tink ${TINK_VERSION}")
+MESSAGE(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
+
+MESSAGE( ** INFO "------------------------------------------------")
+MESSAGE( ** STATUS "Build tink ${TINK_VERSION}")
+
 
 #INCLUDE(cmake/load_3rdparty.cmake)
 
