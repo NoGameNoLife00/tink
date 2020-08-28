@@ -20,7 +20,7 @@ namespace tink {
                      string &ip, int port,
                      IMessageHandlerPtr &&msg_handler) {
         name_ = name;
-        listen_addr_ = std::make_shared<SockAddress>(ip.c_str(), port, ip_version == AF_INET6);
+        listen_addr_ = std::make_shared<SockAddress>(ip, port, ip_version == AF_INET6);
         msg_handler_ = msg_handler;
         conn_mng_ = std::make_shared<ConnManager>();
         return 0;
@@ -30,7 +30,7 @@ namespace tink {
     int Server::Start() {
         auto globalObj = GlobalInstance;
         logger->info("[tink] Server Name:%v, listener at IP:%v, Port:%v, is starting.\n",
-                name_.c_str(), listen_addr_->ToIp(), listen_addr_->ToPort());
+                name_, listen_addr_->ToIp(), listen_addr_->ToPort());
         logger->info("[tink] Version: %v, MaxConn:%v, MaxPacketSize:%v\n", globalObj->GetVersion().c_str(),
                globalObj->GetMaxConn(), globalObj->GetMaxPackageSize());
 
