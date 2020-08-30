@@ -55,6 +55,7 @@ void DoConnectionLost(tink::IConnectionPtr& conn) {
 int main(int argc, char** argv) {
     START_EASYLOGGINGPP(argc, argv);
     setbuf(stdout, NULL); // debug
+    srand(static_cast<unsigned>(time(NULL)));
     auto globalObj = GlobalInstance;
     globalObj->Init();
 
@@ -62,7 +63,7 @@ int main(int argc, char** argv) {
 
     tink::IRouterPtr br(new PingRouter());
     tink::IRouterPtr hi_br(new HiRouter());
-    StringPtr name(new std::string("tink"));
+    StringPtr name(new std::string("demo game tink"));
     StringPtr ip(new std::string("0.0.0.0"));
 
     std::shared_ptr<tink::MessageHandler>  handler(new tink::MessageHandler());

@@ -39,14 +39,14 @@ include_directories(src/base)
 include_directories(3rdparty/cjson)
 include_directories(3rdparty/easyloggingpp/src)
 include_directories(src)
-include_directories(protobuf)
-
 
 add_subdirectory(src)
 add_subdirectory(test)
 add_subdirectory(example)
-add_subdirectory(app)
-add_subdirectory(protobuf)
+add_subdirectory(demo_game)
+
+add_definitions(-std=c++2a)
+
 #file(GLOB_RECURSE SOURCES LIST_DIRECTORIES true *.h *.cpp)
 
 

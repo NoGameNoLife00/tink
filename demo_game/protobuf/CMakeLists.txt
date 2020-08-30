@@ -1,4 +1,4 @@
-set(BINARY ${CMAKE_PROJECT_NAME})
+set(BINARY demo)
 
 include(FindProtobuf)
 find_package(Protobuf REQUIRED)
@@ -8,7 +8,7 @@ else()
     message(FATAL_ERROR "protobuf library is needed but cant be found")
 endif()
 
-set(PROTOBUF_NAME "pbtest")
+set(PROTOBUF_NAME "msg")
 set(PROTOBUF_FILE ${PROTOBUF_NAME}.proto)
 set(PROTO_SRCS ${PROTOBUF_NAME}.pb.cc)
 set(PROTO_HDRS ${PROTOBUF_NAME}.pb.h)
