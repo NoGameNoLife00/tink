@@ -6,8 +6,10 @@
 #include <cstring>
 #include <error_code.h>
 #include <message_handler.h>
-#include <easylogging++.h>
+//#include <easylogging++.h>
 #include <iconnection.h>
+#include <player.h>
+
 class PingRouter : public tink::BaseRouter {
     int Handle(tink::IRequest &request) override {
         printf("call ping router [handle]\n");
@@ -40,11 +42,11 @@ class HiRouter : public tink::BaseRouter {
 
 };
 
-void DoConnectionBegin(tink::IConnectionPtr& conn) {
-    printf("do_connection_begin is called...\n");
-    BytePtr data = std::make_unique<byte[]>(50);
-    strcpy(data.get(), "DoConnection BEGIN...\n");
-    conn->SendMsg(2, data, strlen(data.get())+1);
+void DoConnectionAdd(tink::IConnectionPtr& conn) {
+    logic::Player player(conn);
+    player.SyncPid();
+    player.BroadCastStartPosition();
+//    LOG(INFO) << "player pid = " << player.pid << "online";
 }
 
 
@@ -74,7 +76,7 @@ int main(int argc, char** argv) {
             const_cast<std::string &>(globalObj->GetHost()), globalObj->GetPort(),
             std::dynamic_pointer_cast<tink::IMessageHandler>(handler));
     s->SetOnConnStop(&DoConnectionLost);
-    s->SetOnConnStart(&DoConnectionBegin);
+    s->SetOnConnStart(&DoConnectionAdd);
     s->AddRouter(0, br);
     s->AddRouter(1, hi_br);
     s->Run();

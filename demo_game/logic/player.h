@@ -19,6 +19,10 @@ namespace logic {
         explicit Player(IConnectionPtr conn);
         // 发送protobuf数据到客户端
         void SendMsg(int32_t msg_id, protobuf::Message& msg);
+        // 同步玩家pid
+        void SyncPid();
+        // 广播玩家出生地点
+        void BroadCastStartPosition();
     private:
         static std::atomic_int pid_gen;
     };

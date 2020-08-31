@@ -1,6 +1,8 @@
+#include <easylogging++.h>
 #include "player.h"
-
+#include <msg_type.h>
 namespace logic {
+    el::Logger* logger = el::Loggers::getLogger("default");
     std::atomic_int Player::pid_gen(1);
 
     int Random(int x, int y) {
@@ -16,11 +18,35 @@ namespace logic {
     }
 
     void Player::SendMsg(int32_t msg_id, protobuf::Message &msg) {
-        std::string data;
-        if (!msg.SerializeToString(&data)) {
+        int size = msg.ByteSizeLong();
+        BytePtr data = std::make_unique<byte[]>(size);
+        LOG(DEBUG) << "msg data = " << msg.DebugString();
+        if (!msg.SerializeToArray(data.get(), size)) {
             return;
         }
-        
+        int ret = conn->SendMsg(msg_id, data, size);
+        if (ret != E_OK) {
+            LOG(WARNING) << "player send msg error";
+        }
+    }
+
+    void Player::SyncPid() {
+        pb::SyncPid data;
+        data.set_pid(pid);
+        SendMsg(MSG_SYNC_PID, data);
+    }
+
+    void Player::BroadCastStartPosition() {
+        pb::BroadCast data;
+        pb::Position *pos = new pb::Position();
+        pos->set_x(x);
+        pos->set_y(y);
+        pos->set_v(v);
+        pos->set_z(z);
+        data.set_pid(pid);
+        data.set_tp(2); // ¹ã²¥: 2-Î»ÖÃ×ø±ê
+        data.set_allocated_p(pos);
+        SendMsg(MSG_BROADCAST_POS, data);
     }
 
 }
