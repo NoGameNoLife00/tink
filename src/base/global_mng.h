@@ -14,6 +14,8 @@
 #define READ_BUF_SIZE 1024
 
 #define GlobalInstance (tink::Singleton<tink::GlobalMng>::GetInstance())
+extern el::Logger* logger;
+
 namespace tink {
     // 存储框架的全局参数
     class GlobalMng {
@@ -52,7 +54,54 @@ namespace tink {
         // 框架允许的最大任务数量
         uint32_t max_worker_task_len_;
     };
-    extern el::Logger* logger;
+
+
+    template <typename T, typename... Args>
+    void inline LogInfo(const char* s, const T& value, const Args&... args) {
+        logger->info(s, value, args...);
+    }
+    template <typename T>
+    inline void LogInfo(const T& value) {
+        logger->info(value);
+    }
+
+    template <typename T, typename... Args>
+    void inline LogWarn(const char* s, const T& value, const Args&... args) {
+        logger->warn(s, value, args...);
+    }
+    template <typename T>
+    inline void LogWarn(const T& value) {
+        logger->warn(value);
+    }
+
+
+    template <typename T, typename... Args>
+    void inline LogError(const char* s, const T& value, const Args&... args) {
+        logger->error(s, value, args...);
+    }
+    template <typename T>
+    inline void LogError(const T& value) {
+        logger->error(value);
+    }
+
+    template <typename T, typename... Args>
+    void inline LogFatal(const char* s, const T& value, const Args&... args) {
+        logger->fatal(s, value, args...);
+    }
+    template <typename T>
+    inline void LogFatal(const T& value) {
+        logger->fatal(value);
+    }
+
+    template <typename T, typename... Args>
+    void inline LogDebug(const char* s, const T& value, const Args&... args) {
+        logger->debug(s, value, args...);
+    }
+    template <typename T>
+    inline void LogDebug(const T& value) {
+        logger->debug(value);
+    }
+
 }
 
 
