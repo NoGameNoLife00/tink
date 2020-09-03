@@ -1,4 +1,3 @@
-#include <easylogging++.h>
 #include "player.h"
 #include <msg_type.h>
 #include <global_mng.h>
@@ -22,8 +21,6 @@ namespace logic {
     void Player::SendMsg(int32_t msg_id, protobuf::Message &msg) {
         int size = msg.ByteSizeLong();
         BytePtr data = std::make_unique<byte[]>(size);
-//        el::Logger* logger = el::Loggers::getLogger("logic");
-//        logger->debug("msg data = %v", msg.DebugString());
         spdlog::info("msg data = %v", msg.DebugString());
         if (!msg.SerializeToArray(data.get(), size)) {
             return;

@@ -20,7 +20,6 @@ include_directories(src/interface)
 include_directories(src/net)
 include_directories(src/base)
 include_directories(3rdparty/cjson)
-include_directories(3rdparty/easyloggingpp/src)
 include_directories(3rdparty/spdlog/include)
 include_directories(src)
 

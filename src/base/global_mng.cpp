@@ -3,8 +3,7 @@
 #include <stdio.h>
 #include <cJSON.h>
 #include <version.h>
-//INITIALIZE_EASYLOGGINGPP
-//el::Logger* logger = el::Loggers::getLogger("default");
+
 namespace tink {
     GlobalMng::GlobalMng() : name_("tink_server"),
         host_("0.0.0.0"),
