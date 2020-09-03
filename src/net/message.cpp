@@ -36,7 +36,7 @@ namespace tink {
     }
 
     Message::~Message() {
-        logger->debug("message destruction id:%v", id_);
+        spdlog::debug("message destruction id:{}", id_);
     }
 
 }

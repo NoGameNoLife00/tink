@@ -3,11 +3,9 @@
 #include <stdio.h>
 #include <cJSON.h>
 #include <version.h>
-
-INITIALIZE_EASYLOGGINGPP
+//INITIALIZE_EASYLOGGINGPP
+//el::Logger* logger = el::Loggers::getLogger("default");
 namespace tink {
-    el::Logger* logger = el::Loggers::getLogger("default");
-
     GlobalMng::GlobalMng() : name_("tink_server"),
         host_("0.0.0.0"),
         version_(TINK_VERSION_STR),
@@ -19,8 +17,9 @@ namespace tink {
     }
 
     int GlobalMng::Init() {
-        el::Configurations conf("../etc/log.conf");
-        el::Loggers::reconfigureAllLoggers(conf);
+//        el::Configurations conf("../etc/log.conf");
+//        el::Loggers::reconfigureAllLoggers(conf);
+//        logger = el::Loggers::getLogger("default");
         FILE *fp = nullptr;
         cJSON *json;
         char *out;
@@ -61,7 +60,7 @@ namespace tink {
             }
             delete [] buff;
         } else {
-            logger->info("tink open file etc/config.json failed");
+            spdlog::info("tink open file etc/config.json failed");
             exit(0);
         }
         return 0;

@@ -29,9 +29,9 @@ namespace tink {
 
     int Server::Start() {
         auto globalObj = GlobalInstance;
-        logger->info("[tink] Server Name:%v, listener at IP:%v, Port:%v, is starting.\n",
+        spdlog::info("[tink] Server Name:{}, listener at IP:{}, Port:{}, is starting.\n",
                 name_, listen_addr_->ToIp(), listen_addr_->ToPort());
-        logger->info("[tink] Version: %v, MaxConn:%v, MaxPacketSize:%v\n", globalObj->GetVersion().c_str(),
+        spdlog::info("[tink] Version: {}, MaxConn:{}, MaxPacketSize:{}\n", globalObj->GetVersion().c_str(),
                globalObj->GetMaxConn(), globalObj->GetMaxPackageSize());
 
         // 开启worker工作池
@@ -52,15 +52,15 @@ namespace tink {
 //        inet_pton(ip_version_, "0.0.0.0", &srv_addr.sin_addr);
 //        srv_addr.sin_port = htons(port_);
 //        if (bind(listen_fd_, (struct sockaddr*)&srv_addr, sizeof(srv_addr)) == -1) {
-//            logger->info("bind socket error: %v(code:%v)\n", strerror(errno), errno);
+//            spdlog::info("bind socket error: {}(code:{})\n", strerror(errno), errno);
 //            exit(1);
 //        }
 
 //        if (listen(listen_fd_, 20) == -1) {
-//            logger->info("listen socket error: %v(code:%v)\n", strerror(errno), errno);
+//            spdlog::info("listen socket error: {}(code:{})\n", strerror(errno), errno);
 //            exit(1);
 //        }
-        logger->info("Start tink Server %v listening\n", name_.c_str());
+        spdlog::info("Start tink Server {} listening\n", name_.c_str());
         epoll_fd_ = epoll_create1(EPOLL_CLOEXEC);
         OperateEvent(listen_socket_->GetSockFd(), ListenID, EPOLL_CTL_ADD, EPOLLIN);
         int fd_num;
@@ -77,7 +77,7 @@ namespace tink {
     }
 
     int Server::Stop() {
-        logger->info("[Stop] tink server name %s", name_);
+        spdlog::info("[Stop] tink server name %s", name_);
         conn_mng_->ClearConn();
         return 0;
     }
@@ -90,7 +90,7 @@ namespace tink {
 
     void Server::CallOnConnStop(IConnectionPtr &&conn) {
         if (on_conn_stop_) {
-            logger->info("[call] on_conn_stop ..");
+            spdlog::info("[call] on_conn_stop ..");
             on_conn_stop_(conn);
         }
 
@@ -98,7 +98,7 @@ namespace tink {
 
     void Server::CallOnConnStart(IConnectionPtr &&conn) {
         if (on_conn_start_) {
-            logger->info("[call] on_conn_start ..");
+            spdlog::info("[call] on_conn_start ..");
             on_conn_start_(conn);
         }
     }
@@ -139,12 +139,12 @@ namespace tink {
 //        cli_fd = accept(listen_fd, cli_addr.get(), &cli_addr_len);
         cli_fd = listen_socket_->Accept(*cli_addr);
         if (cli_fd == -1) {
-            logger->warn("accept socket error: %v(code:%v)\n", strerror(errno), errno);
+            spdlog::warn("accept socket error: {}(code:{})\n", strerror(errno), errno);
         } else {
             // 判断最大连接数
             if (conn_mng_->Size() >= GlobalInstance->GetMaxConn()) {
                 // TODO 发送连接失败消息
-                logger->warn("too many connections max_conn=%v", GlobalInstance->GetMaxConn());
+                spdlog::warn("too many connections max_conn={}", GlobalInstance->GetMaxConn());
                 close(cli_fd);
                 return;
             }
@@ -160,10 +160,10 @@ namespace tink {
     void Server::DoError_(int id) {
         auto conn = conn_mng_->Get(id);
         if (!conn) {
-            logger->warn("close not find conn, id=%v", id);
+            spdlog::warn("close not find conn, id={}", id);
             return;
         }
-        logger->warn("conn error, id=%v", id);
+        spdlog::warn("conn error, id={}", id);
         OperateEvent(conn->GetTcpConn(), id, EPOLL_CTL_DEL, EPOLLIN);
         conn->Stop();
     }
@@ -179,7 +179,7 @@ namespace tink {
 
         auto conn = conn_mng_->Get(id);
         if (!conn) {
-            logger->error("[reader] not find connect:%v", id);
+            spdlog::error("[reader] not find connect:{}", id);
             return;
         }
         int fd = conn->GetTcpConn();
@@ -191,26 +191,26 @@ namespace tink {
         // 读取客户端发送的包头
         int ret = read(fd, head_data.get(), head_len);
         if (ret == -1) {
-            logger->error("[reader] msg head error:%v\n", strerror(errno));
+            spdlog::error("[reader] msg head error:{}\n", strerror(errno));
             on_error();
             return;
         } else if (ret == 0) {
-            logger->warn("[reader] client close");
+            spdlog::warn("[reader] client close");
             on_error();
             return;
         }
         ret = DataPack::Unpack(head_data, *msg.get());
         if (ret != E_OK) {
-            logger->warn("[reader] unpack error: %v\n", ret);
+            spdlog::warn("[reader] unpack error: {}\n", ret);
             on_error();
             return;
         }
         // 根据dataLen，再读取Data,放入msg中
         if (msg->GetDataLen() > 0) {
-            logger->debug("msg data len:%v", msg->GetDataLen());
+            spdlog::debug("msg data len:{}", msg->GetDataLen());
             BytePtr buf = std::make_unique<byte[]>(msg->GetDataLen());
             if ((read(fd, buf.get(), msg->GetDataLen()) == -1)) {
-                logger->warn("[reader] msg data error:%v\n", strerror(errno));
+                spdlog::warn("[reader] msg data error:{}\n", strerror(errno));
                 on_error();
                 return;
             }
@@ -232,7 +232,7 @@ namespace tink {
         int ret;
         auto conn = conn_mng_->Get(id);
         if (!conn) {
-            logger->warn("[write] not find conn, id=%v", id);
+            spdlog::warn("[write] not find conn, id={}", id);
             return;
         }
         int fd = conn->GetTcpConn();
@@ -242,7 +242,7 @@ namespace tink {
         buffer->Reset();
         if (ret == -1)
         {
-            logger->error("[writer] error:%v\n", strerror(errno));
+            spdlog::error("[writer] error:{}\n", strerror(errno));
             close(fd);
             OperateEvent(fd, id, EPOLL_CTL_DEL, EPOLLOUT);
         }

@@ -16,8 +16,19 @@ MESSAGE( ** STATUS "Build tink ${TINK_VERSION}")
 
 
 #INCLUDE(cmake/load_3rdparty.cmake)
+include_directories(src/interface)
+include_directories(src/net)
+include_directories(src/base)
+include_directories(3rdparty/cjson)
+include_directories(3rdparty/easyloggingpp/src)
+include_directories(3rdparty/spdlog/include)
+include_directories(src)
 
 add_subdirectory(3rdparty)
+add_subdirectory(src)
+add_subdirectory(test)
+add_subdirectory(example)
+add_subdirectory(demo_game)
 #include(ExternalProject)
 #ExternalProject_Add(libhello
 #        URL    "sharelib.zip"
@@ -33,17 +44,9 @@ add_subdirectory(3rdparty)
 #include_directories(D:\\DEV\\cygwin\\usr\\include)
 #link_directories(D:\\DEV\\cygwin\\lib)
 
-include_directories(src/interface)
-include_directories(src/net)
-include_directories(src/base)
-include_directories(3rdparty/cjson)
-include_directories(3rdparty/easyloggingpp/src)
-include_directories(src)
 
-add_subdirectory(src)
-add_subdirectory(test)
-add_subdirectory(example)
-add_subdirectory(demo_game)
+
+
 
 add_definitions(-std=c++2a)
 

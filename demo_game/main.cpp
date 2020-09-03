@@ -55,7 +55,7 @@ void DoConnectionLost(tink::IConnectionPtr& conn) {
 }
 
 int main(int argc, char** argv) {
-    START_EASYLOGGINGPP(argc, argv);
+//    START_EASYLOGGINGPP(argc, argv);
     setbuf(stdout, NULL); // debug
     srand(static_cast<unsigned>(time(NULL)));
     auto globalObj = GlobalInstance;

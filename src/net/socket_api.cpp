@@ -20,14 +20,14 @@ namespace tink {
 
     void SocketApi::Close(int fd) {
         if (::close(fd) < 0) {
-            logger->warn("socket.close");
+            spdlog::warn("socket.close");
         }
     }
 
     void SocketApi::ShutdownWrite(int fd) {
         if (::shutdown(fd, SHUT_WR) < 0)
         {
-            logger->warn("SocketApi::shutdownWrite");
+            spdlog::warn("SocketApi::shutdownWrite");
         }
     }
 
@@ -74,7 +74,7 @@ namespace tink {
         addr->sin_port = HostToNetwork16(port);
         if (::inet_pton(AF_INET, ip, &addr->sin_addr) <= 0)
         {
-            logger->error("SocketApi.fromIpPort");
+            spdlog::error("SocketApi.fromIpPort");
         }
     }
 
@@ -83,7 +83,7 @@ namespace tink {
         addr->sin6_port = HostToNetwork16(port);
         if (::inet_pton(AF_INET6, ip, &addr->sin6_addr) <= 0)
         {
-            logger->error("SocketApi.fromIpPort");
+            spdlog::error("SocketApi.fromIpPort");
         }
     }
 
@@ -113,7 +113,7 @@ namespace tink {
         socklen_t addrlen = static_cast<socklen_t>(sizeof local_addr);
         if (::getsockname(fd, SockAddrCast(&local_addr), &addrlen) < 0)
         {
-            logger->error("SocketApi.getLocalAddr");
+            spdlog::error("SocketApi.getLocalAddr");
         }
         return local_addr;
     }
@@ -124,7 +124,7 @@ namespace tink {
         socklen_t addrlen = static_cast<socklen_t>(sizeof peer_addr);
         if (::getpeername(fd, SockAddrCast(&peer_addr), &addrlen) < 0)
         {
-            logger->error("SocketApi::getPeerAddr");
+            spdlog::error("SocketApi::getPeerAddr");
         }
         return peer_addr;
     }
@@ -152,13 +152,13 @@ namespace tink {
 
     void SocketApi::Bind(int fd, const struct sockaddr *addr) {
         if (::bind(fd, addr, static_cast<socklen_t>(sizeof(struct sockaddr_in6))) < 0) {
-            logger->fatal("socket.bind %v:%v", strerror(errno), errno);
+            spdlog::critical("socket.bind {}:{}", strerror(errno), errno);
         }
     }
 
     void SocketApi::Listen(int fd) {
         if (::listen(fd, SOMAXCONN) < 0) {
-            logger->fatal("socket.listen %v:%v", strerror(errno), errno);
+            spdlog::critical("socket.listen {}:{}", strerror(errno), errno);
         }
     }
 
@@ -168,7 +168,7 @@ namespace tink {
                                 &addrlen, SOCK_NONBLOCK | SOCK_CLOEXEC);
         if (conn_fd < 0) {
             int savedErrno = errno;
-            logger->error("socket.accept");
+            spdlog::error("socket.accept");
             switch (savedErrno)
             {
                 case EAGAIN:
@@ -189,10 +189,10 @@ namespace tink {
                 case ENOTSOCK:
                 case EOPNOTSUPP:
                     // unexpected errors
-                    logger->fatal("unexpected error of ::accept %v", savedErrno);
+                    spdlog::critical("unexpected error of ::accept {}", savedErrno);
                     break;
                 default:
-                    logger->fatal("unknown error of ::accept %v", savedErrno);
+                    spdlog::critical("unknown error of ::accept {}", savedErrno);
                     break;
             }
         }
@@ -205,13 +205,13 @@ namespace tink {
             sock_fd = ::socket(family, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, IPPROTO_TCP);
             if (sock_fd < 0)
             {
-                logger->fatal("sockets.Create %v:%v",strerror(errno), errno);
+                spdlog::critical("sockets.Create {}:{}",strerror(errno), errno);
             }
         } else {
             sock_fd = ::socket(family, SOCK_STREAM, IPPROTO_TCP);
             if (sock_fd < 0)
             {
-                logger->fatal("sockets.create %v:%v", strerror(errno), errno);
+                spdlog::critical("sockets.create {}:{}", strerror(errno), errno);
             }
         }
         return sock_fd;

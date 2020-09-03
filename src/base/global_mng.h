@@ -9,12 +9,12 @@
 #include <iserver.h>
 #include <singleton.h>
 #include <string>
-#include <easylogging++.h>
+#include <spdlog/spdlog.h>
 
 #define READ_BUF_SIZE 1024
 
 #define GlobalInstance (tink::Singleton<tink::GlobalMng>::GetInstance())
-extern el::Logger* logger;
+//extern el::Logger* logger;
 
 namespace tink {
     // 存储框架的全局参数
@@ -56,51 +56,51 @@ namespace tink {
     };
 
 
-    template <typename T, typename... Args>
-    void inline LogInfo(const char* s, const T& value, const Args&... args) {
-        logger->info(s, value, args...);
-    }
-    template <typename T>
-    inline void LogInfo(const T& value) {
-        logger->info(value);
-    }
-
-    template <typename T, typename... Args>
-    void inline LogWarn(const char* s, const T& value, const Args&... args) {
-        logger->warn(s, value, args...);
-    }
-    template <typename T>
-    inline void LogWarn(const T& value) {
-        logger->warn(value);
-    }
-
-
-    template <typename T, typename... Args>
-    void inline LogError(const char* s, const T& value, const Args&... args) {
-        logger->error(s, value, args...);
-    }
-    template <typename T>
-    inline void LogError(const T& value) {
-        logger->error(value);
-    }
-
-    template <typename T, typename... Args>
-    void inline LogFatal(const char* s, const T& value, const Args&... args) {
-        logger->fatal(s, value, args...);
-    }
-    template <typename T>
-    inline void LogFatal(const T& value) {
-        logger->fatal(value);
-    }
-
-    template <typename T, typename... Args>
-    void inline LogDebug(const char* s, const T& value, const Args&... args) {
-        logger->debug(s, value, args...);
-    }
-    template <typename T>
-    inline void LogDebug(const T& value) {
-        logger->debug(value);
-    }
+//    template <typename T, typename... Args>
+//    void inline spdlog::info(const char* s, const T& value, const Args&... args) {
+//        logger->info(s, value, args...);
+//    }
+//    template <typename T>
+//    inline void spdlog::info(const T& value) {
+//        logger->info(value);
+//    }
+//
+//    template <typename T, typename... Args>
+//    void inline spdlog::warn(const char* s, const T& value, const Args&... args) {
+//        logger->warn(s, value, args...);
+//    }
+//    template <typename T>
+//    inline void spdlog::warn(const T& value) {
+//        logger->warn(value);
+//    }
+//
+//
+//    template <typename T, typename... Args>
+//    void inline spdlog::error(const char* s, const T& value, const Args&... args) {
+//        logger->error(s, value, args...);
+//    }
+//    template <typename T>
+//    inline void spdlog::error(const T& value) {
+//        logger->error(value);
+//    }
+//
+//    template <typename T, typename... Args>
+//    void inline spdlog::critical(const char* s, const T& value, const Args&... args) {
+//        logger->fatal(s, value, args...);
+//    }
+//    template <typename T>
+//    inline void spdlog::critical(const T& value) {
+//        logger->fatal(value);
+//    }
+//
+//    template <typename T, typename... Args>
+//    void inline spdlog::debug(const char* s, const T& value, const Args&... args) {
+//        logger->debug(s, value, args...);
+//    }
+//    template <typename T>
+//    inline void spdlog::debug(const T& value) {
+//        logger->debug(value);
+//    }
 
 }
 

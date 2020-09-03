@@ -1,11 +1,11 @@
-project(demo_game)
+#project(demo_game)
 
 set(BINARY demo_game)
 
+add_subdirectory(protobuf)
+
 include_directories(logic)
 include_directories(protobuf)
-
-add_subdirectory(protobuf)
 
 file(GLOB_RECURSE APP_SOURCES LIST_DIRECTORIES false *.h *.cpp)
 
@@ -15,6 +15,6 @@ add_executable(${BINARY} ${APP_SOURCES})
 
 SET(EXECUTABLE_OUTPUT_PATH  ./bin)
 
-file(COPY ${PROJECT_SOURCE_DIR}/etc DESTINATION ./)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/etc DESTINATION ./)
 #file(COPY ${PROJECT_SOURCE_DIR}/etc/log.conf DESTINATION ./)
 target_link_libraries(${BINARY} PUBLIC ${CMAKE_PROJECT_NAME}_lib demo_proto)

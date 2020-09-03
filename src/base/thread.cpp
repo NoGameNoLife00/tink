@@ -90,7 +90,7 @@ namespace tink {
         if (pthread_create(&pid_, NULL, &StartThread, data)) {
             started_ = false;
             delete data;
-            logger->error("pthread_create failed %v:", errno, strerror(errno));
+            spdlog::error("pthread_create failed {}:", errno, strerror(errno));
         } else {
             latch_.Wait();
         }

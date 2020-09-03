@@ -2,17 +2,10 @@
 <project version="4">
   <component name="PublishConfigData">
     <serverData>
-      <paths name="WSL (8b18e3b9-5478-4728-8c13-4d5068f34709)">
+      <paths name="vm (e7118957-bda8-4b06-b4c5-4c638007c13e)">
         <serverdata>
           <mappings>
-            <mapping local="$PROJECT_DIR$" web="/" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="vm (adf55603-afbf-45eb-b0df-ea75e86a6274)">
-        <serverdata>
-          <mappings>
-            <mapping deploy="/tmp/tmp.js7Jgvk6dF" local="$PROJECT_DIR$" />
+            <mapping deploy="/tmp/tmp.pgI7ra0zRU" local="$PROJECT_DIR$" />
           </mappings>
           <excludedPaths>
             <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug" />

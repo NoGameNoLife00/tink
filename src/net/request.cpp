@@ -19,7 +19,7 @@ namespace tink {
     }
 
     Request::~Request() {
-        logger->debug("request destruction msg_id:%v, conn_id:%v", GetMsgId(), conn_->GetConnId());
+        spdlog::debug("request destruction msg_id:{}, conn_id:{}", GetMsgId(), conn_->GetConnId());
 
     }
 }

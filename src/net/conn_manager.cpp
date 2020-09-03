@@ -9,7 +9,7 @@ namespace tink {
             std::lock_guard<Mutex> guard(mutex_);
             conn_map_.insert(std::pair<uint32_t, IConnectionPtr>(conn->GetConnId(), conn));
         }
-        logger->info("conn add to mgr successfully: conn_id =%v, size=%v", conn->GetConnId(), Size());
+        spdlog::info("conn add to mgr successfully: conn_id ={}, size={}", conn->GetConnId(), Size());
     }
 
     void ConnManager::Remove(IConnectionPtr &&conn) {
@@ -17,7 +17,7 @@ namespace tink {
             std::lock_guard<Mutex> guard(mutex_);
             conn_map_.erase(conn->GetConnId());
         }
-        logger->info("conn remove from mgr successfully: conn_id =%v, size=%v", conn->GetConnId(), Size());
+        spdlog::info("conn remove from mgr successfully: conn_id ={}, size={}", conn->GetConnId(), Size());
     }
 
     IConnectionPtr ConnManager::Get(const uint32_t conn_id) {

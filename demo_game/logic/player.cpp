@@ -1,8 +1,10 @@
 #include <easylogging++.h>
 #include "player.h"
 #include <msg_type.h>
+#include <global_mng.h>
+
 namespace logic {
-    el::Logger* logger = el::Loggers::getLogger("default");
+//    el::Logger* logger = el::Loggers::getLogger("default");
     std::atomic_int Player::pid_gen(1);
 
     int Random(int x, int y) {
@@ -20,13 +22,15 @@ namespace logic {
     void Player::SendMsg(int32_t msg_id, protobuf::Message &msg) {
         int size = msg.ByteSizeLong();
         BytePtr data = std::make_unique<byte[]>(size);
-        LOG(DEBUG) << "msg data = " << msg.DebugString();
+//        el::Logger* logger = el::Loggers::getLogger("logic");
+//        logger->debug("msg data = %v", msg.DebugString());
+        spdlog::info("msg data = %v", msg.DebugString());
         if (!msg.SerializeToArray(data.get(), size)) {
             return;
         }
         int ret = conn->SendMsg(msg_id, data, size);
         if (ret != E_OK) {
-            LOG(WARNING) << "player send msg error";
+            spdlog::warn("player send msg error");
         }
     }
 

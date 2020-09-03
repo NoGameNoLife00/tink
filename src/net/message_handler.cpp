@@ -14,14 +14,14 @@ namespace tink {
             iter->second->Handle(request);
             iter->second->PostHandle(request);
         } else {
-            logger->info("handler msg_id =%v not find", request.GetMsgId());
+            spdlog::info("handler msg_id ={} not find", request.GetMsgId());
         }
         return E_OK;
     }
 
     int MessageHandler::AddRouter(uint32_t msg_id, IRouterPtr &router) {
         if (apis.find(msg_id) != apis.end()) {
-            logger->info("msg repeat add, msg_id=%v", msg_id);
+            spdlog::info("msg repeat add, msg_id={}", msg_id);
             return E_MSG_REPEAT_ROUTER;
         }
         apis[msg_id] = router;
@@ -48,13 +48,13 @@ namespace tink {
     void MessageHandler::StartOneWorker(MessageHandler& handler, int worker_id) {
 //        WorkerInfo* info = static_cast<WorkerInfo*>(worker_info_ptr);
 //        if (!info) {
-//            logger->info("worker thread run error, info_ptr is null\n");
+//            spdlog::info("worker thread run error, info_ptr is null\n");
 //            return nullptr;
 //        }
 //        MessageHandler *handler = info->msg_handler;
 //        int worker_id = info->worker_id;
         IRequestMsgQueuePtr msg_queue = handler.task_queue[worker_id];
-        logger->info("work id = %v, is started...\n", worker_id);
+        spdlog::info("work id = {}, is started...\n", worker_id);
         while (true) {
             IRequestPtr req;
             // 消息队列取出router
@@ -62,16 +62,16 @@ namespace tink {
             if (req->GetMsgId() == MSG_ID_EXIT)
                 break;
             handler.DoMsgHandle(*req);
-            logger->debug("req msg %v", req->GetMsgId());
+            spdlog::debug("req msg {}", req->GetMsgId());
         }
-        logger->info("work id = %v, is stopped...\n", worker_id);
+        spdlog::info("work id = {}, is stopped...\n", worker_id);
     }
 
     int MessageHandler::SendMsgToTaskQueue(IRequestPtr &request) {
         // 平均分配给TaskQueue (暂时按客户端connId分配
         int conn_id = request->GetConnection()->GetConnId();
         int workerId = conn_id % worker_pool_size;
-        logger->info("add conn_id = %v, request msg_id =%v to worker_id=%v", conn_id, request->GetMsgId(), workerId);
+        spdlog::info("add conn_id = {}, request msg_id ={} to worker_id={}", conn_id, request->GetMsgId(), workerId);
         task_queue[workerId]->Push(request);
         return 0;
     }

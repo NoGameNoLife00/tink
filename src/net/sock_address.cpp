@@ -82,7 +82,7 @@ namespace tink {
         {
             if (ret)
             {
-                logger->error("SockAddress.resolve");
+                spdlog::error("SockAddress.resolve");
             }
             return false;
         }
