@@ -19,3 +19,4 @@ add_definitions(-std=c++2a)
 # 将框架代码作为静态链接库使用
 add_library(${BINARY}_lib STATIC ${SOURCES})
 target_link_libraries(${BINARY}_lib ${SPDLOG_LIBS} -pthread)
+set_property(TARGET ${BINARY}_lib  PROPERTY CXX_STANDARD 17)

@@ -26,4 +26,6 @@ namespace logic {
     private:
         static std::atomic_int pid_gen;
     };
+
+    typedef std::shared_ptr<Player> PlayerPtr;
 }

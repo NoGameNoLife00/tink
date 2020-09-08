@@ -14,7 +14,6 @@
 #define READ_BUF_SIZE 1024
 
 #define GlobalInstance (tink::Singleton<tink::GlobalMng>::GetInstance())
-//extern el::Logger* logger;
 
 namespace tink {
     // 存储框架的全局参数
