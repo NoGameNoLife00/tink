@@ -9,6 +9,7 @@
 //#include <easylogging++.h>
 #include <iconnection.h>
 #include <player.h>
+#include <world_manager.h>
 
 class PingRouter : public tink::BaseRouter {
     int Handle(tink::IRequest &request) override {
@@ -43,10 +44,11 @@ class HiRouter : public tink::BaseRouter {
 };
 
 void DoConnectionAdd(tink::IConnectionPtr& conn) {
-    logic::Player player(conn);
-    player.SyncPid();
-    player.BroadCastStartPosition();
-//    LOG(INFO) << "player pid = " << player.pid << "online";
+    logic::PlayerPtr player = std::make_shared<logic::Player>(conn);
+    player->SyncPid();
+    player->BroadCastStartPosition();
+    WorldMngInstance->AddPlayer(player);
+    spdlog::info("player pid = {} online...", player->pid);
 }
 
 

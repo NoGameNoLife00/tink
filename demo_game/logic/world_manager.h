@@ -5,12 +5,14 @@
 #include <shared_mutex>
 #include <memory>
 #include <map>
+#include <singleton.h>
 
 
 #define WorldMngInstance (tink::Singleton<logic::WorldManager>::GetInstance())
 namespace logic {
     typedef std::vector<PlayerPtr> PlayerList;
     class WorldManager {
+    public:
         std::shared_ptr<AOI> aoi;
         std::map<int32_t, PlayerPtr> player_map;
         void Init();
@@ -21,7 +23,7 @@ namespace logic {
     private:
         std::shared_timed_mutex mutex_;
     };
-
+//    extern std::shared_ptr<WorldManager> WorldMngObj;
 }
 
 

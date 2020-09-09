@@ -5,12 +5,8 @@
       <paths name="vm (e7118957-bda8-4b06-b4c5-4c638007c13e)">
         <serverdata>
           <mappings>
-            <mapping deploy="/tmp/tmp.pgI7ra0zRU" local="$PROJECT_DIR$" />
+            <mapping deploy="/tmp/tink" local="$PROJECT_DIR$" />
           </mappings>
-          <excludedPaths>
-            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug" />
-            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug" />
-          </excludedPaths>
         </serverdata>
       </paths>
     </serverData>
