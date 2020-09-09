@@ -23,6 +23,8 @@ namespace logic {
         void SyncPid();
         // 广播玩家出生地点
         void BroadCastStartPosition();
+
+        void Talk(const string &content);
     private:
         static std::atomic_int pid_gen;
     };

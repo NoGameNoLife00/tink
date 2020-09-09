@@ -11,6 +11,7 @@ namespace tink {
         Request(IConnectionPtr &conn, IMessagePtr& msg);
         IConnectionPtr & GetConnection();
         BytePtr& GetData();
+        uint32_t GetDataLen();
         int32_t GetMsgId();
 
         ~Request();

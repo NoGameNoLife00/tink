@@ -22,5 +22,9 @@ namespace tink {
         spdlog::debug("request destruction msg_id:{}, conn_id:{}", GetMsgId(), conn_->GetConnId());
 
     }
+
+    uint32_t Request::GetDataLen() {
+        return msg_->GetDataLen();
+    }
 }
 

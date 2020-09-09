@@ -18,10 +18,10 @@ namespace tink {
         virtual IConnectionPtr & GetConnection() = 0;
         // 获取请求的消息数据
         virtual BytePtr & GetData() = 0;
+        // 消息长度
+        virtual uint32_t GetDataLen() { return 0; }
         // 获取请求消息的ID
-        virtual int32_t GetMsgId() {
-            return 0;
-        };
+        virtual int32_t GetMsgId() { return 0; }
 
         virtual ~IRequest() {};
     };

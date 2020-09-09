@@ -6,6 +6,7 @@ add_subdirectory(protobuf)
 
 include_directories(logic)
 include_directories(protobuf)
+include_directories(api)
 
 file(GLOB_RECURSE APP_SOURCES LIST_DIRECTORIES true *.h *.cpp)
 

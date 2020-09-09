@@ -1,9 +1,9 @@
 #include "player.h"
+#include "world_manager.h"
 #include <msg_type.h>
 #include <global_mng.h>
 
 namespace logic {
-//    el::Logger* logger = el::Loggers::getLogger("default");
     std::atomic_int Player::pid_gen(1);
 
     int Random(int x, int y) {
@@ -48,6 +48,17 @@ namespace logic {
         data.set_tp(2); // ¹ã²¥: 2-Î»ÖÃ×ø±ê
         data.set_allocated_p(pos);
         SendMsg(MSG_BROADCAST_POS, data);
+    }
+
+    void Player::Talk(const string &content) {
+        pb::BroadCast msg;
+        msg.set_pid(pid);
+        msg.set_content(content);
+        PlayerList players;
+        WorldMngInstance->GetAllPlayers(players);
+        for (auto& player: players) {
+            player->SendMsg(MSG_BROADCAST_POS, msg);
+        }
     }
 
 }

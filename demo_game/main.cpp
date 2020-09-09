@@ -10,6 +10,7 @@
 #include <iconnection.h>
 #include <player.h>
 #include <world_manager.h>
+#include <msg_type.h>
 
 class PingRouter : public tink::BaseRouter {
     int Handle(tink::IRequest &request) override {
@@ -48,6 +49,7 @@ void DoConnectionAdd(tink::IConnectionPtr& conn) {
     player->SyncPid();
     player->BroadCastStartPosition();
     WorldMngInstance->AddPlayer(player);
+    conn->SetProperty(logic::PROP_PID, std::to_string(player->pid));
     spdlog::info("player pid = {} online...", player->pid);
 }
 

@@ -12,6 +12,7 @@
 #include <atomic>
 #include <buffer.h>
 #include <socket.h>
+#include <map>
 
 namespace tink {
     typedef MessageQueue<IMessagePtr> IMessageQueue;
@@ -43,6 +44,11 @@ namespace tink {
         Mutex &GetMutex() { return mutex_; }
 
         ~Connection();
+
+        string GetProperty(int key);
+
+        void SetProperty(int key, const string &val) ;
+
     private:
         int conn_id_;
         std::unique_ptr<Socket> socket_;
@@ -56,6 +62,7 @@ namespace tink {
         mutable Mutex mutex_;
         BytePtr tmp_buffer_;
         uint32_t tmp_buffer_size_;
+        std::map<int, std::string> property_;
     };
     typedef std::shared_ptr<Connection> ConnectionPtr;
 }

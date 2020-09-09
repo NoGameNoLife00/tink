@@ -39,11 +39,11 @@ namespace tink {
 
         virtual FixBufferPtr& GetBuffer() = 0;
 
-//        virtual uint32_t GetBufferLen() {return 0;};
-//
-//        virtual uint32_t GetBuffOffset() {return 0;};
+        virtual string GetProperty(int key) {return "";}
 
-        virtual void SetBuffOffset(uint32_t offset) {};
+        virtual void SetProperty(int key, const string &val) {}
+
+        virtual void SetBuffOffset(uint32_t offset) {}
 
         virtual const IMessageHandlerPtr &GetMsgHandler() = 0;
 

@@ -70,4 +70,16 @@ namespace tink {
     Connection::~Connection() {
         spdlog::debug("conn {} is destruction", conn_id_);
     }
+
+    string Connection::GetProperty(int key) {
+        auto it = property_.find(key);
+        if (it != property_.end()) {
+            return it->second;
+        }
+        return "";
+    }
+
+    void Connection::SetProperty(int key, const string &val) {
+        property_[key] = val;
+    }
 }
