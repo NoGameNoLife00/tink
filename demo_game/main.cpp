@@ -11,6 +11,8 @@
 #include <player.h>
 #include <world_manager.h>
 #include <msg_type.h>
+#include <world_chat.h>
+#include <move.h>
 
 class PingRouter : public tink::BaseRouter {
     int Handle(tink::IRequest &request) override {
@@ -67,8 +69,8 @@ int main(int argc, char** argv) {
 
     std::shared_ptr<tink::Server> s(new tink::Server());
 
-    tink::IRouterPtr br(new PingRouter());
-    tink::IRouterPtr hi_br(new HiRouter());
+    tink::IRouterPtr chat_api(new api::WorldChat());
+    tink::IRouterPtr move_api(new api::Move());
     StringPtr name(new std::string("demo game tink"));
     StringPtr ip(new std::string("0.0.0.0"));
 
@@ -81,8 +83,8 @@ int main(int argc, char** argv) {
             std::dynamic_pointer_cast<tink::IMessageHandler>(handler));
     s->SetOnConnStop(&DoConnectionLost);
     s->SetOnConnStart(&DoConnectionAdd);
-    s->AddRouter(0, br);
-    s->AddRouter(1, hi_br);
+    s->AddRouter(logic::MSG_TALK, chat_api);
+    s->AddRouter(logic::MSG_MOVE, move_api);
     s->Run();
     return 0;
 }

@@ -8,6 +8,10 @@
 using namespace tink;
 using namespace google;
 namespace logic {
+    class Player;
+    typedef std::shared_ptr<Player> PlayerPtr;
+    typedef std::vector<PlayerPtr> PlayerList;
+    typedef std::vector<int32_t> PidList;
     class Player {
     public:
         int32_t pid;
@@ -25,9 +29,11 @@ namespace logic {
         void BroadCastStartPosition();
 
         void Talk(const string &content);
+        // 更新玩家位置
+        void UpdatePos(float x, float y, float z, float v);
+        // 获取当前玩家AOI周边玩家
+        void GetSurroundingPlayers(PlayerList& players);
     private:
         static std::atomic_int pid_gen;
     };
-
-    typedef std::shared_ptr<Player> PlayerPtr;
 }

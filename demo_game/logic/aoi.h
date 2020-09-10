@@ -16,7 +16,6 @@ namespace logic {
         std::map<int, GridPtr> grid_map;
 
         typedef std::vector<GridPtr> GridList;
-        typedef std::vector<int32_t> PidList;
 
         AOI(uint32_t min_x, uint32_t min_y, uint32_t max_x,
                 uint32_t max_y, uint32_t cnt_x, uint32_t cnt_y);

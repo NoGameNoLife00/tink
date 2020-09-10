@@ -57,9 +57,35 @@ namespace logic {
         PlayerList players;
         WorldMngInstance->GetAllPlayers(players);
         for (auto& player: players) {
-            player->SendMsg(MSG_BROADCAST_POS, msg);
+            player.SendMsg(MSG_BROADCAST_POS, msg);
         }
     }
 
+    void Player::UpdatePos(float x, float y, float z, float v) {
+        this->x = x;
+        this->y = y;
+        this->z = z;
+        this->v = v;
+        pb::BroadCast msg;
+        pb::Position pos;
+        pos.set_x(x);
+        pos.set_y(y);
+        pos.set_z(z);
+        pos.set_v(v);
+        msg.set_allocated_p(&pos);
+        PlayerList players;
+        GetSurroundingPlayers(players);
+        for (auto ply : players) {
+            ply->SendMsg(MSG_BROADCAST_POS, msg);
+        }
+    }
+
+    void Player::GetSurroundingPlayers(std::vector<PlayerPtr> &players) {
+        PidList pid_list;
+        WorldMngInstance->aoi->GetPidListByPos(x, y, pid_list);
+        for (auto pid : pid_list) {
+            players.emplace_back(WorldMngInstance->GetPlayerByPid(pid));
+        }
+    }
 }
 

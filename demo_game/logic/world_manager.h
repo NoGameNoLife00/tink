@@ -10,7 +10,6 @@
 
 #define WorldMngInstance (tink::Singleton<logic::WorldManager>::GetInstance())
 namespace logic {
-    typedef std::vector<PlayerPtr> PlayerList;
     class WorldManager {
     public:
         std::shared_ptr<AOI> aoi;
