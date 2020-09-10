@@ -27,7 +27,7 @@ namespace logic {
         void SyncPid();
         // 广播玩家出生地点
         void BroadCastStartPosition();
-
+        // 聊天
         void Talk(const string &content);
         // 更新玩家位置
         void UpdatePos(float x, float y, float z, float v);

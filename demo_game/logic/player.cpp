@@ -57,7 +57,7 @@ namespace logic {
         PlayerList players;
         WorldMngInstance->GetAllPlayers(players);
         for (auto& player: players) {
-            player.SendMsg(MSG_BROADCAST_POS, msg);
+            player->SendMsg(MSG_BROADCAST_POS, msg);
         }
     }
 

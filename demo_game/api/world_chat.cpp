@@ -24,7 +24,7 @@ namespace api {
         int pid = atoi(pid_str.c_str());
         logic::PlayerPtr player = WorldMngInstance->GetPlayerByPid(pid);
         if (player) {
-            player.Talk();
+            player->Talk("player online");
         }
         return BaseRouter::Handle(request);
 

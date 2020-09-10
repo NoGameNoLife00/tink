@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <map>
 #include "grid.h"
+#include "player.h"
 
 namespace logic {
     class AOI {
