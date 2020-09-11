@@ -13,7 +13,6 @@ namespace logic {
         uint32_t max_x;
         uint32_t max_y;
         std::set<int> player_set;
-        mutable std::shared_mutex mutex;
         Grid(int gid, int min_x, int min_y, int max_x, int max_y);
         // 格子添加玩家id
         void Add(int player_id);
@@ -25,6 +24,9 @@ namespace logic {
         std::string ToString();
 
         friend std::ostream& operator<<(std::ostream& os, Grid& grid);
+
+    private:
+        mutable std::shared_mutex mutex_;
     };
     typedef std::shared_ptr<Grid> GridPtr;
 }

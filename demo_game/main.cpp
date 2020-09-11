@@ -58,6 +58,7 @@ int main(int argc, char** argv) {
     s->SetOnConnStart(&DoConnectionAdd);
     s->AddRouter(logic::MSG_TALK, chat_api);
     s->AddRouter(logic::MSG_MOVE, move_api);
+    WorldMngInstance->Init();
     s->Run();
 //    spdlog::drop_all();
     return 0;

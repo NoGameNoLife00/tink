@@ -1,11 +1,11 @@
 #include <world_manager.h>
 
-#define AOI_MIN_X 0
-#define AOI_MIN_Y 0
-#define AOI_MAX_X 0
-#define AOI_MAX_Y 0
-#define AOI_CNT_X 0
-#define AOI_CNY_Y 0
+#define AOI_MIN_X 85
+#define AOI_MIN_Y 75
+#define AOI_MAX_X 410
+#define AOI_MAX_Y 400
+#define AOI_CNT_X 10
+#define AOI_CNY_Y 20
 
 namespace logic {
 //    std::shared_ptr<logic::WorldManager> WorldMngObj = tink::Singleton<logic::WorldManager>::GetInstance();
