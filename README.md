@@ -1,5 +1,5 @@
 # tink
 c++ 服务器框架
 
-依赖库:protobuf googletest easyloggingpp cjson
+依赖库:protobuf googletest spdlog cjson
 

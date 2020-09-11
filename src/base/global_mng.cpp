@@ -3,22 +3,24 @@
 #include <stdio.h>
 #include <cJSON.h>
 #include <version.h>
+#include <spdlog/sinks/daily_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/async_logger.h>
+#include <spdlog/async.h>
 
 namespace tink {
     GlobalMng::GlobalMng() : name_("tink_server"),
-        host_("0.0.0.0"),
-        version_(TINK_VERSION_STR),
-        port_(8896),
-        max_conn_(10000),
-        max_package_size_(2048),
-        worker_pool_size_(10),
-        max_worker_task_len_(1024) {
+                             host_("0.0.0.0"),
+                             version_(TINK_VERSION_STR),
+                             port_(8896),
+                             max_conn_(10000),
+                             max_package_size_(2048),
+                             worker_pool_size_(10),
+                             max_worker_task_len_(1024),
+                             log_name_("./logs/tink.log"){
     }
 
     int GlobalMng::Init() {
-//        el::Configurations conf("../etc/log.conf");
-//        el::Loggers::reconfigureAllLoggers(conf);
-//        logger = el::Loggers::getLogger("default");
         FILE *fp = nullptr;
         cJSON *json;
         char *out;
@@ -57,9 +59,21 @@ namespace tink {
             if (item != nullptr) {
                 worker_pool_size_ = item->valueint;
             }
+            item = cJSON_GetObjectItem(json, "log_path");
+            if (item != nullptr) {
+                log_name_ = item->valuestring;
+            }
             delete [] buff;
+            // init log
+            spdlog::init_thread_pool(8192, 1);
+            auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+            auto file_sink = std::make_shared<spdlog::sinks::daily_file_sink_mt>(log_name_, 0, 0);
+            auto logger = std::make_shared<spdlog::async_logger>("tink", spdlog::sinks_init_list{file_sink, console_sink}, spdlog::thread_pool());
+            logger->set_pattern("[%Y-%m-%d.%e %T] [t-%t] [%l] %v");
+            logger->flush_on(spdlog::level::debug);
+            spdlog::set_default_logger(logger);
         } else {
-            spdlog::info("tink open file etc/config.json failed");
+            fprintf(stderr,"tink open file etc/config.json failed");
             exit(0);
         }
         return 0;

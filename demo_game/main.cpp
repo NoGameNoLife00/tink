@@ -59,5 +59,6 @@ int main(int argc, char** argv) {
     s->AddRouter(logic::MSG_TALK, chat_api);
     s->AddRouter(logic::MSG_MOVE, move_api);
     s->Run();
+//    spdlog::drop_all();
     return 0;
 }
