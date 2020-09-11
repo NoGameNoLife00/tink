@@ -3,8 +3,6 @@
 #include <assert.h>
 #include <netdb.h>
 #include <global_mng.h>
-#include "sock_address.h"
-
 
 namespace tink {
     SockAddress::SockAddress(uint16_t port, bool loopback_only, bool ipv6) {

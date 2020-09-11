@@ -1,5 +1,5 @@
 #include <sstream>
-#include "aoi.h"
+#include <aoi.h>
 namespace logic {
 
     AOI::AOI(uint32_t min_x, uint32_t min_y, uint32_t max_x,

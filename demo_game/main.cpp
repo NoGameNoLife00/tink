@@ -1,50 +1,14 @@
 #include <iostream>
 #include <server.h>
 #include <global_mng.h>
-#include <sys/socket.h>
-#include <base_router.h>
 #include <cstring>
-#include <error_code.h>
 #include <message_handler.h>
-//#include <easylogging++.h>
 #include <iconnection.h>
 #include <player.h>
 #include <world_manager.h>
 #include <msg_type.h>
 #include <world_chat.h>
 #include <move.h>
-
-class PingRouter : public tink::BaseRouter {
-    int Handle(tink::IRequest &request) override {
-        printf("call ping router [handle]\n");
-        printf("recv from client: msgId = %d, data=%s\n", request.GetMsgId(), request.GetData().get());
-        char *str = new char[20] {0};
-        strcpy(str, "ping....\n");
-        BytePtr data(str);
-        int e_code = request.GetConnection()->SendMsg(1, data, strlen(str)+1);
-        if (e_code != E_OK) {
-            printf("send msg error:%d",e_code);
-        }
-        return E_OK;
-    }
-
-};
-
-class HiRouter : public tink::BaseRouter {
-    int Handle(tink::IRequest &request) override {
-        printf("call hi router [handle]\n");
-        printf("recv from client: msgId = %d, data=%s\n", request.GetMsgId(), request.GetData().get());
-        char *str = new char[20] {0};
-        strcpy(str, "ping....\n");
-        BytePtr data(str);
-        int e_code = request.GetConnection()->SendMsg(1, data, strlen(str)+1);
-        if (e_code != E_OK) {
-            printf("send msg error:%d",e_code);
-        }
-        return E_OK;
-    }
-
-};
 
 void DoConnectionAdd(tink::IConnectionPtr& conn) {
     logic::PlayerPtr player = std::make_shared<logic::Player>(conn);
@@ -57,11 +21,20 @@ void DoConnectionAdd(tink::IConnectionPtr& conn) {
 
 
 void DoConnectionLost(tink::IConnectionPtr& conn) {
-    printf("do_connection_lost is called...\n");
+    string pid_str = conn->GetProperty(logic::PROP_PID);
+    if (pid_str.empty()) {
+        spdlog::warn("get property pid error");
+        return;
+    }
+    int pid = atoi(pid_str.c_str());
+    logic::PlayerPtr player = WorldMngInstance->GetPlayerByPid(pid);
+    if (player) {
+        player->LostConnection();
+    }
+    spdlog::info("player pid= {} offline...", pid);
 }
 
 int main(int argc, char** argv) {
-//    START_EASYLOGGINGPP(argc, argv);
     setbuf(stdout, NULL); // debug
     srand(static_cast<unsigned>(time(NULL)));
     auto globalObj = GlobalInstance;

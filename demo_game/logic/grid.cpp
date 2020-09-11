@@ -1,5 +1,5 @@
 #include <sstream>
-#include "grid.h"
+#include <grid.h>
 
 namespace logic {
     Grid::Grid(int gid, int min_x, int min_y, int max_x, int max_y) :

@@ -1,7 +1,6 @@
 #include <error_code.h>
 #include <message_handler.h>
 #include <global_mng.h>
-#include <cstring>
 #include <thread.h>
 #include <assert.h>
 

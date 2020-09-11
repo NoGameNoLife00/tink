@@ -1,7 +1,5 @@
-
 #include <global_mng.h>
-#include <error_code.h>
-#include "conn_manager.h"
+#include <conn_manager.h>
 
 namespace tink {
     void ConnManager::Add(IConnectionPtr &&conn) {

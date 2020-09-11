@@ -1,6 +1,4 @@
 #include <server.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <errno.h>
 #include <cstring>
 #include <unistd.h>
@@ -36,30 +34,9 @@ namespace tink {
 
         // 开启worker工作池
         msg_handler_->StartWorkerPool();
-
-//        listen_fd_ = socket(ip_version_, SOCK_STREAM, 0);
-
-//        SockAddress listen_addr(port_, false,ip_version_ == AF_INET6);
         listen_socket_ = std::make_unique<Socket>(SocketApi::Create(listen_addr_->Family()));
         listen_socket_->BindAddress(*listen_addr_);
         listen_socket_->Listen();
-//        ON_SCOPE_EXIT([&]{
-//            close(listen_fd_);
-//        });
-
-//        struct sockaddr_in srv_addr;
-//        srv_addr.sin_family = ip_version_;
-//        inet_pton(ip_version_, "0.0.0.0", &srv_addr.sin_addr);
-//        srv_addr.sin_port = htons(port_);
-//        if (bind(listen_fd_, (struct sockaddr*)&srv_addr, sizeof(srv_addr)) == -1) {
-//            spdlog::info("bind socket error: {}(code:{})\n", strerror(errno), errno);
-//            exit(1);
-//        }
-
-//        if (listen(listen_fd_, 20) == -1) {
-//            spdlog::info("listen socket error: {}(code:{})\n", strerror(errno), errno);
-//            exit(1);
-//        }
         spdlog::info("Start tink Server {} listening\n", name_.c_str());
         epoll_fd_ = epoll_create1(EPOLL_CLOEXEC);
         OperateEvent(listen_socket_->GetSockFd(), ListenID, EPOLL_CTL_ADD, EPOLLIN);
@@ -132,11 +109,7 @@ namespace tink {
     {
         static int cid = ConnStartID;
         int cli_fd;
-//        RemoteAddrPtr cli_addr = std::make_shared<sockaddr>();
         SockAddressPtr cli_addr = std::make_shared<SockAddress>();
-//        socklen_t  cli_addr_len;
-//        memset(cli_addr.get(), 0, sizeof(sockaddr));
-//        cli_fd = accept(listen_fd, cli_addr.get(), &cli_addr_len);
         cli_fd = listen_socket_->Accept(*cli_addr);
         if (cli_fd == -1) {
             spdlog::warn("accept socket error: {}(code:{})\n", strerror(errno), errno);
@@ -216,15 +189,11 @@ namespace tink {
             }
             msg->SetData(buf);
         }
-//        modify_event(epoll_fd_, fd, EPOLLOUT);
 
         IRequestPtr req_ptr = std::make_shared<Request>(conn,msg);
         if (GlobalInstance->GetWorkerPoolSize() > 0) {
             conn->GetMsgHandler()->SendMsgToTaskQueue(req_ptr);
-        } else {
-            //msg_handler_->DoMsgHandle(req);
         }
-
     }
 
     void Server::DoWrite_(int id)

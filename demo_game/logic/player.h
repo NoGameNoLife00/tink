@@ -33,6 +33,8 @@ namespace logic {
         void UpdatePos(float x, float y, float z, float v);
         // 获取当前玩家AOI周边玩家
         void GetSurroundingPlayers(PlayerList& players);
+        // 玩家下线
+        void LostConnection();
     private:
         static std::atomic_int pid_gen;
     };

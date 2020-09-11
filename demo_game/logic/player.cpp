@@ -1,5 +1,5 @@
-#include "player.h"
-#include "world_manager.h"
+#include <player.h>
+#include <world_manager.h>
 #include <msg_type.h>
 #include <global_mng.h>
 
@@ -86,6 +86,18 @@ namespace logic {
         for (auto pid : pid_list) {
             players.emplace_back(WorldMngInstance->GetPlayerByPid(pid));
         }
+    }
+
+    void Player::LostConnection() {
+        logic::PlayerList players;
+        GetSurroundingPlayers(players);
+        pb::SyncPid msg;
+        msg.set_pid(pid);
+        for (auto& player : players) {
+            player->SendMsg(MSG_BROADCAST_OFFLINE, msg);
+        }
+        WorldMngInstance->aoi->RemoveFromGridByPos(pid, x, z);
+        WorldMngInstance->RemovePlayer(pid);
     }
 }
 

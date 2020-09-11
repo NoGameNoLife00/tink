@@ -1,12 +1,10 @@
 #ifndef TINK_SOCKET_API_H
 #define TINK_SOCKET_API_H
 
-
 #include <cstdint>
 #include <endian.h>
 #include <cstddef>
 #include <bits/sockaddr.h>
-
 namespace tink {
     namespace SocketApi {
         int Create(sa_family_t family, bool nonblock = false);

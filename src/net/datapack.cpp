@@ -1,9 +1,4 @@
-//
-// Created by admin on 2020/6/1.
-//
-
-#include "datapack.h"
-#include "message.h"
+#include <datapack.h>
 #include <type.h>
 #include <cstring>
 #include <global_mng.h>

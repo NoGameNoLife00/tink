@@ -6,6 +6,7 @@ namespace logic {
         MSG_TALK = 2,
         MSG_MOVE = 3,
         MSG_BROADCAST_POS = 200,
+        MSG_BROADCAST_OFFLINE =201,
     };
 
     enum PROP_KEY {

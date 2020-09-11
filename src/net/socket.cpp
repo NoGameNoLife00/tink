@@ -1,10 +1,5 @@
 #include <sys/socket.h>
 #include <global_mng.h>
-#include <unistd.h>
-#include <netinet/in.h>
-#include <assert.h>
-#include <arpa/inet.h>
-#include <netdb.h>
 #include <socket.h>
 
 namespace tink {

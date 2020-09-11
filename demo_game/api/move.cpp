@@ -1,8 +1,4 @@
-//
-// Created by Ёблн on 2020/9/10.
-//
-
-#include "move.h"
+#include <move.h>
 #include <msg.pb.h>
 #include <spdlog/spdlog.h>
 #include <msg_type.h>

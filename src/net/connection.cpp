@@ -1,10 +1,8 @@
-#include <unistd.h>
 #include <cstring>
 #include <connection.h>
 #include <server.h>
 #include <request.h>
 #include <global_mng.h>
-#include <arpa/inet.h>
 #include <datapack.h>
 #include <message.h>
 

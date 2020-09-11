@@ -1,7 +1,7 @@
 #pragma once
 
-#include "aoi.h"
-#include "player.h"
+#include <aoi.h>
+#include <player.h>
 #include <shared_mutex>
 #include <memory>
 #include <map>
