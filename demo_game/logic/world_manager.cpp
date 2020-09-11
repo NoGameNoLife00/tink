@@ -15,7 +15,7 @@ namespace logic {
     }
 
     void WorldManager::AddPlayer(PlayerPtr player) {
-        std::unique_lock<std::shared_timed_mutex> lock(mutex_);
+        std::unique_lock<std::shared_mutex> lock(mutex_);
         if (player_map.find(player->pid) != player_map.end()) {
             return;
         }
@@ -24,12 +24,12 @@ namespace logic {
     }
 
     void WorldManager::RemovePlayer(int32_t pid) {
-        std::unique_lock<std::shared_timed_mutex> lock(mutex_);
+        std::unique_lock<std::shared_mutex> lock(mutex_);
         player_map.erase(pid);
     }
 
     PlayerPtr WorldManager::GetPlayerByPid(int32_t pid) {
-        std::shared_lock<std::shared_timed_mutex> lock(mutex_);
+        std::shared_lock<std::shared_mutex> lock(mutex_);
         auto it = player_map.find(pid);
         if (it != player_map.end()) {
              return it->second;
@@ -38,7 +38,7 @@ namespace logic {
     }
 
     void WorldManager::GetAllPlayers(PlayerList &result) {
-        std::shared_lock<std::shared_timed_mutex> lock(mutex_);
+        std::shared_lock<std::shared_mutex> lock(mutex_);
         for (auto&& p : player_map) {
             result.emplace_back(p.second);
         }

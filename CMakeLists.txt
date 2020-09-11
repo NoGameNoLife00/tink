@@ -11,8 +11,8 @@ ENDIF()
 
 MESSAGE(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
 
-MESSAGE( ** INFO "------------------------------------------------")
-MESSAGE( ** STATUS "Build tink ${TINK_VERSION}")
+MESSAGE( "** INFO ------------------------------------------------")
+MESSAGE( "** STATUS Build tink ${TINK_VERSION}")
 
 
 #INCLUDE(cmake/load_3rdparty.cmake)

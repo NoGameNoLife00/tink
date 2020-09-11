@@ -8,22 +8,22 @@ namespace logic {
     }
 
     void Grid::Add(int player_id) {
-        std::lock_guard<std::shared_timed_mutex> lock(mutex);
+        std::lock_guard<std::shared_mutex> lock(mutex);
         player_set.emplace(player_id);
     }
 
     void Grid::Remove(int player_id) {
-        std::lock_guard<std::shared_timed_mutex> lock(mutex);
+        std::lock_guard<std::shared_mutex> lock(mutex);
         player_set.erase(player_id);
     }
 
     void Grid::GetPlayerIds(std::vector<int> &ids) {
-        std::shared_lock<std::shared_timed_mutex> guard(mutex);
+        std::shared_lock<std::shared_mutex> guard(mutex);
         ids.assign(player_set.begin(), player_set.end());
     }
 
     std::string Grid::ToString() {
-        std::shared_lock<std::shared_timed_mutex> guard(mutex);
+        std::shared_lock<std::shared_mutex> guard(mutex);
         std::stringstream ss;
         ss << "Gid: " << gid << " minX: " << min_x << " minY: "
            << min_y << " maxX: " << max_x

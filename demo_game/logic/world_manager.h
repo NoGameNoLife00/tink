@@ -20,7 +20,7 @@ namespace logic {
         PlayerPtr GetPlayerByPid(int32_t pid);
         void GetAllPlayers(PlayerList& result);
     private:
-        std::shared_timed_mutex mutex_;
+        std::shared_mutex mutex_;
     };
 //    extern std::shared_ptr<WorldManager> WorldMngObj;
 }

@@ -13,7 +13,7 @@ namespace logic {
         uint32_t max_x;
         uint32_t max_y;
         std::set<int> player_set;
-        mutable std::shared_timed_mutex mutex;
+        mutable std::shared_mutex mutex;
         Grid(int gid, int min_x, int min_y, int max_x, int max_y);
         // 格子添加玩家id
         void Add(int player_id);
