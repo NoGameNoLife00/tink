@@ -27,9 +27,9 @@ namespace tink {
 
     int Server::Start() {
         auto globalObj = GlobalInstance;
-        spdlog::info("[tink] Server Name:{}, listener at IP:{}, Port:{}, is starting.\n",
+        spdlog::info("[tink] Server Name:{}, listener at IP:{}, Port:{}, is starting.",
                 name_, listen_addr_->ToIp(), listen_addr_->ToPort());
-        spdlog::info("[tink] Version: {}, MaxConn:{}, MaxPacketSize:{}\n", globalObj->GetVersion().c_str(),
+        spdlog::info("[tink] Version: {}, MaxConn:{}, MaxPacketSize:{}", globalObj->GetVersion().c_str(),
                globalObj->GetMaxConn(), globalObj->GetMaxPackageSize());
 
         // 开启worker工作池
@@ -37,7 +37,7 @@ namespace tink {
         listen_socket_ = std::make_unique<Socket>(SocketApi::Create(listen_addr_->Family()));
         listen_socket_->BindAddress(*listen_addr_);
         listen_socket_->Listen();
-        spdlog::info("Start tink Server {} listening\n", name_.c_str());
+        spdlog::info("Start tink Server {} listening", name_.c_str());
         epoll_fd_ = epoll_create1(EPOLL_CLOEXEC);
         OperateEvent(listen_socket_->GetSockFd(), ListenID, EPOLL_CTL_ADD, EPOLLIN);
         int fd_num;
@@ -112,7 +112,7 @@ namespace tink {
         SockAddressPtr cli_addr = std::make_shared<SockAddress>();
         cli_fd = listen_socket_->Accept(*cli_addr);
         if (cli_fd == -1) {
-            spdlog::warn("accept socket error: {}(code:{})\n", strerror(errno), errno);
+            spdlog::warn("accept socket error: {}(code:{})", strerror(errno), errno);
         } else {
             // 判断最大连接数
             if (conn_mng_->Size() >= GlobalInstance->GetMaxConn()) {
@@ -164,7 +164,7 @@ namespace tink {
         // 读取客户端发送的包头
         int ret = read(fd, head_data.get(), head_len);
         if (ret == -1) {
-            spdlog::error("[reader] msg head error:{}\n", strerror(errno));
+            spdlog::error("[reader] msg head error:{}", strerror(errno));
             on_error();
             return;
         } else if (ret == 0) {
@@ -174,7 +174,7 @@ namespace tink {
         }
         ret = DataPack::Unpack(head_data, *msg.get());
         if (ret != E_OK) {
-            spdlog::warn("[reader] unpack error: {}\n", ret);
+            spdlog::warn("[reader] unpack error: {}", ret);
             on_error();
             return;
         }
@@ -183,7 +183,7 @@ namespace tink {
             spdlog::debug("msg data len:{}", msg->GetDataLen());
             BytePtr buf = std::make_unique<byte[]>(msg->GetDataLen());
             if ((read(fd, buf.get(), msg->GetDataLen()) == -1)) {
-                spdlog::warn("[reader] msg data error:{}\n", strerror(errno));
+                spdlog::warn("[reader] msg data error:{}", strerror(errno));
                 on_error();
                 return;
             }
@@ -211,7 +211,7 @@ namespace tink {
         buffer->Reset();
         if (ret == -1)
         {
-            spdlog::error("[writer] error:{}\n", strerror(errno));
+            spdlog::error("[writer] error:{}", strerror(errno));
             close(fd);
             OperateEvent(fd, id, EPOLL_CTL_DEL, EPOLLOUT);
         }

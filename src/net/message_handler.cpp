@@ -53,7 +53,7 @@ namespace tink {
 //        MessageHandler *handler = info->msg_handler;
 //        int worker_id = info->worker_id;
         IRequestMsgQueuePtr msg_queue = handler.task_queue[worker_id];
-        spdlog::info("work id = {}, is started...\n", worker_id);
+        spdlog::info("work id = {}, is started...", worker_id);
         while (true) {
             IRequestPtr req;
             // 消息队列取出router
@@ -63,7 +63,7 @@ namespace tink {
             handler.DoMsgHandle(*req);
             spdlog::debug("req msg {}", req->GetMsgId());
         }
-        spdlog::info("work id = {}, is stopped...\n", worker_id);
+        spdlog::info("work id = {}, is stopped...", worker_id);
     }
 
     int MessageHandler::SendMsgToTaskQueue(IRequestPtr &request) {

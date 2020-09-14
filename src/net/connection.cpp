@@ -24,7 +24,7 @@ namespace tink {
     }
 
     int Connection::Stop() {
-        spdlog::info("conn_ stop, conn_id:{}\n", conn_id_);
+        spdlog::info("conn_ stop, conn_id:{}", conn_id_);
 
         if (is_close_) {
             return 0;
@@ -41,7 +41,7 @@ namespace tink {
     }
 
     int Connection::Start() {
-        spdlog::info("conn_ Start; conn_id:{}\n", conn_id_);
+        spdlog::info("conn_ Start; conn_id:{}", conn_id_);
         server->CallOnConnStart(std::dynamic_pointer_cast<IConnection>(shared_from_this()));
         return 0;
     }
