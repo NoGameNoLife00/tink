@@ -11,12 +11,12 @@ namespace tink {
         return 8;
     }
 
-    int DataPack::Pack(IMessage &msg, BytePtr &data, uint32_t &data_len) {
+    int DataPack::Pack(Message &msg, BytePtr &data, uint32_t &data_len) {
         return Pack(msg, data.get(), data_len);
     }
 
 
-    int DataPack::Pack(IMessage &msg, byte *buff, uint32_t &data_len) {
+    int DataPack::Pack(Message &msg, byte *buff, uint32_t &data_len) {
         data_len = GetHeadLen() + msg.GetDataLen();
         // 写id
         uint32_t id = msg.GetId();
@@ -30,7 +30,7 @@ namespace tink {
         memcpy(ptr, msg.GetData().get(), len);
         return 0;
     }
-    int DataPack::Unpack(BytePtr &data, IMessage &msg) {
+    int DataPack::Unpack(BytePtr &data, Message &msg) {
         byte *ptr = data.get();
         // 读id
         uint32_t id = 0;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <iconnection.h>
+#include <connection.h>
 #include <atomic>
 #include <msg.pb.h>
 
@@ -15,12 +15,12 @@ namespace logic {
     class Player {
     public:
         int32_t pid;
-        IConnectionPtr conn;
+        ConnectionPtr conn;
         float x;
         float y;
         float z;
         float v;
-        explicit Player(IConnectionPtr conn);
+        explicit Player(ConnectionPtr conn);
         // 发送protobuf数据到客户端
         void SendMsg(int32_t msg_id, protobuf::Message& msg);
         // 同步玩家pid

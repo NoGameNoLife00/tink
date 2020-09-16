@@ -6,7 +6,7 @@
 #include <world_manager.h>
 
 namespace api {
-    int Move::Handle(tink::IRequest &request) {
+    int Move::Handle(tink::Request &request) {
         pb::Position msg;
         if (!msg.ParseFromArray(request.GetData().get(), request.GetDataLen())) {
             spdlog::warn("move position parse error");

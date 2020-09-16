@@ -2,11 +2,11 @@
 #include <global_mng.h>
 
 namespace tink {
-    Request::Request(IConnectionPtr &conn, IMessagePtr& msg) :conn_(conn) {
+    Request::Request(ConnectionPtr &conn, MessagePtr& msg) :conn_(conn) {
         msg_ = std::move(msg);
     }
 
-    IConnectionPtr & Request::GetConnection() {
+    ConnectionPtr & Request::GetConnection() {
         return conn_;
     }
 

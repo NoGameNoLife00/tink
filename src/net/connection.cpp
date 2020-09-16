@@ -8,7 +8,7 @@
 
 #define BUFF_MAX_SIZE_COUNt 16
 namespace tink {
-    int Connection::Init(IServerPtr &&server, int conn_fd, int id, IMessageHandlerPtr &msg_handler, SockAddressPtr &addr) {
+    int Connection::Init(ServerPtr &&server, int conn_fd, int id, MessageHandlerPtr &msg_handler, SockAddressPtr &addr) {
         uint32_t package_size = (GlobalInstance->GetMaxPackageSize() + DataPack::GetHeadLen());
         this->server = server;
         this->socket_ = std::make_unique<Socket>(conn_fd);
@@ -19,7 +19,7 @@ namespace tink {
         this->buffer_ = std::make_unique<FixBuffer>(package_size * BUFF_MAX_SIZE_COUNt);
         this->tmp_buffer_size_ = package_size;
         this->tmp_buffer_ = std::make_unique<byte[]>(tmp_buffer_size_);
-        this->server->GetConnMng()->Add(std::dynamic_pointer_cast<IConnection>(shared_from_this()));
+        this->server->GetConnMng()->Add(std::dynamic_pointer_cast<Connection>(shared_from_this()));
         return 0;
     }
 
@@ -29,11 +29,11 @@ namespace tink {
         if (is_close_) {
             return 0;
         }
-        server->CallOnConnStop(std::dynamic_pointer_cast<IConnection>(shared_from_this()));
+        server->CallOnConnStop(std::dynamic_pointer_cast<Connection>(shared_from_this()));
         // 关闭读写线程
         is_close_ = true;
 
-        server->GetConnMng()->Remove(std::dynamic_pointer_cast<IConnection>(shared_from_this()));
+        server->GetConnMng()->Remove(std::dynamic_pointer_cast<Connection>(shared_from_this()));
 
         // 回收socket
         // close(conn_fd_);
@@ -42,7 +42,7 @@ namespace tink {
 
     int Connection::Start() {
         spdlog::info("conn_ Start; conn_id:{}", conn_id_);
-        server->CallOnConnStart(std::dynamic_pointer_cast<IConnection>(shared_from_this()));
+        server->CallOnConnStart(std::dynamic_pointer_cast<Connection>(shared_from_this()));
         return 0;
     }
 

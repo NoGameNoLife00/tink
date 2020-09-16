@@ -16,7 +16,7 @@
 namespace tink {
     int Server::Init(string &name, int ip_version,
                      string &ip, int port,
-                     IMessageHandlerPtr &&msg_handler) {
+                     MessageHandlerPtr &&msg_handler) {
         name_ = name;
         listen_addr_ = std::make_shared<SockAddress>(ip, port, ip_version == AF_INET6);
         msg_handler_ = msg_handler;
@@ -59,13 +59,13 @@ namespace tink {
         return 0;
     }
 
-    int Server::AddRouter(uint32_t msg_id, std::shared_ptr<IRouter> &router) {
+    int Server::AddRouter(uint32_t msg_id, std::shared_ptr<BaseRouter> &router) {
         msg_handler_->AddRouter(msg_id, router);
         return 0;
     }
 
 
-    void Server::CallOnConnStop(IConnectionPtr &&conn) {
+    void Server::CallOnConnStop(ConnectionPtr &&conn) {
         if (on_conn_stop_) {
             spdlog::info("[call] on_conn_stop ..");
             on_conn_stop_(conn);
@@ -73,7 +73,7 @@ namespace tink {
 
     }
 
-    void Server::CallOnConnStart(IConnectionPtr &&conn) {
+    void Server::CallOnConnStart(ConnectionPtr &&conn) {
         if (on_conn_start_) {
             spdlog::info("[call] on_conn_start ..");
             on_conn_start_(conn);
@@ -123,7 +123,7 @@ namespace tink {
             }
             cid++;
             ConnectionPtr conn(new Connection);
-			conn->Init(std::dynamic_pointer_cast<IServer>(shared_from_this()), cli_fd, cid, this->msg_handler_, cli_addr);
+			conn->Init(std::dynamic_pointer_cast<Server>(shared_from_this()), cli_fd, cid, this->msg_handler_, cli_addr);
             conn->Start();
             //添加一个客户描述符和事件
             OperateEvent(cli_fd, cid, EPOLL_CTL_ADD, EPOLLIN);
@@ -147,7 +147,7 @@ namespace tink {
         BytePtr head_data = std::make_unique<byte[]>(head_len);
         memset(head_data.get(), 0, head_len);
         // 读取客户端的数据到buf中
-        IMessagePtr msg = std::make_unique<Message>();
+        MessagePtr msg = std::make_unique<Message>();
 
 
         auto conn = conn_mng_->Get(id);
@@ -190,7 +190,7 @@ namespace tink {
             msg->SetData(buf);
         }
 
-        IRequestPtr req_ptr = std::make_shared<Request>(conn,msg);
+        RequestPtr req_ptr = std::make_shared<Request>(conn,msg);
         if (GlobalInstance->GetWorkerPoolSize() > 0) {
             conn->GetMsgHandler()->SendMsgToTaskQueue(req_ptr);
         }

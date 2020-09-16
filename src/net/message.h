@@ -1,12 +1,10 @@
 #ifndef TINK_MESSAGE_H
 #define TINK_MESSAGE_H
 
-
-#include <imessage.h>
 #include <leaked_object_detector.h>
-
+#include <type.h>
 namespace tink {
-    class Message : public IMessage{
+    class Message {
     public:
         int Init(uint32_t id, uint32_t len, BytePtr &data);
         int32_t GetId() const;
@@ -28,6 +26,7 @@ namespace tink {
 
         LEAK_DETECTOR(Message);
     };
+
 }
 
 

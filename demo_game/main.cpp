@@ -3,14 +3,14 @@
 #include <global_mng.h>
 #include <cstring>
 #include <message_handler.h>
-#include <iconnection.h>
+#include <connection.h>
 #include <player.h>
 #include <world_manager.h>
 #include <msg_type.h>
 #include <world_chat.h>
 #include <move.h>
 
-void DoConnectionAdd(tink::IConnectionPtr& conn) {
+void DoConnectionAdd(tink::ConnectionPtr& conn) {
     logic::PlayerPtr player = std::make_shared<logic::Player>(conn);
     player->SyncPid();
     player->BroadCastStartPosition();
@@ -20,7 +20,7 @@ void DoConnectionAdd(tink::IConnectionPtr& conn) {
 }
 
 
-void DoConnectionLost(tink::IConnectionPtr& conn) {
+void DoConnectionLost(tink::ConnectionPtr& conn) {
     string pid_str = conn->GetProperty(logic::PROP_PID);
     if (pid_str.empty()) {
         spdlog::warn("get property pid error");
@@ -42,18 +42,18 @@ int main(int argc, char** argv) {
 
     std::shared_ptr<tink::Server> s(new tink::Server());
 
-    tink::IRouterPtr chat_api(new api::WorldChat());
-    tink::IRouterPtr move_api(new api::Move());
+    tink::BaseRouterPtr chat_api(new api::WorldChat());
+    tink::BaseRouterPtr move_api(new api::Move());
     StringPtr name(new std::string("demo game tink"));
     StringPtr ip(new std::string("0.0.0.0"));
 
     std::shared_ptr<tink::MessageHandler>  handler(new tink::MessageHandler());
 
-    globalObj->SetServer(std::dynamic_pointer_cast<tink::IServer>(s));
+    globalObj->SetServer(std::dynamic_pointer_cast<tink::Server>(s));
     handler->Init();
     s->Init(const_cast<std::string &>(globalObj->GetName()), AF_INET,
             const_cast<std::string &>(globalObj->GetHost()), globalObj->GetPort(),
-            std::dynamic_pointer_cast<tink::IMessageHandler>(handler));
+            std::dynamic_pointer_cast<tink::MessageHandler>(handler));
     s->SetOnConnStop(&DoConnectionLost);
     s->SetOnConnStart(&DoConnectionAdd);
     s->AddRouter(logic::MSG_TALK, chat_api);

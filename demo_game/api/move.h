@@ -4,6 +4,6 @@
 namespace api {
     class Move : public tink::BaseRouter {
     public:
-        int Handle(tink::IRequest &request) override;
+        int Handle(tink::Request &request) override;
     };
 }

@@ -6,7 +6,7 @@
 #define TINK_GLOBAL_MNG_H
 
 #include <memory>
-#include <iserver.h>
+#include <server.h>
 #include <singleton.h>
 #include <string>
 #include <spdlog/spdlog.h>
@@ -23,9 +23,9 @@ namespace tink {
         // 配置初始化
         int Init();
         int Reload();
-        const std::shared_ptr<IServer>& GetServer() const;
+        const std::shared_ptr<Server>& GetServer() const;
 
-        void SetServer(std::shared_ptr<IServer>&& s);
+        void SetServer(std::shared_ptr<Server>&& s);
 
         const string& GetHost() const;
 
@@ -44,7 +44,7 @@ namespace tink {
         uint32_t max_package_size_;
 
         // 全局Server对象
-        std::shared_ptr<IServer> server_;
+        std::shared_ptr<Server> server_;
         string version_;
         string host_;
         string name_;

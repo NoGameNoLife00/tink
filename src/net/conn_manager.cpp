@@ -2,15 +2,15 @@
 #include <conn_manager.h>
 
 namespace tink {
-    void ConnManager::Add(IConnectionPtr &&conn) {
+    void ConnManager::Add(ConnectionPtr &&conn) {
         {
             std::lock_guard<Mutex> guard(mutex_);
-            conn_map_.insert(std::pair<uint32_t, IConnectionPtr>(conn->GetConnId(), conn));
+            conn_map_.insert(std::pair<uint32_t, ConnectionPtr>(conn->GetConnId(), conn));
         }
         spdlog::info("conn add to mgr successfully: conn_id ={}, size={}", conn->GetConnId(), Size());
     }
 
-    void ConnManager::Remove(IConnectionPtr &&conn) {
+    void ConnManager::Remove(ConnectionPtr &&conn) {
         {
             std::lock_guard<Mutex> guard(mutex_);
             conn_map_.erase(conn->GetConnId());
@@ -18,13 +18,13 @@ namespace tink {
         spdlog::info("conn remove from mgr successfully: conn_id ={}, size={}", conn->GetConnId(), Size());
     }
 
-    IConnectionPtr ConnManager::Get(const uint32_t conn_id) {
+    ConnectionPtr ConnManager::Get(const uint32_t conn_id) {
         std::lock_guard<Mutex> guard(mutex_);
         auto it = conn_map_.find(conn_id);
         if (it != conn_map_.end()){
             return it->second;
         }
-        return IConnectionPtr();
+        return ConnectionPtr();
     }
 
     uint32_t ConnManager::Size() {

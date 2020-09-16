@@ -63,16 +63,76 @@ namespace tink {
 
     void Timer::Execute_() {
         int idx = time_ & TIME_NEAR_MASK;
-        // todo 是否能使用迭代器？？
-        for(auto &current : near_[idx]) {
+        if (!near_[idx].empty()) {
+            TimerNodeList temp_list;
+            for (auto& node : near_[idx]) {
+                temp_list.emplace_back(std::move(node));
+            }
+            near_->clear();
             mutex_.unlock();
-
+            DispatchList_(temp_list);
             mutex_.lock();
         }
     }
 
-    void Timer::DispatchList(TimerNode &curr) {
+    void Timer::DispatchList_(TimerNodeList &curr) {
+        for (auto& node : curr) {
+            TimerEvent& event = node->event;
+        }
+    }
 
+    void Timer::AddNode_(TimerNodePtr &node) {
+        uint32_t tm = node->expire;
+        if ((tm|TIME_NEAR_MASK) == (time_|TIME_NEAR_MASK)) {
+            near_[tm&TIME_NEAR_MASK].emplace_back(std::move(node));
+        } else {
+            uint32_t mask = TIME_NEAR << TIME_NEAR_SHIFT;
+            int i;
+            for (i = 0; i < 3; i++) {
+                if ((tm|(mask-1) == (time_|(mask-1)))) {
+                    break;
+                }
+                mask <<= TIME_NEAR_SHIFT;
+            }
+            t_[i][(tm>>(TIME_NEAR_SHIFT + i * TIME_LEVEL_SHIFT)) & TIME_LEVEL_MASK].emplace_back(std::move(node));
+        }
+    }
+
+    void Timer::Add_(int time, const TimerEvent& event) {
+        TimerNodePtr node = std::make_unique<TimerNode>();
+        memcpy(&node->event, &event, sizeof(TimerEvent));
+
+        std::unique_lock<std::mutex> lock(mutex_);
+        node->expire = time + time_;
+        AddNode_(node);
+    }
+
+    void Timer::Shift_() {
+        int mask = TIME_NEAR;
+        uint32_t ct = ++time_;
+        if (ct == 0) {
+            MoveList_(3, 0);
+        } else {
+            uint32_t time = ct >> TIME_NEAR_SHIFT;
+            int i = 0;
+            while ((ct&(mask-1)) == 0) {
+                int idx = time & TIME_LEVEL_MASK;
+                if (idx != 0) {
+                    MoveList_(i, idx);
+                    break;
+                }
+                mask <<= TIME_LEVEL_SHIFT;
+                time >>= TIME_LEVEL_SHIFT;
+                ++i;
+            }
+        }
+    }
+
+    void Timer::MoveList_(int level, int idx) {
+        for (auto& current : t_[level][idx]) {
+            AddNode_(current);
+        }
+        t_[level][idx].clear();
     }
 }
 

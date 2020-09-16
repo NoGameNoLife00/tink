@@ -10,7 +10,7 @@ namespace logic {
         return  (rand() % (y-x+1)) + x;
     }
 
-    Player::Player(IConnectionPtr conn) : conn(conn){
+    Player::Player(ConnectionPtr conn) : conn(conn){
         pid = pid_gen.fetch_add(1);
         x = 160 + Random(0, 10);
         y = 0;

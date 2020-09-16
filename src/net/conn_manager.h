@@ -6,26 +6,30 @@
 #define TINK_CONN_MANAGER_H
 
 #include <type.h>
-#include <iconnection.h>
+#include <connection.h>
 #include <unordered_map>
 #include <mutex>
-#include <iconn_manager.h>
+#include <server.h>
 
 namespace tink {
-    class ConnManager : public IConnManager{
+    class Connection;
+    typedef std::shared_ptr<Connection> ConnectionPtr;
+
+    class ConnManager {
     public:
-        void Add(IConnectionPtr &&conn) override;
-
-        void Remove(IConnectionPtr &&conn) override;
-
-        IConnectionPtr Get(const uint32_t conn_id) override;
-
-        uint32_t Size() override;
-
-        void ClearConn() override;
+        // 添加连接
+        void Add(ConnectionPtr &&conn);
+        // 删除连接
+        void Remove(ConnectionPtr &&conn);
+        // 根据connID获取连接
+        ConnectionPtr Get(const uint32_t conn_id) ;
+        // 得到当前连接数
+        uint32_t Size();
+        // 清除终止所以连接
+        void ClearConn();
 
     private:
-        typedef std::unordered_map<uint32_t, IConnectionPtr> ConnectionMap;
+        typedef std::unordered_map<uint32_t, ConnectionPtr> ConnectionMap;
         ConnectionMap conn_map_;
         Mutex mutex_;
     };

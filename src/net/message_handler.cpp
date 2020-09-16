@@ -3,9 +3,10 @@
 #include <global_mng.h>
 #include <thread.h>
 #include <assert.h>
+#include <request.h>
 
 namespace tink {
-    int MessageHandler::DoMsgHandle(IRequest &request) {
+    int MessageHandler::DoMsgHandle(Request &request) {
         // 根据MsgId 调度对应router业务
         auto iter = apis.find(request.GetMsgId());
         if (iter != apis.end()) {
@@ -18,7 +19,7 @@ namespace tink {
         return E_OK;
     }
 
-    int MessageHandler::AddRouter(uint32_t msg_id, IRouterPtr &router) {
+    int MessageHandler::AddRouter(uint32_t msg_id, BaseRouterPtr &router) {
         if (apis.find(msg_id) != apis.end()) {
             spdlog::info("msg repeat add, msg_id={}", msg_id);
             return E_MSG_REPEAT_ROUTER;
@@ -37,7 +38,7 @@ namespace tink {
         threads_.reserve(worker_pool_size);
         for (int i = 0; i < worker_pool_size; i++) {
             // 创建一个消息队列和启动worker线程
-            task_queue.push_back(std::make_shared<IRequestMsgQueue>());
+            task_queue.push_back(std::make_shared<RequestMsgQueue>());
             threads_.emplace_back(std::make_unique<Thread>(std::bind(StartOneWorker, std::ref(*this),  i), "worker"+i+1));
             threads_[i]->Start();
         }
@@ -52,10 +53,10 @@ namespace tink {
 //        }
 //        MessageHandler *handler = info->msg_handler;
 //        int worker_id = info->worker_id;
-        IRequestMsgQueuePtr msg_queue = handler.task_queue[worker_id];
+        RequestMsgQueuePtr msg_queue = handler.task_queue[worker_id];
         spdlog::info("work id = {}, is started...", worker_id);
         while (true) {
-            IRequestPtr req;
+            RequestPtr req;
             // 消息队列取出router
             msg_queue->Pop(req, true);
             if (req->GetMsgId() == MSG_ID_EXIT)
@@ -66,7 +67,7 @@ namespace tink {
         spdlog::info("work id = {}, is stopped...", worker_id);
     }
 
-    int MessageHandler::SendMsgToTaskQueue(IRequestPtr &request) {
+    int MessageHandler::SendMsgToTaskQueue(RequestPtr &request) {
         // 平均分配给TaskQueue (暂时按客户端connId分配
         int conn_id = request->GetConnection()->GetConnId();
         int workerId = conn_id % worker_pool_size;

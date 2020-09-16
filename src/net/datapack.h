@@ -1,17 +1,19 @@
 #ifndef TINK_DATAPACK_H
 #define TINK_DATAPACK_H
 
-#include <idatapack.h>
+#include <type.h>
+#include <message.h>
 namespace tink {
     class DataPack {
     public:
+        // 获取包的头的长度
         static uint32_t GetHeadLen();
+        // 反序列化
+        static int Unpack(BytePtr &data, Message &msg);
+        // 序列化
+        static int Pack(Message &msg, BytePtr &data, uint32_t &data_len);
 
-        static int Unpack(BytePtr &data, IMessage &msg);
-
-        static int Pack(IMessage &msg, BytePtr &data, uint32_t &data_len);
-
-        static int Pack(IMessage &msg, byte *buff, uint32_t &data_len);
+        static int Pack(Message &msg, byte *buff, uint32_t &data_len);
     };
 }
 

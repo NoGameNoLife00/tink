@@ -1,14 +1,14 @@
 #include <base_router.h>
 namespace tink {
-    int BaseRouter::PreHandle(IRequest &request) {
+    int BaseRouter::PreHandle(Request &request) {
         return 0;
     }
 
-    int BaseRouter::Handle(IRequest &request) {
+    int BaseRouter::Handle(Request &request) {
         return 0;
     }
 
-    int BaseRouter::PostHandle(IRequest &request) {
+    int BaseRouter::PostHandle(Request &request) {
         return 0;
     }
 }

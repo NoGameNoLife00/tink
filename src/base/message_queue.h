@@ -1,5 +1,7 @@
 #ifndef TINK_MESSAGE_QUEUE_H
 #define TINK_MESSAGE_QUEUE_H
+
+
 #include <queue>
 #include <type.h>
 #include <condition_variable>

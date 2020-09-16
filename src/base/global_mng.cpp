@@ -79,7 +79,7 @@ namespace tink {
         return 0;
     }
 
-    const std::shared_ptr<IServer>& GlobalMng::GetServer() const {
+    const std::shared_ptr<Server>& GlobalMng::GetServer() const {
         return server_;
     }
 
@@ -111,7 +111,7 @@ namespace tink {
         return worker_pool_size_;
     }
 
-    void GlobalMng::SetServer(std::shared_ptr<IServer>&& s) {
+    void GlobalMng::SetServer(std::shared_ptr<Server>&& s) {
         server_ = s;
     }
 

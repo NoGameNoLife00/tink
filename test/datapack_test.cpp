@@ -3,7 +3,7 @@
 #include <message.h>
 #include <datapack.h>
 #include <global_mng.h>
-#include <imessage_handler.h>
+#include <Message_handler.h>
 #include <message_handler.h>
 #include <memory>
 
@@ -12,7 +12,7 @@ TEST(datapackTest, test1) {
     tink::DataPack dp;
     tink::Message msg;
     BytePtr buf(new byte[5] {'t','i','n','k','\0'});
-    std::shared_ptr<tink::IMessageHandler> msg_handler(new tink::MessageHandler);
+    std::shared_ptr<tink::MessageHandler> msg_handler(new tink::MessageHandler);
 
     msg.SetId(1);
     msg.SetDataLen(5);

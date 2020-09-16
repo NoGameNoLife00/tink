@@ -6,7 +6,7 @@
 #include <world_manager.h>
 
 namespace api {
-    int WorldChat::Handle(tink::IRequest &request) {
+    int WorldChat::Handle(tink::Request &request) {
         pb::Talk msg;
         if (!msg.ParseFromArray(request.GetData().get(), request.GetDataLen())) {
             spdlog::warn("talk parse error");

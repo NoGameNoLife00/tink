@@ -2,7 +2,6 @@
 #设置 BINARY 为项目名IndexProject
 set(BINARY ${CMAKE_PROJECT_NAME})
 
-include_directories(interface)
 include_directories(base)
 include_directories(net)
 

@@ -1,37 +1,46 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#include <iserver.h>
 #include <string>
 #include <memory>
-#include <imessage_handler.h>
+#include <message_handler.h>
 #include <sys/epoll.h>
 #include <unordered_map>
 #include <map>
-#include <iconn_manager.h>
 #include <vector>
 #include <socket.h>
+#include <connection.h>
+#include <conn_manager.h>
+#include <functional>
 
 namespace tink {
+    class Connection;
+    class MessageHandler;
+    class ConnManager;
+    class BaseRouter;
+    typedef std::shared_ptr<Connection> ConnectionPtr;
+    typedef std::function<void(ConnectionPtr&)> ConnHookFunc;
+    typedef std::shared_ptr<MessageHandler> MessageHandlerPtr;
+    typedef std::shared_ptr<ConnManager> ConnManagerPtr;
 
-    class Server : public IServer
-    , public std::enable_shared_from_this<Server>
-            {
+    class Server : public std::enable_shared_from_this<Server> {
     public:
         int Init(string &name, int ip_version,
                  string &ip, int port,
-                 IMessageHandlerPtr &&msg_handler);
-        int Start();
-        int Run();
-        int Stop();
-        int AddRouter(uint32_t msg_id, std::shared_ptr<IRouter> &router);
+                 MessageHandlerPtr &&msg_handler);
+        int Start(); // 启动
+        int Run(); // 运行
+        int Stop(); // 停止
+        // 给当前服务注册一个路由方法，供客户端链接处理使用
+        int AddRouter(uint32_t msg_id, std::shared_ptr<BaseRouter> &router);
         void OperateEvent(uint32_t fd, uint32_t id, int op, int state);
-        IConnManagerPtr& GetConnMng() {return conn_mng_;};
+        ConnManagerPtr& GetConnMng() {return conn_mng_;};
         void SetOnConnStart(ConnHookFunc &&func);
         void SetOnConnStop(ConnHookFunc &&func);
-        void CallOnConnStart(IConnectionPtr &&conn);
-        void CallOnConnStop(IConnectionPtr &&conn);
+        void CallOnConnStart(ConnectionPtr &&conn);
+        void CallOnConnStop(ConnectionPtr &&conn);
     private:
+
         void HandleAccept_();
         void HandleEvents_(int event_num);
         void DoRead_(int id);
@@ -39,9 +48,9 @@ namespace tink {
         void DoError_(int id);
         string name_;
         // server的消息管理模块
-        IMessageHandlerPtr msg_handler_;
+        MessageHandlerPtr msg_handler_;
         // server的连接管理器
-        IConnManagerPtr conn_mng_;
+        ConnManagerPtr conn_mng_;
 
         static const int ListenID = 0;
         static const int ConnStartID = 1000;
