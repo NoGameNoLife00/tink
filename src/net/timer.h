@@ -6,7 +6,7 @@
 #include <shared_mutex>
 
 namespace tink {
-
+    // 定时器事件
     typedef struct TimerEvent_ {
         uint32_t handle;
         int32_t session;
