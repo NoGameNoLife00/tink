@@ -40,7 +40,10 @@ namespace tink {
         void CallOnConnStart(ConnectionPtr &&conn);
         void CallOnConnStop(ConnectionPtr &&conn);
     private:
-
+        static const int ListenID = 0;
+        static const int ConnStartID = 1000;
+        static const int InitEvenListCount = 32;
+        typedef std::array<struct epoll_event, InitEvenListCount> EventList;
         void HandleAccept_();
         void HandleEvents_(int event_num);
         void DoRead_(int id);
@@ -52,12 +55,7 @@ namespace tink {
         // server的连接管理器
         ConnManagerPtr conn_mng_;
 
-        static const int ListenID = 0;
-        static const int ConnStartID = 1000;
-        static const int InitEvenListCount = 32;
-        typedef std::array<struct epoll_event, InitEvenListCount> EventList;
         int epoll_fd_;
-//        int listen_fd_;
         std::unique_ptr<Socket> listen_socket_;
         SockAddressPtr listen_addr_;
         EventList events_;

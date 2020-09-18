@@ -147,7 +147,7 @@ namespace tink {
         BytePtr head_data = std::make_unique<byte[]>(head_len);
         memset(head_data.get(), 0, head_len);
         // 读取客户端的数据到buf中
-        MessagePtr msg = std::make_unique<Message>();
+        MessagePtr msg = std::make_unique<NetMessage>();
 
 
         auto conn = conn_mng_->Get(id);

@@ -22,7 +22,7 @@ namespace tink {
         // 删除连接
         void Remove(ConnectionPtr &&conn);
         // 根据connID获取连接
-        ConnectionPtr Get(const uint32_t conn_id) ;
+        ConnectionPtr Get(uint32_t conn_id) ;
         // 得到当前连接数
         uint32_t Size();
         // 清除终止所以连接

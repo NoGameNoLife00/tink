@@ -1,42 +1,44 @@
 #include <error_code.h>
 #include <message.h>
-#include <global_mng.h>
 
 namespace tink {
 
-    int32_t Message::GetId() const {
-        return id_;
+    int32_t NetMessage::GetId() const {
+        return id;
     }
 
-    void Message::SetId(uint32_t id) {
-        id_ = id;
+    void NetMessage::SetId(uint32_t id) {
+        this->id = id;
     }
 
-    uint32_t Message::GetDataLen() const {
-        return data_len_;
+    uint32_t NetMessage::GetDataLen() const {
+        return data_len;
     }
 
-    void Message::SetDataLen(uint32_t dataLen) {
-        data_len_ = dataLen;
+    void NetMessage::SetDataLen(uint32_t len) {
+        this->data_len = len;
     }
 
-    BytePtr &Message::GetData() {
-        return data_;
+    BytePtr &NetMessage::GetData() {
+        return data;
     }
 
-    void Message::SetData(BytePtr &data) {
-        data_ = std::move(data);
+    void NetMessage::SetData(BytePtr &data) {
+        data = std::move(data);
     }
 
-    int Message::Init(uint32_t id, uint32_t len, BytePtr &data) {
-        id_ = id;
-        data_len_ = len;
-        data_ = std::move(data);
+    int NetMessage::Init(uint32_t id, uint32_t len, BytePtr &data) {
+        this->id = id;
+        data_len = len;
+        this->data = std::move(data);
         return E_OK;
     }
 
-    Message::~Message() {
-        spdlog::debug("message destruction id:{}", id_);
+    int Message::Init(uint32_t source, int32_t session, BytePtr& data, size_t size) {
+        this->source = source;
+        this->session = session;
+        this->data = std::move(data);
+        this->size = size;
+        return E_OK;
     }
-
 }

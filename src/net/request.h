@@ -5,10 +5,10 @@
 #include <connection.h>
 #include <server.h>
 namespace tink {
-    class Message;
+    class NetMessage;
     class Connection;
 
-    typedef std::unique_ptr<Message> MessagePtr;
+    typedef std::unique_ptr<NetMessage> MessagePtr;
     typedef std::shared_ptr<Connection> ConnectionPtr;
     class Request {
     public:

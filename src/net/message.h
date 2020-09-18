@@ -4,8 +4,7 @@
 #include <leaked_object_detector.h>
 #include <type.h>
 namespace tink {
-    class Message {
-    public:
+    struct NetMessage {
         int Init(uint32_t id, uint32_t len, BytePtr &data);
         int32_t GetId() const;
 
@@ -13,18 +12,24 @@ namespace tink {
 
         uint32_t GetDataLen() const;
 
-        void SetDataLen(uint32_t dataLen);
+        void SetDataLen(uint32_t data_len);
 
         BytePtr &GetData();
 
         void SetData(BytePtr &data);
-        ~Message();
-    private:
-        uint32_t id_; // 消息ID
-        uint32_t data_len_; // 消息长度
-        BytePtr data_; // 消息数据
+        uint32_t id; // 消息ID
+        uint32_t data_len; // 消息长度
+        BytePtr data; // 消息数据
+        LEAK_DETECTOR(NetMessage);
+    };
 
-        LEAK_DETECTOR(Message);
+    struct Message {
+        uint32_t source;
+        int32_t session;
+        BytePtr data;
+        size_t size;
+
+        int Init(uint32_t source, int32_t session, BytePtr& data, size_t size);
     };
 
 }

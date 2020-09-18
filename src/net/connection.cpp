@@ -1,6 +1,5 @@
 #include <cstring>
 #include <connection.h>
-#include <server.h>
 #include <request.h>
 #include <global_mng.h>
 #include <datapack.h>
@@ -52,7 +51,7 @@ namespace tink {
         }
         int ret = E_OK;
         std::lock_guard<Mutex> guard(mutex_);
-        Message msg;
+        NetMessage msg;
         msg.Init(msg_id, data_len, data);
         uint32_t len;
         memset(tmp_buffer_.get(), 0, tmp_buffer_size_);
