@@ -13,13 +13,13 @@
 
 #define READ_BUF_SIZE 1024
 
-#define GlobalInstance (tink::Singleton<tink::GlobalMng>::GetInstance())
+#define GlobalInstance (tink::GlobalMng::GetInstance())
 
 namespace tink {
     // 存储框架的全局参数
-    class GlobalMng {
+    class GlobalMng : public Singleton<GlobalMng> {
     public:
-        GlobalMng();
+//        explicit GlobalMng();
         // 配置初始化
         int Init();
         int Reload();
@@ -40,6 +40,7 @@ namespace tink {
         uint32_t GetMaxPackageSize() const;
         uint32_t GetWorkerPoolSize() const;
     private:
+        void Default_();
         int max_conn_;
         uint32_t max_package_size_;
 

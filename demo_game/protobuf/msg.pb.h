@@ -147,7 +147,7 @@ class SyncPid PROTOBUF_FINAL :
     InternalSwap(other);
   }
 
-  // implements Message ----------------------------------------------
+  // implements NetMessage ----------------------------------------------
 
   inline SyncPid* New() const final {
     return CreateMaybeMessage<SyncPid>(nullptr);
@@ -284,7 +284,7 @@ class Position PROTOBUF_FINAL :
     InternalSwap(other);
   }
 
-  // implements Message ----------------------------------------------
+  // implements NetMessage ----------------------------------------------
 
   inline Position* New() const final {
     return CreateMaybeMessage<Position>(nullptr);
@@ -461,7 +461,7 @@ class BroadCast PROTOBUF_FINAL :
     InternalSwap(other);
   }
 
-  // implements Message ----------------------------------------------
+  // implements NetMessage ----------------------------------------------
 
   inline BroadCast* New() const final {
     return CreateMaybeMessage<BroadCast>(nullptr);
@@ -677,7 +677,7 @@ class Talk PROTOBUF_FINAL :
     InternalSwap(other);
   }
 
-  // implements Message ----------------------------------------------
+  // implements NetMessage ----------------------------------------------
 
   inline Talk* New() const final {
     return CreateMaybeMessage<Talk>(nullptr);
@@ -821,7 +821,7 @@ class Player PROTOBUF_FINAL :
     InternalSwap(other);
   }
 
-  // implements Message ----------------------------------------------
+  // implements NetMessage ----------------------------------------------
 
   inline Player* New() const final {
     return CreateMaybeMessage<Player>(nullptr);
@@ -978,7 +978,7 @@ class SyncPlayers PROTOBUF_FINAL :
     InternalSwap(other);
   }
 
-  // implements Message ----------------------------------------------
+  // implements NetMessage ----------------------------------------------
 
   inline SyncPlayers* New() const final {
     return CreateMaybeMessage<SyncPlayers>(nullptr);

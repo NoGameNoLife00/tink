@@ -42,7 +42,7 @@ namespace tink {
         // 读数据
         msg.SetId(id);
         msg.SetDataLen(data_len);
-        if (GlobalInstance->GetMaxPackageSize() > 0 && data_len > GlobalInstance->GetMaxPackageSize()) {
+        if (GlobalInstance.GetMaxPackageSize() > 0 && data_len > GlobalInstance.GetMaxPackageSize()) {
             return E_PACKET_SIZE;
         }
         return E_OK;

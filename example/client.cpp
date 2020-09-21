@@ -35,7 +35,7 @@ int main() {
         scanf("%s", str_buf.get());
 //        strcpy(str_buf.get(), "hello world");
         // 发送msg给客户端
-        tink::Message msg;
+        tink::NetMessage msg;
         msg.Init(0,strlen(str_buf.get())+1, str_buf);
 
         dp.Pack(msg, out, out_len);
@@ -45,7 +45,7 @@ int main() {
         }
 
         BytePtr msg_head = std::make_unique<byte[]>(dp.GetHeadLen());
-        tink::Message recv_msg;
+        tink::NetMessage recv_msg;
 
         if ((recv(fd, msg_head.get(), dp.GetHeadLen(), 0)) == -1) {
             printf("client recv msg head error %s\n", strerror(errno));

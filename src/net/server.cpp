@@ -26,11 +26,11 @@ namespace tink {
 
 
     int Server::Start() {
-        auto globalObj = GlobalInstance;
+        auto& globalObj = GlobalInstance;
         spdlog::info("[tink] Server Name:{}, listener at IP:{}, Port:{}, is starting.",
                 name_, listen_addr_->ToIp(), listen_addr_->ToPort());
-        spdlog::info("[tink] Version: {}, MaxConn:{}, MaxPacketSize:{}", globalObj->GetVersion().c_str(),
-               globalObj->GetMaxConn(), globalObj->GetMaxPackageSize());
+        spdlog::info("[tink] Version: {}, MaxConn:{}, MaxPacketSize:{}", globalObj.GetVersion().c_str(),
+               globalObj.GetMaxConn(), globalObj.GetMaxPackageSize());
 
         // 开启worker工作池
         msg_handler_->StartWorkerPool();
@@ -115,9 +115,9 @@ namespace tink {
             spdlog::warn("accept socket error: {}(code:{})", strerror(errno), errno);
         } else {
             // 判断最大连接数
-            if (conn_mng_->Size() >= GlobalInstance->GetMaxConn()) {
+            if (conn_mng_->Size() >= GlobalInstance.GetMaxConn()) {
                 // TODO 发送连接失败消息
-                spdlog::warn("too many connections max_conn={}", GlobalInstance->GetMaxConn());
+                spdlog::warn("too many connections max_conn={}", GlobalInstance.GetMaxConn());
                 close(cli_fd);
                 return;
             }
@@ -191,7 +191,7 @@ namespace tink {
         }
 
         RequestPtr req_ptr = std::make_shared<Request>(conn,msg);
-        if (GlobalInstance->GetWorkerPoolSize() > 0) {
+        if (GlobalInstance.GetWorkerPoolSize() > 0) {
             conn->GetMsgHandler()->SendMsgToTaskQueue(req_ptr);
         }
     }

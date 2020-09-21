@@ -29,7 +29,7 @@ namespace tink {
     }
 
     int MessageHandler::Init() {
-        worker_pool_size = GlobalInstance->GetWorkerPoolSize();
+        worker_pool_size = GlobalInstance.GetWorkerPoolSize();
         return 0;
     }
 

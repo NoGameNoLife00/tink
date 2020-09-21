@@ -14,7 +14,7 @@ void DoConnectionAdd(tink::ConnectionPtr& conn) {
     logic::PlayerPtr player = std::make_shared<logic::Player>(conn);
     player->SyncPid();
     player->BroadCastStartPosition();
-    WorldMngInstance->AddPlayer(player);
+    WorldMngInstance.AddPlayer(player);
     conn->SetProperty(logic::PROP_PID, std::to_string(player->pid));
     spdlog::info("player pid = {} online...", player->pid);
 }
@@ -27,7 +27,7 @@ void DoConnectionLost(tink::ConnectionPtr& conn) {
         return;
     }
     int pid = atoi(pid_str.c_str());
-    logic::PlayerPtr player = WorldMngInstance->GetPlayerByPid(pid);
+    logic::PlayerPtr player = WorldMngInstance.GetPlayerByPid(pid);
     if (player) {
         player->LostConnection();
     }
@@ -37,8 +37,8 @@ void DoConnectionLost(tink::ConnectionPtr& conn) {
 int main(int argc, char** argv) {
     setbuf(stdout, NULL); // debug
     srand(static_cast<unsigned>(time(NULL)));
-    auto globalObj = GlobalInstance;
-    globalObj->Init();
+    auto& globalObj = GlobalInstance;
+    globalObj.Init();
 
     std::shared_ptr<tink::Server> s(new tink::Server());
 
@@ -49,16 +49,16 @@ int main(int argc, char** argv) {
 
     std::shared_ptr<tink::MessageHandler>  handler(new tink::MessageHandler());
 
-    globalObj->SetServer(std::dynamic_pointer_cast<tink::Server>(s));
+    globalObj.SetServer(std::dynamic_pointer_cast<tink::Server>(s));
     handler->Init();
-    s->Init(const_cast<std::string &>(globalObj->GetName()), AF_INET,
-            const_cast<std::string &>(globalObj->GetHost()), globalObj->GetPort(),
+    s->Init(const_cast<std::string &>(globalObj.GetName()), AF_INET,
+            const_cast<std::string &>(globalObj.GetHost()), globalObj.GetPort(),
             std::dynamic_pointer_cast<tink::MessageHandler>(handler));
     s->SetOnConnStop(&DoConnectionLost);
     s->SetOnConnStart(&DoConnectionAdd);
     s->AddRouter(logic::MSG_TALK, chat_api);
     s->AddRouter(logic::MSG_MOVE, move_api);
-    WorldMngInstance->Init();
+    WorldMngInstance.Init();
     s->Run();
 //    spdlog::drop_all();
     return 0;

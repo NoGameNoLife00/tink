@@ -9,18 +9,21 @@
 #include <spdlog/async.h>
 
 namespace tink {
-    GlobalMng::GlobalMng() : name_("tink_server"),
-                             host_("0.0.0.0"),
-                             version_(TINK_VERSION_STR),
-                             port_(8896),
-                             max_conn_(10000),
-                             max_package_size_(2048),
-                             worker_pool_size_(10),
-                             max_worker_task_len_(1024),
-                             log_name_("./logs/tink.log"){
+
+    void GlobalMng::Default_() {
+        name_ = "tink_server";
+        host_ = "0.0.0.0";
+        version_ = TINK_VERSION_STR;
+        port_ = 8896;
+        max_conn_ = 10000;
+        max_package_size_ = 2048;
+        worker_pool_size_ = 10;
+        max_worker_task_len_ = 1024;
+        log_name_ = "./logs/tink.log";
     }
 
     int GlobalMng::Init() {
+        Default_();
         FILE *fp = nullptr;
         cJSON *json;
         char *out;
@@ -114,6 +117,8 @@ namespace tink {
     void GlobalMng::SetServer(std::shared_ptr<Server>&& s) {
         server_ = s;
     }
+
+
 
 }
 

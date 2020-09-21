@@ -16,4 +16,5 @@
 #define E_MSG_REPEAT_ROUTER 5 // 消息id已被添加handle
 #define E_CONN_NOT_FIND 6 // 找不到链接
 #define E_BUFF_OVERSIZE 7 // 连接缓存已满
+#define E_QUERY_MODULE 8 // 加载模块出错
 #endif //TINK_ERROR_CODE_H

@@ -18,7 +18,7 @@ namespace api {
             return E_FAILED;
         }
         int pid = atoi(pid_str.c_str());
-        logic::PlayerPtr player = WorldMngInstance->GetPlayerByPid(pid);
+        logic::PlayerPtr player = WorldMngInstance.GetPlayerByPid(pid);
         if (player) {
             player->Talk("player online");
         }

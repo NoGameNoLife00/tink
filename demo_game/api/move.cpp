@@ -20,7 +20,7 @@ namespace api {
         }
         int pid = atoi(pid_str.c_str());
         spdlog::info("user pid={}, move({},{},{},{})", pid, msg.x(), msg.y(), msg.z(), msg.y());
-        logic::PlayerPtr player = WorldMngInstance->GetPlayerByPid(pid);
+        logic::PlayerPtr player = WorldMngInstance.GetPlayerByPid(pid);
         player->UpdatePos(msg.x(), msg.y(), msg.z(), msg.v());
         return E_OK;
     }

@@ -8,7 +8,7 @@
 #define BUFF_MAX_SIZE_COUNt 16
 namespace tink {
     int Connection::Init(ServerPtr &&server, int conn_fd, int id, MessageHandlerPtr &msg_handler, SockAddressPtr &addr) {
-        uint32_t package_size = (GlobalInstance->GetMaxPackageSize() + DataPack::GetHeadLen());
+        uint32_t package_size = (GlobalInstance.GetMaxPackageSize() + DataPack::GetHeadLen());
         this->server = server;
         this->socket_ = std::make_unique<Socket>(conn_fd);
         this->conn_id_ = id;
@@ -60,7 +60,7 @@ namespace tink {
         if (ret) {
             return ret;
         }
-        GlobalInstance->GetServer()->OperateEvent(socket_->GetSockFd(), conn_id_, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
+        GlobalInstance.GetServer()->OperateEvent(socket_->GetSockFd(), conn_id_, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
         return ret;
     }
 

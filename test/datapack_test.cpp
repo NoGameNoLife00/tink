@@ -10,7 +10,7 @@
 TEST(datapackTest, test1) {
     auto globalObj = GlobalInstance;
     tink::DataPack dp;
-    tink::Message msg;
+    tink::NetMessage msg;
     BytePtr buf(new byte[5] {'t','i','n','k','\0'});
     std::shared_ptr<tink::MessageHandler> msg_handler(new tink::MessageHandler);
 
@@ -18,13 +18,13 @@ TEST(datapackTest, test1) {
     msg.SetDataLen(5);
     msg.SetData(buf);
 
-//    std::shared_ptr<tink::Message> msg_ptr(&msg);
+//    std::shared_ptr<tink::NetMessage> msg_ptr(&msg);
     BytePtr out(new byte[1024]);
     uint out_len;
     dp.Pack(msg, out, out_len);
 
 
-    tink::Message out_msg;
+    tink::NetMessage out_msg;
     dp.Unpack(out,out_msg);
     EXPECT_EQ(msg.GetId(), out_msg.GetId());
     EXPECT_EQ(msg.GetDataLen(), out_msg.GetDataLen());

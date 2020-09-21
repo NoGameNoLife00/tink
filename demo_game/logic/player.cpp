@@ -55,7 +55,7 @@ namespace logic {
         msg.set_pid(pid);
         msg.set_content(content);
         PlayerList players;
-        WorldMngInstance->GetAllPlayers(players);
+        WorldMngInstance.GetAllPlayers(players);
         for (auto& player: players) {
             player->SendMsg(MSG_BROADCAST_POS, msg);
         }
@@ -82,9 +82,9 @@ namespace logic {
 
     void Player::GetSurroundingPlayers(std::vector<PlayerPtr> &players) {
         PidList pid_list;
-        WorldMngInstance->aoi->GetPidListByPos(x, y, pid_list);
+        WorldMngInstance.aoi->GetPidListByPos(x, y, pid_list);
         for (auto pid : pid_list) {
-            players.emplace_back(WorldMngInstance->GetPlayerByPid(pid));
+            players.emplace_back(WorldMngInstance.GetPlayerByPid(pid));
         }
     }
 
@@ -96,8 +96,8 @@ namespace logic {
         for (auto& player : players) {
             player->SendMsg(MSG_BROADCAST_OFFLINE, msg);
         }
-        WorldMngInstance->aoi->RemoveFromGridByPos(pid, x, z);
-        WorldMngInstance->RemovePlayer(pid);
+        WorldMngInstance.aoi->RemoveFromGridByPos(pid, x, z);
+        WorldMngInstance.RemovePlayer(pid);
     }
 }
 

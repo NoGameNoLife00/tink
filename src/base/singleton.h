@@ -9,44 +9,57 @@
 #include <mutex>
 
 namespace tink {
-    // 单模板
     template<typename T>
-    class Singleton {
-    public:
-        template<typename ...Args>
-        static std::shared_ptr<T> GetInstance(Args&&... args) {
-            if (!instance_) {
-                std::lock_guard<Mutex> gLock(mutex_);
-                if (nullptr == instance_) {
-                    instance_ = std::make_shared<T>(std::forward<Args>(args)...);
-                }
-            }
-            return instance_;
-        }
-
-        //主动析构单例对象（一般不需要主动析构，除非特殊需求）
-        static void DesInstance() {
-            if (instance_) {
-                instance_.reset();
-                instance_ = nullptr;
-            }
-        }
-
-    private:
-        static std::shared_ptr<T> instance_;
-        static Mutex mutex_;
-
-        explicit Singleton();
-        Singleton(const Singleton&) = delete;
-        Singleton& operator=(const Singleton&) = delete;
-        ~Singleton();
+    struct has_no_destroy
+    {
+        template <typename C> static char test(decltype(&C::no_destroy));
+        template <typename C> static int32_t test(...);
+        const static bool value = sizeof(test<T>(0)) == 1;
     };
 
     template<typename T>
-    std::shared_ptr<T> Singleton<T>::instance_ = nullptr;
+    class Singleton : noncopyable
+    {
+    public:
+        Singleton() = delete;
+        ~Singleton() = delete;
+
+        static T& GetInstance()
+        {
+            pthread_once(&ponce_, &Singleton::New);
+            assert(value_ != NULL);
+            return *value_;
+        }
+
+    private:
+        static void New()
+        {
+            value_ = new T();
+            if (!has_no_destroy<T>::value)
+            {
+                ::atexit(Delete);
+            }
+        }
+
+        static void Delete()
+        {
+            typedef char T_must_be_complete_type[sizeof(T) == 0 ? -1 : 1];
+            T_must_be_complete_type dummy; (void) dummy;
+
+            delete value_;
+            value_ = NULL;
+        }
+
+    private:
+        static pthread_once_t ponce_;
+        static T*             value_;
+    };
 
     template<typename T>
-    Mutex Singleton<T>::mutex_;
+    pthread_once_t Singleton<T>::ponce_ = PTHREAD_ONCE_INIT;
+
+    template<typename T>
+    T* Singleton<T>::value_ = NULL;
 }
 
 #endif //TINK_SINGLETON_H

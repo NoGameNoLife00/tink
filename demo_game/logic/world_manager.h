@@ -8,9 +8,9 @@
 #include <singleton.h>
 
 
-#define WorldMngInstance (tink::Singleton<logic::WorldManager>::GetInstance())
+#define WorldMngInstance (logic::WorldManager::GetInstance())
 namespace logic {
-    class WorldManager {
+    class WorldManager : tink::Singleton<WorldManager> {
     public:
         std::shared_ptr<AOI> aoi;
         std::map<int32_t, PlayerPtr> player_map;
