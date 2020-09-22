@@ -21,6 +21,7 @@ namespace tink {
         int Unregister(int handle);
         void UnregisterAll();
         uint32_t FindName(const std::string& name);
+        ContextPtr HandleGrab(uint32_t handle);
     private:
         uint32_t harbor_;
         uint32_t handle_index_;

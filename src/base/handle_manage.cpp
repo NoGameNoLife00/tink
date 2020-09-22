@@ -1,5 +1,5 @@
 #include <error_code.h>
-#include <assert.h>
+#include <cassert>
 #include "handle_manage.h"
 namespace tink {
     int HandleManage::Init(int harbor) {
@@ -13,7 +13,7 @@ namespace tink {
         uint32_t handle = handle_index_;
         assert(handle_map_.size() <= HANDLE_MASK);
         if (handle > HANDLE_MASK) {
-            handle == 1;
+            handle = 1;
         }
         for (int hash = handle; hash < HANDLE_MASK; hash++ ) {
             if (handle_map_.find(hash) == handle_map_.end()) {
@@ -60,7 +60,7 @@ namespace tink {
     }
 
     int HandleManage::BindName(uint32_t handle, std::string &name) {
-        std::unique_lock<std::shared_mutex> lock(mutex_);\
+        std::unique_lock<std::shared_mutex> lock(mutex_);
         // todo 需要优化效率
         for (auto it : name_map_) {
             if (it.first == name) {
@@ -76,6 +76,15 @@ namespace tink {
             return it->second;
         }
         return 0;
+    }
+
+    ContextPtr HandleManage::HandleGrab(uint32_t handle) {
+        std::shared_lock<std::shared_mutex> lock(mutex_);
+        uint32_t hash = handle & (HANDLE_MASK);
+        if (auto it = handle_map_.find(hash); it != handle_map_.end()) {
+            return it->second;
+        }
+        return nullptr;
     }
 }
 

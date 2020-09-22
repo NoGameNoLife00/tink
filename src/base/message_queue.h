@@ -5,15 +5,18 @@
 #include <queue>
 #include <type.h>
 #include <condition_variable>
+#include "global_mq.h"
 
 namespace tink {
+
+
     template<class Type>
-    class MessageQueue {
+    class MessageQueueT {
     public:
-        MessageQueue& operator = (const MessageQueue&) = delete;
-        MessageQueue(const MessageQueue& mq) = delete;
-        MessageQueue() : queue_(), mutex_(), condition_(){}
-        virtual ~MessageQueue(){}
+        MessageQueueT& operator = (const MessageQueueT&) = delete;
+        MessageQueueT(const MessageQueueT& mq) = delete;
+        MessageQueueT() : queue_(), mutex_(), condition_(){}
+        virtual ~MessageQueueT(){}
         void Push(Type msg){
             std::lock_guard <Mutex> lock(mutex_);
             queue_.push(msg);
@@ -64,5 +67,43 @@ namespace tink {
         mutable Mutex mutex_;//同步锁
         std::condition_variable condition_;//实现同步式获取消息
     };
+
+    typedef std::function<void(MsgPtr, void *)> MsgDrop;
+    class MessageQueue : public std::enable_shared_from_this<MessageQueue> {
+    public:
+        MessageQueue& operator = (const MessageQueue&) = delete;
+        MessageQueue(const MessageQueue& mq) = delete;
+        MessageQueue(uint32_t handle) : handle_(handle), in_global(true),
+                                        release_(false), queue_(), mutex_(), condition_() {}
+        virtual ~MessageQueue(){}
+        void Push(MsgPtr msg);
+        //blocked定义访问方式是同步阻塞或者非阻塞模式
+        MsgPtr Pop(bool isBlocked = true);
+
+        int32_t Size(){
+            std::lock_guard<Mutex> lock(mutex_);
+            return queue_.size();
+        }
+
+        uint32_t Handle() {return handle_;}
+
+        bool Empty(){
+            std::lock_guard<Mutex> lock(mutex_);
+            return queue_.empty();
+        }
+
+        void MarkRelease();
+        void Release(MsgDrop drop_func, void* ud);
+    private:
+        void DropQueue_(MsgDrop drop_func, void *ud);
+        std::queue<MsgPtr> queue_;//存储消息的队列
+        mutable Mutex mutex_;//同步锁
+        std::condition_variable condition_;//实现同步式获取消息
+        uint32_t handle_;
+        bool release_;
+        bool in_global;
+    };
+    typedef std::shared_ptr<MessageQueue> MQPtr;
+
 }
 #endif //TINK_MESSAGE_QUEUE_H

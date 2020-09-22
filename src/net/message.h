@@ -32,6 +32,7 @@ namespace tink {
         int Init(uint32_t source, int32_t session, BytePtr& data, size_t size);
     };
 
+    typedef std::unique_ptr<Message> MsgPtr;
 }
 
 

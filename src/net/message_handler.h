@@ -16,7 +16,7 @@ namespace tink {
     typedef std::shared_ptr<BaseRouter> BaseRouterPtr;
     class MessageHandler {
     public:
-        typedef MessageQueue<RequestPtr> RequestMsgQueue;
+        typedef MessageQueueT<RequestPtr> RequestMsgQueue;
         typedef std::shared_ptr<RequestMsgQueue> RequestMsgQueuePtr;
         typedef std::vector<RequestMsgQueuePtr> MsgQueueList;
 //        virtual ~MessageHandler();
