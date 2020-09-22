@@ -5,7 +5,7 @@
 #include <connection.h>
 #include <global_mng.h>
 #include <scope_guard.h>
-#include <type.h>
+#include <common.h>
 #include <conn_manager.h>
 #include <message.h>
 #include <datapack.h>

@@ -2,7 +2,7 @@
 #define TINK_MESSAGE_H
 
 #include <leaked_object_detector.h>
-#include <type.h>
+#include <common.h>
 namespace tink {
     struct NetMessage {
         int Init(uint32_t id, uint32_t len, BytePtr &data);
@@ -32,7 +32,7 @@ namespace tink {
         int Init(uint32_t source, int32_t session, BytePtr& data, size_t size);
     };
 
-    typedef std::unique_ptr<Message> MsgPtr;
+    typedef std::shared_ptr<Message> MsgPtr;
 }
 
 

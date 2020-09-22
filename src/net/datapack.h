@@ -1,7 +1,7 @@
 #ifndef TINK_DATAPACK_H
 #define TINK_DATAPACK_H
 
-#include <type.h>
+#include <common.h>
 #include <message.h>
 namespace tink {
     class DataPack {

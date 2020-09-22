@@ -13,13 +13,12 @@
 
 #define READ_BUF_SIZE 1024
 
-#define GlobalInstance (tink::GlobalMng::GetInstance())
+#define GlobalInstance (tink::Singleton<GlobalMng>::GetInstance())
 
 namespace tink {
     // 存储框架的全局参数
-    class GlobalMng : public Singleton<GlobalMng> {
+    class GlobalMng {
     public:
-//        explicit GlobalMng();
         // 配置初始化
         int Init();
         int Reload();

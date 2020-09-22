@@ -3,13 +3,11 @@
 
 
 #include <queue>
-#include <type.h>
+#include <common.h>
 #include <condition_variable>
 #include "global_mq.h"
 
 namespace tink {
-
-
     template<class Type>
     class MessageQueueT {
     public:
@@ -69,6 +67,7 @@ namespace tink {
     };
 
     typedef std::function<void(MsgPtr, void *)> MsgDrop;
+
     class MessageQueue : public std::enable_shared_from_this<MessageQueue> {
     public:
         MessageQueue& operator = (const MessageQueue&) = delete;
@@ -103,7 +102,7 @@ namespace tink {
         bool release_;
         bool in_global;
     };
-    typedef std::shared_ptr<MessageQueue> MQPtr;
+
 
 }
 #endif //TINK_MESSAGE_QUEUE_H

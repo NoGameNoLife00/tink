@@ -2,7 +2,7 @@
 #define TINK_CONTEXT_H
 
 #include <base_module.h>
-#include <type.h>
+#include <common.h>
 
 namespace tink {
     class Context;

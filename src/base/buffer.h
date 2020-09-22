@@ -7,10 +7,10 @@
 
 
 #include <cstdint>
-#include <type.h>
+#include <common.h>
 #include <cstring>
 #include <error_code.h>
-#include <noncopyadble.h>
+#include <noncopyable.h>
 
 namespace tink {
     class FixBuffer : noncopyable {

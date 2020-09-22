@@ -5,7 +5,7 @@
 #ifndef TINK_CONN_MANAGER_H
 #define TINK_CONN_MANAGER_H
 
-#include <type.h>
+#include <common.h>
 #include <connection.h>
 #include <unordered_map>
 #include <mutex>

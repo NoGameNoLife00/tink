@@ -1,5 +1,5 @@
 #include <datapack.h>
-#include <type.h>
+#include <common.h>
 #include <cstring>
 #include <global_mng.h>
 #include <error_code.h>

@@ -1,12 +1,14 @@
 #ifndef TINK_GLOBAL_MQ_H
 #define TINK_GLOBAL_MQ_H
 #include <singleton.h>
-#include <type.h>
+#include <common.h>
 #include <list>
-#include <message_queue.h>
 #include <message.h>
-
+#include <message_queue.h>
+#define GlobalMQInstance tink::Singleton<tink::GlobalMQ>::GetInstance()
 namespace tink {
+    class MessageQueue;
+    typedef std::shared_ptr<MessageQueue> MQPtr;
     class GlobalMQ : public Singleton<GlobalMQ>  {
     public:
         void Push(MQPtr mq);

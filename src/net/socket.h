@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <endian.h>
 #include <netinet/tcp.h>
-#include <noncopyadble.h>
+#include <noncopyable.h>
 #include <netinet/in.h>
 #include <string_util.h>
 #include <socket_api.h>

@@ -1,5 +1,5 @@
-#ifndef TINK_NONCOPYADBLE_H
-#define TINK_NONCOPYADBLE_H
+#ifndef TINK_NONCOPYABLE_H
+#define TINK_NONCOPYABLE_H
 
 namespace tink {
     class noncopyable
@@ -14,4 +14,4 @@ namespace tink {
     };
 }
 
-#endif //TINK_NONCOPYADBLE_H
+#endif //TINK_NONCOPYABLE_H

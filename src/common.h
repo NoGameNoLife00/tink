@@ -1,5 +1,5 @@
-#ifndef TINK_TYPE_H
-#define TINK_TYPE_H
+#ifndef TINK_COMMON_H
+#define TINK_COMMON_H
 #include <sys/types.h>
 #include <memory>
 #include <mutex>
@@ -13,7 +13,7 @@ namespace tink {
     typedef std::shared_ptr<std::string> StringPtr;
     typedef std::shared_ptr<struct sockaddr> RemoteAddrPtr;
     typedef std::mutex Mutex;
-    typedef std::function<int (Context& ctx, void* ud, int type, int session, uint32_t source, const void* msg, size_t sz)> ContextCallBack;
+//    typedef std::function<int (Context& ctx, void* ud, int type, int session, uint32_t source, const void* msg, size_t sz)> ContextCallBack;
 }
 
-#endif //TINK_TYPE_H
+#endif //TINK_COMMON_H

@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <mutex>
+#include "noncopyable.h"
 
 namespace tink {
     template<typename T>

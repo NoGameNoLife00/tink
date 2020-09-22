@@ -7,7 +7,7 @@
 #include <cerrno>
 #include <datapack.h>
 #include <message.h>
-#include <type.h>
+#include <common.h>
 
 
 #define MAX_BUF_SIZE 1024

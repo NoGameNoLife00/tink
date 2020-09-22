@@ -1,13 +1,13 @@
 #ifndef TINK_BASE_MODULE_H
 #define TINK_BASE_MODULE_H
 
-#include <type.h>
+#include <common.h>
 
 namespace tink {
     class Context;
     class BaseModule {
     public:
-        virtual int Init(Context& ctx, const byte* param) = 0;
+        virtual int Init(Context& ctx, const char* param) = 0;
         virtual void Release() = 0;
         virtual void Signal(int signal) = 0;
         virtual const std::string& Name() {return name_;}

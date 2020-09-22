@@ -1,9 +1,9 @@
 #ifndef TINK_COUNT_DOWN_LATCH_H
 #define TINK_COUNT_DOWN_LATCH_H
 
-#include <type.h>
+#include <common.h>
 #include <condition_variable>
-#include <noncopyadble.h>
+#include <noncopyable.h>
 
 namespace tink {
     class CountDownLatch : noncopyable {
