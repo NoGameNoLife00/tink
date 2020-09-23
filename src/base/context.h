@@ -18,6 +18,8 @@ namespace tink {
         void Send(BytePtr &data, size_t sz, uint32_t source, int type, int session);
         void SetCallBack(ContextCallBack cb, void *ud);
         uint32_t Handle() { return handle; }
+        void Reserve() { --total; }
+
 
         ContextCallBack cb;
         void *cb_ud;

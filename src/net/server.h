@@ -12,6 +12,7 @@
 #include <connection.h>
 #include <conn_manager.h>
 #include <functional>
+#include <context.h>
 
 namespace tink {
     class Connection;
@@ -39,6 +40,8 @@ namespace tink {
         void SetOnConnStop(ConnHookFunc &&func);
         void CallOnConnStart(ConnectionPtr &&conn);
         void CallOnConnStop(ConnectionPtr &&conn);
+
+        int Send(Context *context, uint32_t source, uint32_t destination, int type, int session, BytePtr data, size_t sz);
     private:
         static const int ListenID = 0;
         static const int ConnStartID = 1000;

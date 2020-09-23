@@ -68,7 +68,7 @@ namespace tink {
     }
 
     void Context::SetCallBack(ContextCallBack cb, void *ud) {
-        cb = cb;
+        this->cb = cb;
         cb_ud = ud;
     }
 

@@ -10,6 +10,7 @@
 #include <message.h>
 #include <datapack.h>
 #include <request.h>
+#include <context.h>
 
 
 #define MAX_BUF_SIZE 2048
@@ -224,6 +225,17 @@ namespace tink {
         ev.events = state;
         ev.data.u32 = id;
         epoll_ctl(epoll_fd_, op, fd, &ev);
+    }
+
+    int Server::Send(Context *context, uint32_t source, uint32_t destination,
+                     int type, int session, BytePtr data,
+                     size_t sz) {
+        if ((sz & MESSAGE_TYPE_MASK) != sz) {
+            spdlog::error("The message to {} is too large", destination);
+            return E_PACKET_SIZE;
+        }
+
+        return 0;
     }
 
 
