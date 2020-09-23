@@ -5,7 +5,8 @@
 #include <queue>
 #include <common.h>
 #include <condition_variable>
-#include "global_mq.h"
+#include <global_mq.h>
+#include <functional>
 
 namespace tink {
     template<class Type>

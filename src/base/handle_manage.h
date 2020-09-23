@@ -10,8 +10,11 @@
 #include <context.h>
 #include <map>
 #include <singleton.h>
+
+#define HandleMngInstance tink::Singleton<tink::HandleManage>::GetInstance()
+
 namespace tink {
-    class HandleManage : public Singleton<HandleManage> {
+    class HandleManage : public  {
     public:
         constexpr static int HANDLE_REMOTE_SHIFT = 24;
         constexpr static int HANDLE_MASK = 0xffffff;

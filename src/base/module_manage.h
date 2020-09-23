@@ -3,19 +3,18 @@
 
 #include <base_module.h>
 #include <singleton.h>
+#define ModuleMngInstance tink::Singleton<tink::ModuleManage>::GetInstance()
 namespace tink {
-    class ModuleManage : public Singleton<ModuleManage> {
+    class ModuleManage {
     public:
         constexpr static int MAX_MODULE_TYPE = 64;
         int Init(const std::string& path);
         ModulePtr Query(const std::string& name);
-
     private:
         ModulePtr Query_(const std::string& name);
         std::vector<ModulePtr> m_;
         std::string path_;
         mutable Mutex mutex_;
-
     };
 }
 

@@ -46,14 +46,14 @@ namespace tink {
 
         lock.unlock();
         if (ctx) {
-            ctx->Destory();
+            ctx->Destroy();
         }
         return E_OK;
     }
 
     void HandleManage::UnregisterAll() {
         for (auto& it : handle_map_) {
-            it.second->Destory();
+            it.second->Destroy();
         }
         handle_map_.clear();
         name_map_.clear();
