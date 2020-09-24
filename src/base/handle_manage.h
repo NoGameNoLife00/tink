@@ -14,10 +14,8 @@
 #define HandleMngInstance tink::Singleton<tink::HandleManage>::GetInstance()
 
 namespace tink {
-    class HandleManage : public  {
+    class HandleManage {
     public:
-        constexpr static int HANDLE_REMOTE_SHIFT = 24;
-        constexpr static int HANDLE_MASK = 0xffffff;
         int Init(int harbor);
         uint32_t Register(ContextPtr ctx);
         int BindName(uint32_t handle, std::string& name);
@@ -25,6 +23,8 @@ namespace tink {
         void UnregisterAll();
         uint32_t FindName(const std::string& name);
         ContextPtr HandleGrab(uint32_t handle);
+
+        int handle_key;
     private:
         uint32_t harbor_;
         uint32_t handle_index_;

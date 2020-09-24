@@ -41,7 +41,8 @@ namespace tink {
         void CallOnConnStart(ConnectionPtr &&conn);
         void CallOnConnStop(ConnectionPtr &&conn);
 
-        int Send(Context *context, uint32_t source, uint32_t destination, int type, int session, BytePtr data, size_t sz);
+        int ContextPush(uint32_t handle, MsgPtr& msg);
+        void ContextEndless(uint32_t handle);
     private:
         static const int ListenID = 0;
         static const int ConnStartID = 1000;

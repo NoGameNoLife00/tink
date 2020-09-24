@@ -34,7 +34,7 @@ namespace tink {
             return E_FAILED;
         }
         auto ctx = it->second;
-        if (ctx && ctx->handle == handle) {
+        if (ctx && ctx->handle_ == handle) {
             handle_map_.erase(hash);
             for (auto it = name_map_.begin(); it != name_map_.end(); it++) {
                 if (it->second == hash) {

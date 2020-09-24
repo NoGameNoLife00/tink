@@ -11,6 +11,7 @@
 #include <datapack.h>
 #include <request.h>
 #include <context.h>
+#include <handle_manage.h>
 
 
 #define MAX_BUF_SIZE 2048
@@ -227,15 +228,21 @@ namespace tink {
         epoll_ctl(epoll_fd_, op, fd, &ev);
     }
 
-    int Server::Send(Context *context, uint32_t source, uint32_t destination,
-                     int type, int session, BytePtr data,
-                     size_t sz) {
-        if ((sz & MESSAGE_TYPE_MASK) != sz) {
-            spdlog::error("The message to {} is too large", destination);
-            return E_PACKET_SIZE;
+    int Server::ContextPush(uint32_t handle, MsgPtr &msg) {
+        ContextPtr ctx = HandleMngInstance.HandleGrab(handle);
+        if (!ctx) {
+            return E_FAILED;
         }
+        ctx->Queue()->Push(msg);
+        return E_OK;
+    }
 
-        return 0;
+    void Server::ContextEndless(uint32_t handle) {
+        ContextPtr ctx = HandleMngInstance.HandleGrab(handle);
+        if (!ctx) {
+            return ;
+        }
+        ctx->SetEndless(true);
     }
 
 

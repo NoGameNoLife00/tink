@@ -29,7 +29,7 @@ namespace tink {
     typedef struct Message_ {
         uint32_t source;
         int32_t session;
-        BytePtr data;
+        DataPtr data;
         size_t size;
 
         int Init(uint32_t source, int32_t session, BytePtr& data, size_t size);
@@ -42,10 +42,11 @@ namespace tink {
 
     typedef struct RemoteMessage_ {
         RemoteName destination;
-        BytePtr message;
+        DataPtr message;
         size_t size;
         int type;
     } RemoteMessage;
+    typedef std::shared_ptr<RemoteMessage> RemoteMsgPtr;
     typedef std::shared_ptr<Message> MsgPtr;
 }
 
