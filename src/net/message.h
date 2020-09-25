@@ -3,10 +3,11 @@
 
 #include <leaked_object_detector.h>
 #include <common.h>
-#define GLOBALNAME_LENGTH 32
+
 namespace tink {
     constexpr int MESSAGE_TYPE_MASK = (SIZE_MAX >> 8);
     constexpr int MESSAGE_TYPE_SHIFT = ((sizeof(size_t)-1) * 8);
+    constexpr int GLOBALNAME_LENGTH = 32;
     typedef struct NetMessage_ {
         int Init(uint32_t id, uint32_t len, BytePtr &data);
         int32_t GetId() const;

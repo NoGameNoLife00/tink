@@ -26,7 +26,7 @@ namespace tink {
         void DispatchAll();
         void *cb_ud;
         int Send(uint32_t source, uint32_t destination, int type, int session, DataPtr &data, size_t sz);
-
+        int SendName(uint32_t source, const std::string& addr, int type, int session, DataPtr &data, size_t sz);
         ModulePtr mod;
 
         uint64_t cpu_cost;
@@ -37,7 +37,7 @@ namespace tink {
         bool profile;
 
     private:
-        int FilterArgs_(int type, int *session, DataPtr& data, size_t *sz);
+        int FilterArgs_(int type, int &session, DataPtr& data, size_t &sz);
         void DispatchMessage_(MsgPtr msg);
 
         mutable std::mutex mutex_;

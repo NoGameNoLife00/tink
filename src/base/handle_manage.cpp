@@ -2,13 +2,13 @@
 #include <cassert>
 #include "handle_manage.h"
 namespace tink {
-    int HandleManage::Init(int harbor) {
+    int ContextManage::Init(int harbor) {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         handle_index_ = 1;
         harbor_ = (harbor & 0xff) << HANDLE_REMOTE_SHIFT;
     }
 
-    uint32_t HandleManage::Register(ContextPtr ctx) {
+    uint32_t ContextManage::Register(ContextPtr ctx) {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         uint32_t handle = handle_index_;
         assert(handle_map_.size() <= HANDLE_MASK);
@@ -26,7 +26,7 @@ namespace tink {
         return 0;
     }
 
-    int HandleManage::Unregister(int handle) {
+    int ContextManage::Unregister(int handle) {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         uint32_t hash = handle & HANDLE_MASK;
         auto it = handle_map_.find(hash);
@@ -34,7 +34,7 @@ namespace tink {
             return E_FAILED;
         }
         auto ctx = it->second;
-        if (ctx && ctx->handle_ == handle) {
+        if (ctx && (ctx->Handle() == handle)) {
             handle_map_.erase(hash);
             for (auto it = name_map_.begin(); it != name_map_.end(); it++) {
                 if (it->second == hash) {
@@ -51,7 +51,7 @@ namespace tink {
         return E_OK;
     }
 
-    void HandleManage::UnregisterAll() {
+    void ContextManage::UnregisterAll() {
         for (auto& it : handle_map_) {
             it.second->Destroy();
         }
@@ -59,7 +59,7 @@ namespace tink {
         name_map_.clear();
     }
 
-    int HandleManage::BindName(uint32_t handle, std::string &name) {
+    int ContextManage::BindName(uint32_t handle, std::string &name) {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         // todo 需要优化效率
         for (auto it : name_map_) {
@@ -71,20 +71,29 @@ namespace tink {
         return E_OK;
     }
 
-    uint32_t HandleManage::FindName(const std::string & name) {
+    uint32_t ContextManage::FindName(const std::string & name) {
         if (auto it = name_map_.find(name); it != name_map_.end()) {
             return it->second;
         }
         return 0;
     }
 
-    ContextPtr HandleManage::HandleGrab(uint32_t handle) {
+    ContextPtr ContextManage::HandleGrab(uint32_t handle) {
         std::shared_lock<std::shared_mutex> lock(mutex_);
         uint32_t hash = handle & (HANDLE_MASK);
         if (auto it = handle_map_.find(hash); it != handle_map_.end()) {
             return it->second;
         }
         return nullptr;
+    }
+
+    int ContextManage::PushMessage(uint32_t handle, MsgPtr &msg) {
+        ContextPtr ctx = HandleGrab(handle);
+        if (!ctx) {
+            return E_FAILED;
+        }
+        ctx->Queue()->Push(msg);
+        return E_OK;
     }
 }
 

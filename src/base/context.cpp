@@ -5,6 +5,8 @@
 #include <spdlog/spdlog.h>
 #include <common.h>
 #include <timer.h>
+#include <harbor.h>
+
 namespace tink {
     std::atomic_int Context::total = 0;
     struct drop_t {
@@ -32,7 +34,7 @@ namespace tink {
         cpu_start = 0;
         profile = false;
         message_count_ = 0;
-        handle_ = HandleMngInstance.Register(shared_from_this());
+        handle_ = ContextMngInstance.Register(shared_from_this());
         if (handle_ == 0) {
             return E_FAILED;
         }
@@ -45,7 +47,7 @@ namespace tink {
             GlobalMQInstance.Push(queue_);
         } else {
             spdlog::error("Failed launch {}", name);
-            HandleMngInstance.Unregister(handle_);
+            ContextMngInstance.Unregister(handle_);
             struct drop_t d = {handle_};
             queue_->Release(DropMessage, &d);
         }
@@ -93,7 +95,7 @@ namespace tink {
     void Context::DispatchMessage_(MsgPtr msg) {
         assert(init);
         std::lock_guard<Mutex> guard(mutex_);
-        pthread_setspecific(HandleMngInstance.handle_key, (void *)(uintptr_t)(handle_));
+        CurrentHandle::SetHandle(handle_);
         int type = msg->size >> MESSAGE_TYPE_SHIFT;
         size_t sz = msg->size & MESSAGE_TYPE_MASK;
         message_count_++;
@@ -113,7 +115,7 @@ namespace tink {
             spdlog::error("The message to {} is too large", destination);
             return E_PACKET_SIZE;
         }
-        FilterArgs_(type, &session, data, &sz);
+        FilterArgs_(type, session, data, sz);
         if (source == 0) {
             source = handle_;
         }
@@ -123,23 +125,80 @@ namespace tink {
                 data.reset();
                 return E_FAILED;
             }
+            return session;
         }
-
-
+        if (Harbor::MessageIsRemote(destination)) {
+            RemoteMsgPtr r_msg = std::make_shared<RemoteMessage>();
+            r_msg->destination.handle = destination;
+            r_msg->message = data;
+            r_msg->size = sz & MESSAGE_TYPE_MASK;
+            r_msg->type = sz >> MESSAGE_TYPE_SHIFT;
+            Harbor::Send(r_msg, source, session);
+        } else {
+            MsgPtr s_msg = std::make_shared<Message>();
+            s_msg->source = source;
+            s_msg->session = session;
+            s_msg->data = data;
+            s_msg->size = sz;
+            if (ContextMngInstance.PushMessage(destination, s_msg)) {
+                return E_FAILED;
+            }
+        }
+        return session;
     }
 
-    int Context::FilterArgs_(int type, int *session, DataPtr &data, size_t *sz) {
+    int Context::FilterArgs_(int type, int &session, DataPtr &data, size_t &sz) {
 //        int needcopy = !(type & PTYPE_TAG_DONTCOPY);
         int allocsession = type & PTYPE_TAG_ALLOCSESSION;
         type &= 0xff;
 
         if (allocsession) {
-            assert(*session == 0);
-            *session = NewSession();
+            assert(session == 0);
+            session = NewSession();
         }
 
-        *sz |= (size_t)type << MESSAGE_TYPE_SHIFT;
+        sz |= static_cast<size_t>(type) << MESSAGE_TYPE_SHIFT;
         return 0;
+    }
+
+    static void CopyName(char name[GLOBALNAME_LENGTH], const char * addr) {
+        int i;
+        for (i=0; i < GLOBALNAME_LENGTH && addr[i]; i++) {
+            name[i] = addr[i];
+        }
+        for (; i < GLOBALNAME_LENGTH; i++) {
+            name[i] = '\0';
+        }
+    }
+    int Context::SendName(uint32_t source, const std::string &addr, int type, int session, DataPtr &data, size_t sz) {
+        if (source == 0) {
+            source = handle_;
+        }
+        uint32_t  des = 0;
+        if (addr[0] == ':') {
+            des = strtoul(addr.c_str()+1, NULL, 16);
+        } else if ( addr[0] == '.') {
+            des = ContextMngInstance.FindName(addr.c_str()+1);
+            if (des == 0) {
+                return E_FAILED;
+            }
+        } else {
+            if ((sz & MESSAGE_TYPE_MASK) != sz) {
+                spdlog::error("The message to {} is too large", addr);
+                return E_FAILED;
+            }
+            FilterArgs_(type, session, data, sz);
+
+            RemoteMsgPtr r_msg = std::make_shared<RemoteMessage>();
+            CopyName(r_msg->destination.name, addr.c_str());
+            r_msg->destination.handle = 0;
+            r_msg->message = data;
+            r_msg->size = sz & MESSAGE_TYPE_MASK;
+            r_msg->type = sz >> MESSAGE_TYPE_SHIFT;
+            Harbor::Send(r_msg, source, session);
+            return session;
+        }
+        return Send(source, des, type, session, data, sz);
     }
 
 }

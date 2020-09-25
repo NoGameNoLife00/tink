@@ -11,10 +11,20 @@
 #include <map>
 #include <singleton.h>
 
-#define HandleMngInstance tink::Singleton<tink::HandleManage>::GetInstance()
+#define ContextMngInstance tink::Singleton<tink::ContextManage>::GetInstance()
 
 namespace tink {
-    class HandleManage {
+    namespace CurrentHandle {
+        extern thread_local uint32_t t_handle;
+        inline uint32_t Handle() {
+            return t_handle;
+        }
+        inline int SetHandle(uint32_t h) {
+            t_handle = h;
+        }
+    }
+
+    class ContextManage {
     public:
         int Init(int harbor);
         uint32_t Register(ContextPtr ctx);
@@ -24,7 +34,9 @@ namespace tink {
         uint32_t FindName(const std::string& name);
         ContextPtr HandleGrab(uint32_t handle);
 
-        int handle_key;
+        int PushMessage(uint32_t handle, MsgPtr &msg);
+
+
     private:
         uint32_t harbor_;
         uint32_t handle_index_;

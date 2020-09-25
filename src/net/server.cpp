@@ -229,7 +229,7 @@ namespace tink {
     }
 
     int Server::ContextPush(uint32_t handle, MsgPtr &msg) {
-        ContextPtr ctx = HandleMngInstance.HandleGrab(handle);
+        ContextPtr ctx = ContextMngInstance.HandleGrab(handle);
         if (!ctx) {
             return E_FAILED;
         }
@@ -238,7 +238,7 @@ namespace tink {
     }
 
     void Server::ContextEndless(uint32_t handle) {
-        ContextPtr ctx = HandleMngInstance.HandleGrab(handle);
+        ContextPtr ctx = ContextMngInstance.HandleGrab(handle);
         if (!ctx) {
             return ;
         }
