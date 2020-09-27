@@ -17,11 +17,18 @@
 #include <module_manage.h>
 #include "harbor.h"
 #include "timer.h"
+#include "monitor.h"
 
 
 #define MAX_BUF_SIZE 2048
 namespace tink {
-    volatile int Server::SIG = 0;
+    static volatile int SIG = 0;
+
+    static void HandleHup(int signal) {
+        if (signal == SIGHUP) {
+            SIG = 1;
+        }
+    }
 
     int Sigign() {
         struct sigaction sa;
@@ -63,16 +70,86 @@ namespace tink {
     }
 
 
+    static void wakeup(MonitorPtr m, int busy) {
+        if (m->sleep >= m->count - busy) {
+            // signal sleep worker, "spurious wakeup" is harmless
+            m->cond.notify_one();
+        }
+    }
+
+
+#define CHECK_ABORT if (Context::Total()==0) break;
+    static void ThreadMonitor(MonitorPtr m) {
+        int i;
+        int n = m->count;
+        CurrentHandle::InitThread(THREAD_MONITOR);
+        for (;;) {
+            CHECK_ABORT
+            for (i=0;i<n;i++) {
+                m->m[i]->Check();
+            }
+            for (i=0;i<5;i++) {
+                CHECK_ABORT
+                sleep(1);
+            }
+        }
+    }
+
+
+    static void SignalHup() {
+        // make log file reopen
+
+        MsgPtr smsg = std::make_shared<Message>();
+        smsg->source = 0;
+        smsg->session = 0;
+        smsg->data = NULL;
+        smsg->size = static_cast<size_t>(PTYPE_SYSTEM) << MESSAGE_TYPE_SHIFT;
+        uint32_t logger = ContextMngInstance.FindName("logger");
+        if (logger) {
+            ContextMngInstance.PushMessage(logger, smsg);
+        }
+    }
+
+    static void ThreadTimer(MonitorPtr m) {
+        CurrentHandle::InitThread(THREAD_TIMER);
+        for (;;) {
+            TimerInstance.UpdateTime();
+            // socket_updatetime();
+            CHECK_ABORT
+            wakeup(m,m->count-1);
+            usleep(2500);
+            if (SIG) {
+                SignalHup();
+                SIG = 0;
+            }
+        }
+        // wakeup socket thread
+        // socket_exit();
+        // wakeup all worker thread
+        m->mutex.lock();
+        m->quit = 1;
+        m->cond.notify_all();
+        m->mutex.unlock();
+        return;
+    }
 
     int Server::Start() {
-        auto& globalObj = ConfigMngInstance;
+        auto& config = ConfigMngInstance;
         spdlog::info("[tink] Server Name:{}, listener at IP:{}, Port:{}, is starting.",
                 name_, listen_addr_->ToIp(), listen_addr_->ToPort());
-        spdlog::info("[tink] Version: {}, MaxConn:{}, MaxPacketSize:{}", globalObj.GetVersion().c_str(),
-               globalObj.GetMaxConn(), globalObj.GetMaxPackageSize());
+        spdlog::info("[tink] Version: {}, MaxConn:{}, MaxPacketSize:{}", config.GetVersion().c_str(),
+                     config.GetMaxConn(), config.GetMaxPackageSize());
 
+        int thread = config.GetWorkerPoolSize();
+        MonitorPtr m = std::shared_ptr<Monitor>();
+        m->count = thread;
+        m->sleep = 0;
+        for (int i = 0; i < thread; i++) {
+            m->m.emplace_back(std::make_shared<MonitorNode>());
+        }
 
-
+        std::unique_ptr<Thread> t_monitor = std::make_unique<Thread>(std::bind(ThreadMonitor, m), "monitor");
+        std::unique_ptr<Thread> t_timer = std::make_unique<Thread>(std::bind(ThreadMonitor, m), "timer");
 
         // 开启worker工作池
         msg_handler_->StartWorkerPool();
@@ -266,23 +343,6 @@ namespace tink {
         ev.events = state;
         ev.data.u32 = id;
         epoll_ctl(epoll_fd_, op, fd, &ev);
-    }
-
-    int Server::ContextPush(uint32_t handle, MsgPtr &msg) {
-        ContextPtr ctx = ContextMngInstance.HandleGrab(handle);
-        if (!ctx) {
-            return E_FAILED;
-        }
-        ctx->Queue()->Push(msg);
-        return E_OK;
-    }
-
-    void Server::ContextEndless(uint32_t handle) {
-        ContextPtr ctx = ContextMngInstance.HandleGrab(handle);
-        if (!ctx) {
-            return ;
-        }
-        ctx->SetEndless(true);
     }
 
 

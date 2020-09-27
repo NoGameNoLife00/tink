@@ -98,5 +98,13 @@ namespace tink {
         ctx->Queue()->Push(msg);
         return E_OK;
     }
+
+    void ContextManage::ContextEndless(uint32_t handle) {
+        ContextPtr ctx = ContextMngInstance.HandleGrab(handle);
+        if (!ctx) {
+            return ;
+        }
+        ctx->SetEndless(true);
+    }
 }
 

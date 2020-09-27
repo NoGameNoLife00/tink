@@ -41,15 +41,7 @@ namespace tink {
         void CallOnConnStart(ConnectionPtr &&conn);
         void CallOnConnStop(ConnectionPtr &&conn);
 
-        int ContextPush(uint32_t handle, MsgPtr& msg);
-        void ContextEndless(uint32_t handle);
     private:
-        static volatile int SIG;
-        static void HandleHup(int signal) {
-            if (signal == SIGHUP) {
-                SIG = 1;
-            }
-        }
 
         static const int ListenID = 0;
         static const int ConnStartID = 1000;
