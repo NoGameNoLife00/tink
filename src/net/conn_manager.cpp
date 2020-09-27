@@ -1,4 +1,4 @@
-#include <global_mng.h>
+#include <config_mng.h>
 #include <conn_manager.h>
 
 namespace tink {

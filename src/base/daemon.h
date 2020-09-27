@@ -5,8 +5,10 @@
 
 namespace tink {
     class Daemon {
-        static int Init(const std::string& pid_file);
         static int Exit(const std::string& pid_file);
+
+    public:
+        static int Init(const std::string& pid_file);
     };
 }
 

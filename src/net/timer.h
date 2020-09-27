@@ -5,6 +5,8 @@
 #include <list>
 #include <shared_mutex>
 
+#define TimerInstance tink::Singleton<tink::Timer>::GetInstance()
+
 namespace tink {
     // 定时器事件
     typedef struct TimerEvent_ {
@@ -27,9 +29,10 @@ namespace tink {
     }
 
     class Timer {
-
+    public:
         void Init();
         void UpdateTime();
+        int TimeOut(uint32_t handle, int time, int session);
     private:
         typedef std::list<TimerNodePtr> TimerNodeList;
         void Add_(int time, const TimerEvent& event);

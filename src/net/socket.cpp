@@ -1,5 +1,5 @@
 #include <sys/socket.h>
-#include <global_mng.h>
+#include <config_mng.h>
 #include <socket.h>
 
 namespace tink {

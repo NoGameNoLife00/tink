@@ -7,7 +7,7 @@
 #include <execinfo.h>
 #include <cxxabi.h>
 #include <thread.h>
-#include <global_mng.h>
+#include <config_mng.h>
 #include <sys/prctl.h>
 #include "thread.h"
 

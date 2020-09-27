@@ -2,13 +2,13 @@
 
 #include <message.h>
 #include <datapack.h>
-#include <global_mng.h>
+#include <config_mng.h>
 #include <Message_handler.h>
 #include <message_handler.h>
 #include <memory>
 
 TEST(datapackTest, test1) {
-    auto globalObj = GlobalInstance;
+    auto globalObj = ConfigMngInstance;
     tink::DataPack dp;
     tink::NetMessage msg;
     BytePtr buf(new byte[5] {'t','i','n','k','\0'});

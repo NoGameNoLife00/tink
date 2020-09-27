@@ -1,6 +1,6 @@
 #include <error_code.h>
 #include <message_handler.h>
-#include <global_mng.h>
+#include <config_mng.h>
 #include <thread.h>
 #include <assert.h>
 #include <request.h>
@@ -29,7 +29,7 @@ namespace tink {
     }
 
     int MessageHandler::Init() {
-        worker_pool_size = GlobalInstance.GetWorkerPoolSize();
+        worker_pool_size = ConfigMngInstance.GetWorkerPoolSize();
         return 0;
     }
 

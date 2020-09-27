@@ -1,5 +1,5 @@
 #include "context.h"
-#include "handle_manage.h"
+#include "context_manage.h"
 #include <module_manage.h>
 #include <error_code.h>
 #include <spdlog/spdlog.h>
@@ -24,15 +24,15 @@ namespace tink {
         if (!mod) {
             return E_QUERY_MODULE;
         }
-        this->mod = mod;
+        this->mod_ = mod;
         callback_ = nullptr;
-        cb_ud = nullptr;
-        session_id = 0;
-        init = false;
+        cb_ud_ = nullptr;
+        session_id_ = 0;
+        init_ = false;
         endless_ = false;
-        cpu_cost = 0;
-        cpu_start = 0;
-        profile = false;
+        cpu_cost_ = 0;
+        cpu_start_ = 0;
+        profile_ = false;
         message_count_ = 0;
         handle_ = ContextMngInstance.Register(shared_from_this());
         if (handle_ == 0) {
@@ -43,7 +43,7 @@ namespace tink {
         int ret = mod->Init(*this, param);
         mutex_.unlock();
         if (ret == E_OK) {
-            init = true;
+            init_ = true;
             GlobalMQInstance.Push(queue_);
         } else {
             spdlog::error("Failed launch {}", name);
@@ -56,12 +56,12 @@ namespace tink {
     }
 
     void Context::Destroy() {
-        mod->Release();
+        mod_->Release();
         queue_->MarkRelease();
         --total;
     }
 
-    void Context::Send(DataPtr &data, size_t sz, uint32_t source, int type, int session) {
+    void Context::Send(DataPtr &&data, size_t sz, uint32_t source, int type, int session) {
         MsgPtr msg = std::make_shared<Message>();
         msg->source = source;
         msg->session = session;
@@ -72,14 +72,14 @@ namespace tink {
 
     void Context::SetCallBack(ContextCallBack cb, void *ud) {
         this->callback_ = cb;
-        cb_ud = ud;
+        cb_ud_ = ud;
     }
 
     int Context::NewSession() {
-        int session = ++session_id;
+        int session = ++session_id_;
         if (session <= 0) {
-            session_id = 1;
-            return session_id;
+            session_id_ = 1;
+            return session_id_;
         }
         return session;
     }
@@ -93,19 +93,19 @@ namespace tink {
     }
 
     void Context::DispatchMessage_(MsgPtr msg) {
-        assert(init);
+        assert(init_);
         std::lock_guard<Mutex> guard(mutex_);
         CurrentHandle::SetHandle(handle_);
         int type = msg->size >> MESSAGE_TYPE_SHIFT;
         size_t sz = msg->size & MESSAGE_TYPE_MASK;
         message_count_++;
-        if (profile) {
-            cpu_start = TimeUtil::GetThreadTime();
-            callback_(*this, cb_ud, type, msg->session, msg->source, msg->data, sz);
-            uint64_t cost_tm = TimeUtil::GetThreadTime() - cpu_start;
-            cpu_cost += cost_tm;
+        if (profile_) {
+            cpu_start_ = TimeUtil::GetThreadTime();
+            callback_(*this, cb_ud_, type, msg->session, msg->source, msg->data, sz);
+            uint64_t cost_tm = TimeUtil::GetThreadTime() - cpu_start_;
+            cpu_cost_ += cost_tm;
         } else {
-            callback_(*this, cb_ud, type, msg->session, msg->source, msg->data, sz);
+            callback_(*this, cb_ud_, type, msg->session, msg->source, msg->data, sz);
         }
     }
 
@@ -170,6 +170,7 @@ namespace tink {
             name[i] = '\0';
         }
     }
+
     int Context::SendName(uint32_t source, const std::string &addr, int type, int session, DataPtr &data, size_t sz) {
         if (source == 0) {
             source = handle_;

@@ -1,7 +1,7 @@
 #include <datapack.h>
 #include <common.h>
 #include <cstring>
-#include <global_mng.h>
+#include <config_mng.h>
 #include <error_code.h>
 
 namespace tink {
@@ -42,7 +42,7 @@ namespace tink {
         // 读数据
         msg.SetId(id);
         msg.SetDataLen(data_len);
-        if (GlobalInstance.GetMaxPackageSize() > 0 && data_len > GlobalInstance.GetMaxPackageSize()) {
+        if (ConfigMngInstance.GetMaxPackageSize() > 0 && data_len > ConfigMngInstance.GetMaxPackageSize()) {
             return E_PACKET_SIZE;
         }
         return E_OK;

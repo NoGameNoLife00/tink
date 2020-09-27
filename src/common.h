@@ -27,6 +27,13 @@ namespace tink {
     constexpr auto PTYPE_ERROR = 7;
     constexpr auto PTYPE_TAG_DONTCOPY = 0x10000;
     constexpr auto PTYPE_TAG_ALLOCSESSION = 0x20000;
+
+
+    constexpr auto THREAD_WORKER = 0;
+    constexpr auto THREAD_MAIN = 1;
+    constexpr auto THREAD_SOCKET = 2;
+    constexpr auto THREAD_TIMER = 3;
+    constexpr auto THREAD_MONITOR = 4;
 }
 
 #endif //TINK_COMMON_H

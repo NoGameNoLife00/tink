@@ -2,8 +2,8 @@
 // 读取配置
 //
 
-#ifndef TINK_GLOBAL_MNG_H
-#define TINK_GLOBAL_MNG_H
+#ifndef TINK_CONFIG_MNG_H
+#define TINK_CONFIG_MNG_H
 
 #include <memory>
 #include <server.h>
@@ -13,11 +13,11 @@
 
 #define READ_BUF_SIZE 1024
 
-#define GlobalInstance (tink::Singleton<GlobalMng>::GetInstance())
+#define ConfigMngInstance (tink::Singleton<ConfigMng>::GetInstance())
 
 namespace tink {
     // 存储框架的全局参数
-    class GlobalMng {
+    class ConfigMng {
     public:
         // 配置初始化
         int Init();
@@ -36,6 +36,14 @@ namespace tink {
 
         int GetMaxConn() const;
 
+        const string& GetDaemon() const { return daemon_; }
+
+        const string& GetModulePath() const { return module_path_; }
+
+        bool GetProfile() const { return profile_; }
+
+        int GetHarbor() const { return harbor_; }
+
         uint32_t GetMaxPackageSize() const;
         uint32_t GetWorkerPoolSize() const;
     private:
@@ -53,9 +61,13 @@ namespace tink {
         uint32_t worker_pool_size_;
         // 框架允许的最大任务数量
         uint32_t max_worker_task_len_;
+        string daemon_;
+        string module_path_;
+        bool profile_;
+        int harbor_;
     };
 }
 
 
 
-#endif //TINK_GLOBAL_MNG_H
+#endif //TINK_CONFIG_MNG_H

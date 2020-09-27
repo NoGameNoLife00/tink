@@ -9,7 +9,7 @@ namespace tink {
 
     void Harbor::Send(tink::RemoteMsgPtr r_msg, uint32_t source, int session) {
         assert(invalid_type(r_msg->type) && REMOTE);
-        REMOTE->Send(r_msg, sizeof(*r_msg), source, PTYPE_SYSTEM, session);
+        REMOTE->Send(std::static_pointer_cast<void>(r_msg), sizeof(*r_msg), source, PTYPE_SYSTEM, session);
     }
 
     void Harbor::Init(int harbor) {

@@ -1,9 +1,5 @@
-//
-// Created by Ёблн on 2020/9/21.
-//
-
-#ifndef TINK_HANDLE_MANAGE_H
-#define TINK_HANDLE_MANAGE_H
+#ifndef TINK_CONTEXT_MANAGE_H
+#define TINK_CONTEXT_MANAGE_H
 
 
 #include <shared_mutex>
@@ -16,9 +12,15 @@
 namespace tink {
     namespace CurrentHandle {
         extern thread_local uint32_t t_handle;
+
         inline uint32_t Handle() {
             return t_handle;
         }
+
+        inline void InitThread(int m) {
+            t_handle = static_cast<uint32_t>(-m);
+        }
+
         inline int SetHandle(uint32_t h) {
             t_handle = h;
         }
@@ -33,9 +35,7 @@ namespace tink {
         void UnregisterAll();
         uint32_t FindName(const std::string& name);
         ContextPtr HandleGrab(uint32_t handle);
-
         int PushMessage(uint32_t handle, MsgPtr &msg);
-
 
     private:
         uint32_t harbor_;
@@ -48,4 +48,4 @@ namespace tink {
 
 
 
-#endif //TINK_HANDLE_MANAGE_H
+#endif //TINK_CONTEXT_MANAGE_H

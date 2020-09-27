@@ -3,7 +3,7 @@
 #include <cstring>
 #include <unistd.h>
 #include <connection.h>
-#include <global_mng.h>
+#include <config_mng.h>
 #include <scope_guard.h>
 #include <common.h>
 #include <conn_manager.h>
@@ -11,11 +11,28 @@
 #include <datapack.h>
 #include <request.h>
 #include <context.h>
-#include <handle_manage.h>
+#include <context_manage.h>
+#include <signal.h>
+#include <daemon.h>
+#include <module_manage.h>
+#include "harbor.h"
+#include "timer.h"
 
 
 #define MAX_BUF_SIZE 2048
 namespace tink {
+    volatile int Server::SIG = 0;
+
+    int Sigign() {
+        struct sigaction sa;
+        sa.sa_handler = SIG_IGN;
+        sa.sa_flags = 0;
+        sigemptyset(&sa.sa_mask);
+        sigaction(SIGPIPE, &sa, 0);
+        return 0;
+    }
+
+
     int Server::Init(string &name, int ip_version,
                      string &ip, int port,
                      MessageHandlerPtr &&msg_handler) {
@@ -23,16 +40,38 @@ namespace tink {
         listen_addr_ = std::make_shared<SockAddress>(ip, port, ip_version == AF_INET6);
         msg_handler_ = msg_handler;
         conn_mng_ = std::make_shared<ConnManager>();
+        CurrentHandle::InitThread(THREAD_MAIN);
+//        Sigign();
+
+        // register SIGHUP for log file reopen
+//        struct sigaction sa;
+//        sa.sa_handler = &HandleHup;
+//        sa.sa_flags = SA_RESTART;
+//        sigfillset(&sa.sa_mask);
+//        sigaction(SIGHUP, &sa, NULL);
+        if (!ConfigMngInstance.GetDaemon().empty()) {
+            if (Daemon::Init(ConfigMngInstance.GetDaemon())) {
+                exit(1);
+            }
+        }
+        Harbor::Init(ConfigMngInstance.GetHarbor());
+        ContextMngInstance.Init(ConfigMngInstance.GetHarbor());
+        ModuleMngInstance.Init(ConfigMngInstance.GetModulePath());
+        TimerInstance.Init()
         return 0;
     }
 
 
+
     int Server::Start() {
-        auto& globalObj = GlobalInstance;
+        auto& globalObj = ConfigMngInstance;
         spdlog::info("[tink] Server Name:{}, listener at IP:{}, Port:{}, is starting.",
                 name_, listen_addr_->ToIp(), listen_addr_->ToPort());
         spdlog::info("[tink] Version: {}, MaxConn:{}, MaxPacketSize:{}", globalObj.GetVersion().c_str(),
                globalObj.GetMaxConn(), globalObj.GetMaxPackageSize());
+
+
+
 
         // 开启worker工作池
         msg_handler_->StartWorkerPool();
@@ -117,9 +156,9 @@ namespace tink {
             spdlog::warn("accept socket error: {}(code:{})", strerror(errno), errno);
         } else {
             // 判断最大连接数
-            if (conn_mng_->Size() >= GlobalInstance.GetMaxConn()) {
+            if (conn_mng_->Size() >= ConfigMngInstance.GetMaxConn()) {
                 // TODO 发送连接失败消息
-                spdlog::warn("too many connections max_conn={}", GlobalInstance.GetMaxConn());
+                spdlog::warn("too many connections max_conn={}", ConfigMngInstance.GetMaxConn());
                 close(cli_fd);
                 return;
             }
@@ -193,7 +232,7 @@ namespace tink {
         }
 
         RequestPtr req_ptr = std::make_shared<Request>(conn,msg);
-        if (GlobalInstance.GetWorkerPoolSize() > 0) {
+        if (ConfigMngInstance.GetWorkerPoolSize() > 0) {
             conn->GetMsgHandler()->SendMsgToTaskQueue(req_ptr);
         }
     }

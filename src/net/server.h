@@ -44,6 +44,13 @@ namespace tink {
         int ContextPush(uint32_t handle, MsgPtr& msg);
         void ContextEndless(uint32_t handle);
     private:
+        static volatile int SIG;
+        static void HandleHup(int signal) {
+            if (signal == SIGHUP) {
+                SIG = 1;
+            }
+        }
+
         static const int ListenID = 0;
         static const int ConnStartID = 1000;
         static const int InitEvenListCount = 32;

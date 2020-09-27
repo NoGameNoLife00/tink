@@ -2,7 +2,7 @@
 #include <cstring>
 #include <assert.h>
 #include <netdb.h>
-#include <global_mng.h>
+#include <config_mng.h>
 
 namespace tink {
     SockAddress::SockAddress(uint16_t port, bool loopback_only, bool ipv6) {

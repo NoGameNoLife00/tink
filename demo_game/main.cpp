@@ -1,6 +1,6 @@
 #include <iostream>
 #include <server.h>
-#include <global_mng.h>
+#include <config_mng.h>
 #include <cstring>
 #include <message_handler.h>
 #include <connection.h>
@@ -37,7 +37,7 @@ void DoConnectionLost(tink::ConnectionPtr& conn) {
 int main(int argc, char** argv) {
     setbuf(stdout, NULL); // debug
     srand(static_cast<unsigned>(time(NULL)));
-    auto& globalObj = GlobalInstance;
+    auto& globalObj = ConfigMngInstance;
     globalObj.Init();
 
     std::shared_ptr<tink::Server> s(new tink::Server());

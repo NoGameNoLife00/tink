@@ -1,7 +1,7 @@
 #include <player.h>
 #include <world_manager.h>
 #include <msg_type.h>
-#include <global_mng.h>
+#include <config_mng.h>
 
 namespace logic {
     std::atomic_int Player::pid_gen(1);

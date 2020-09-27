@@ -1,5 +1,5 @@
 #include <request.h>
-#include <global_mng.h>
+#include <config_mng.h>
 
 namespace tink {
     Request::Request(ConnectionPtr &conn, MessagePtr& msg) :conn_(conn) {

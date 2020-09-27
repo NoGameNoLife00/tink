@@ -3,7 +3,10 @@
 //
 
 #include <spdlog/spdlog.h>
+#include <error_code.h>
 #include "timer.h"
+#include "message.h"
+#include "context_manage.h"
 
 namespace tink {
     namespace TimeUtil {
@@ -133,6 +136,25 @@ namespace tink {
             AddNode_(current);
         }
         t_[level][idx].clear();
+    }
+
+    int Timer::TimeOut(uint32_t handle, int time, int session) {
+        if (time <= 0) {
+            MsgPtr msg = std::make_shared<Message>();
+            msg->source = 0;
+            msg->session = session;
+            msg->data = nullptr;
+            msg->size = static_cast<size_t>(PTYPE_RESPONSE) << MESSAGE_TYPE_SHIFT;
+            if (ContextMngInstance.PushMessage(handle, msg)) {
+                return E_FAILED;
+            }
+        } else {
+            TimerEvent event;
+            event.handle = handle;
+            event.session = session;
+            Add_(time, event);
+        }
+        return session;
     }
 }
 

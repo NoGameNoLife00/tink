@@ -4,5 +4,8 @@
   "port": 8999,
   "max_connection": 1000,
   "worker_pool_size": 8,
-  "log_name" : "./logs/game.log"
+  "log_name" : "./logs/game.log",
+  "harbor" : 1,
+  "daemon" : "",
+  "profile" : false
 }

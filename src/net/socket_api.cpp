@@ -1,6 +1,6 @@
 #include <unistd.h>
 #include <sys/socket.h>
-#include <global_mng.h>
+#include <config_mng.h>
 #include <assert.h>
 #include <arpa/inet.h>
 #include <socket_api.h>

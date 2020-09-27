@@ -1,7 +1,10 @@
 #include <error_code.h>
 #include <cassert>
-#include "handle_manage.h"
+#include "context_manage.h"
 namespace tink {
+
+    thread_local uint32_t CurrentHandle::t_handle = 0;
+
     int ContextManage::Init(int harbor) {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         handle_index_ = 1;
