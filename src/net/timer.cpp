@@ -62,6 +62,7 @@ namespace tink {
         std::unique_lock<std::mutex> lock(mutex_);
         Execute_();
         Shift_();
+        Execute_();
     }
 
     void Timer::Execute_() {
@@ -81,6 +82,12 @@ namespace tink {
     void Timer::DispatchList_(TimerNodeList &curr) {
         for (auto& node : curr) {
             TimerEvent& event = node->event;
+            MsgPtr msg = std::make_shared<Message>();
+            msg->source = 0;
+            msg->session = event.session;
+            msg->data = nullptr;
+            msg->size = static_cast<size_t>(PTYPE_RESPONSE) << MESSAGE_TYPE_SHIFT;
+            ContextMngInstance.PushMessage(event.handle, msg);
         }
     }
 
@@ -156,6 +163,8 @@ namespace tink {
         }
         return session;
     }
+
+
 }
 
 

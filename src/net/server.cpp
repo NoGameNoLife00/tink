@@ -57,7 +57,8 @@ namespace tink {
         Harbor::Init(ConfigMngInstance.GetHarbor());
         ContextMngInstance.Init(ConfigMngInstance.GetHarbor());
         ModuleMngInstance.Init(ConfigMngInstance.GetModulePath());
-        TimerInstance.Init()
+        TimerInstance.Init();
+
         return 0;
     }
 
