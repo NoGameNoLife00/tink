@@ -18,6 +18,12 @@ namespace tink {
         return ::write(fd, buf, count);
     }
 
+    int SocketApi::SendTo(int fd, const void *buf, size_t count, int flag,
+                          const struct sockaddr *addr, socklen_t addr_len) {
+
+        return ::sendto(fd, buf, count, flag, addr, addr_len);
+    }
+
     void SocketApi::Close(int fd) {
         if (::close(fd) < 0) {
             spdlog::warn("socket.close");
@@ -216,5 +222,6 @@ namespace tink {
         }
         return sock_fd;
     }
+
 
 }

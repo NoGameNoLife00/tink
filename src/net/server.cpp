@@ -133,6 +133,11 @@ namespace tink {
         return;
     }
 
+
+    static void ThreadSocket(MonitorPtr m) {
+
+    }
+
     int Server::Start() {
         auto& config = ConfigMngInstance;
         spdlog::info("[tink] Server Name:{}, listener at IP:{}, Port:{}, is starting.",
@@ -149,7 +154,11 @@ namespace tink {
         }
 
         std::unique_ptr<Thread> t_monitor = std::make_unique<Thread>(std::bind(ThreadMonitor, m), "monitor");
-        std::unique_ptr<Thread> t_timer = std::make_unique<Thread>(std::bind(ThreadMonitor, m), "timer");
+        std::unique_ptr<Thread> t_timer = std::make_unique<Thread>(std::bind(ThreadTimer, m), "timer");
+        std::unique_ptr<Thread> t_socket = std::make_unique<Thread>(std::bind(ThreadSocket, m), "timer");
+
+
+
 
         // 开启worker工作池
         msg_handler_->StartWorkerPool();

@@ -73,5 +73,40 @@ namespace tink {
                      &optval, static_cast<socklen_t>(sizeof optval));
     }
 
+    int Socket::Init(int id, int fd, int protocol, uintptr_t opaque) {
+        id_ = id;
+        sock_fd_ = fd;
+        sending_ = ID_TAG16(id) << 16 | 0;
+        protocol_ = protocol;
+        p_.size = MIN_READ_BUFFER;
+        opaque_ = opaque;
+        wb_size_ = 0;
+        warn_size_ = 0;
+        assert(high_.empty());
+        assert(low_.empty());
+        dw_buffer_ = nullptr;
+        memset(&stat_, 0, sizeof(stat_));
+        return 0;
+    }
+
+    void Socket::Destroy() {
+
+    }
+
+    socklen_t Socket::UdpAddress(const uint8_t udp_address[UDP_ADDRESS_SIZE], SockAddress &sa) {
+        int type = (uint8_t)udp_address[0];
+        if (type != protocol_)
+            return 0;
+        uint16_t port = 0;
+        memcpy(&port, udp_address+1, sizeof(uint16_t));
+        switch (protocol_) {
+            case PROTOCOL_UDP:
+                return sa.Init(udp_address + 1 + sizeof(uint16_t), port, false);
+            case PROTOCOL_UDPv6:
+                return sa.Init(udp_address + 1 + sizeof(uint16_t), port, true);
+        }
+        return 0;
+    }
+
 }
 

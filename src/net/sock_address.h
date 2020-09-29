@@ -15,6 +15,7 @@ namespace tink {
         SockAddress(StringArg ip, uint16_t port, bool ipv6 = false);
         explicit SockAddress(const struct sockaddr_in& addr) : addr_(addr) {}
         explicit SockAddress(const struct sockaddr_in6& addr) : addr6_(addr) {}
+        int Init(const void *addr, uint16_t port, bool ipv6 = false);
         sa_family_t Family() const { return addr_.sin_family; }
         string ToIp() const ;
         string ToIpPort() const ;

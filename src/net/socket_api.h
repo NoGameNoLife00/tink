@@ -14,6 +14,7 @@ namespace tink {
         int Accept(int fd, struct sockaddr_in6* addr);
         int Read(int fd, void *buf, size_t count);
         int Write(int fd, const void *buf, size_t count);
+        int SendTo(int fd, const void *buf, size_t count, int flag, const struct sockaddr* addr, socklen_t addr_len);
         void Close(int fd);
         void ShutdownWrite(int fd);
         int GetSocketError(int fd);
@@ -28,6 +29,7 @@ namespace tink {
         const struct sockaddr_in6* SockAddrIn6Cast(const struct sockaddr* addr);
         struct sockaddr_in6 GetLocalAddr(int fd);
         struct sockaddr_in6 GetPeerAddr(int fd);
+
         bool IsSelfConnect(int fd);
         inline uint64_t HostToNetwork64(uint64_t host64)
         {

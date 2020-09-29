@@ -18,6 +18,7 @@ namespace tink {
         FixBuffer(size_t s) : size(s), len_(0) {
             data_ = new byte[size];
         }
+
         ~FixBuffer() {
             delete [] data_;
         }
@@ -32,7 +33,7 @@ namespace tink {
 
         const byte * Data() const { return data_; }
         int Length() const {return static_cast<int>(len_); }
-        int Capacity() const {return sizeof data_; }
+        int Capacity() const {return size; }
         int Remain() const { return size - len_; }
 
         void Add(size_t len) { len_ += len; }
@@ -47,6 +48,17 @@ namespace tink {
         size_t len_;
     };
     typedef std::unique_ptr<FixBuffer> FixBufferPtr;
+
+    typedef struct SocketSendBuffer_ {
+        int id;
+        int type;
+        DataPtr buffer;
+        size_t sz;
+        void FreeBuffer() {
+            buffer.reset();
+        }
+    }SocketSendBuffer;
+
 }
 
 #endif //TINK_BUFFER_H
