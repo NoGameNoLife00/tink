@@ -80,6 +80,8 @@ namespace tink {
     }RequestUdp;
 
     typedef struct RequestPackage_ {
+        RequestPackage_() {}
+
         uint8_t header[8];	// 6 bytes dummy
         union {
             char buffer[256];
@@ -124,7 +126,14 @@ namespace tink {
         void Shutdown(uintptr_t opaque, int id);
         void Start(uintptr_t opaque, int id);
 
-        int Send(SocketSendBuffer &buf);
+        int Send(SocketSendBuffer &buffer);
+        int SendLowPriority(SocketSendBuffer &buffer);
+
+        int Listen(uintptr_t opaque, const string &addr, int port, int backlog);
+        int Connect(uintptr_t opaque, const string &addr, int port);
+        int Bind(uintptr_t opaque, int fd);
+
+        int NoDelay(int id);
     private:
         SocketPtr NewSocket_(int id, int fd, int protocol, uintptr_t opaque, bool add);
         void ForceClose(const SocketPtr& s, SocketMessage &result);
@@ -132,13 +141,15 @@ namespace tink {
         int CtrlCmd(SocketMsgPtr &result);
         int StartSocket(RequestStart *request, SocketMsgPtr result);
         void SendRequest(RequestPackage &request, byte type, int len);
+        int ReserveId();
+        int OpenRequest(RequestPackage &req, uintptr_t opaque, const string &addr, int port);
 
         volatile uint64_t time_;
         int recvctrl_fd;
         int sendctrl_fd;
         int checkctrl;
         PollerPtr poll_;
-        int alloc_id;
+        std::atomic_int alloc_id;
         int event_n;
         int event_index;
         fd_set rfds;

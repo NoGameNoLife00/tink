@@ -56,9 +56,10 @@ namespace tink {
 
     class Socket : noncopyable {
     public:
-//        explicit Socket(int fd):sock_fd_(fd) {}
+        explicit Socket(int fd):sock_fd_(fd) {}
         int Init(int id, int fd, int protocol, uintptr_t opaque);
         void Destroy();
+        void Close();
         ~Socket();
         int GetSockFd() const { return sock_fd_; }
         int GetTcpInfo(struct tcp_info* info) const ;
@@ -69,6 +70,8 @@ namespace tink {
         void ShutDownWrite();
         void SetTcpNoDelay(bool active);
         void SetKeepAlive(bool active);
+        void SetReuseAddr(bool active);
+        void SetReusePort(bool active);
 
         socklen_t UdpAddress(const uint8_t udp_address[UDP_ADDRESS_SIZE], SockAddress& sa);
 
@@ -99,16 +102,16 @@ namespace tink {
         WbList& GetHigh() { return high_; }
         WbList& GetLow() { return low_; }
 
-        FixBufferPtr& GetDWBuffer() { return dw_buffer_; }
+        DataBufferPtr& GetDWBuffer() { return dw_buffer_; }
 
-        void SetDwBuffer(FixBufferPtr& buf) {
-            dw_buffer_ = std::move(buf);
+        void SetDwBuffer(DataBufferPtr buf) {
+            dw_buffer_ = buf;
         }
 
-        void CloneDwBuffer(DataPtr buff, int sz, int offset) {
-            dw_buffer_.reset(std::make_shared<FixBuffer>());
+        void IncSendingRef(int id);
 
-        }
+        void DecSendingRef(int id);
+
 
         mutable std::recursive_mutex mutex;
 
@@ -118,12 +121,14 @@ namespace tink {
             stat_.write += n;
             stat_.wtime = time;
         }
+
+        bool Reserve(int id);
     private:
         int id_;
         int sock_fd_;
-        int type_;
+        std::atomic_uint8_t type_;
         uintptr_t opaque_;
-        uint8_t protocol_;
+        int protocol_;
         uint64_t wb_size_;
         WbList high_;
         WbList low_;
@@ -135,9 +140,9 @@ namespace tink {
             int size;
             uint8_t udp_address[UDP_ADDRESS_SIZE];
         } p_;
-        FixBufferPtr dw_buffer_;
+        DataBufferPtr dw_buffer_;
 //        int dw_offset_;
-//        const void * dw_buffer_;
+//        DataPtr dw_buffer_;
 //        size_t dw_size_;
 
 

@@ -7,10 +7,10 @@
 #include <bits/sockaddr.h>
 namespace tink {
     namespace SocketApi {
-        int Create(sa_family_t family, bool nonblock = false);
+        int Create(sa_family_t family, bool nonblock = false, bool udp = false);
         int Connect(int fd, const struct sockaddr* addr);
-        void Bind(int fd, const struct sockaddr* addr);
-        void Listen(int fd);
+        int Bind(int fd, const struct sockaddr* addr);
+        int Listen(int fd, int backlog = SOMAXCONN);
         int Accept(int fd, struct sockaddr_in6* addr);
         int Read(int fd, void *buf, size_t count);
         int Write(int fd, const void *buf, size_t count);

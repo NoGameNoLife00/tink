@@ -262,17 +262,17 @@ namespace tink {
         SendRequest(request, 'S', sizeof(request.u.start));
     }
 
-    int SocketServer::Send(SocketSendBuffer &buf) {
-        int id = buf.id;
+    int SocketServer::Send(SocketSendBuffer &buffer) {
+        int id = buffer.id;
         SocketPtr s = GetSocket(id);
         if (s->GetId() != id || s->GetType() == SOCKET_TYPE_INVALID) {
-            buf.FreeBuffer();
+            buffer.FreeBuffer();
             return E_FAILED;
         }
         if (s->CanDirectWrite(id) && s->mutex.try_lock()) {
             if (s->CanDirectWrite(id)) {
                 SendObject so;
-                so.InitFromSendBuffer(buf);
+                so.InitFromSendBuffer(buffer);
                 ssize_t n;
                 if (s->GetProtocol() == PROTOCOL_TCP) {
                     n = SocketApi::Write(s->GetSockFd(), so.buffer.get(), so.sz);
@@ -282,7 +282,6 @@ namespace tink {
                     if (sa_sz == 0) {
                         fprintf(stderr, "socket-server : set udp (%d) address first.\n", id);
                         s->mutex.unlock();
-                        buf.FreeBuffer();
                         return E_FAILED;
                     }
                     n = SocketApi::SendTo(s->GetSockFd(), so.buffer.get(), so.sz, 0, sa.GetSockAddr(), sa_sz);
@@ -295,22 +294,157 @@ namespace tink {
                 if (n == so.sz) {
                     // write done
                     s->mutex.unlock();
-                    buf.FreeBuffer();
                     return 0;
                 }
-                buf;
-                s->SetDwBuffer()
-
-
+                s->SetDwBuffer(std::make_shared<DataBuffer>(buffer.buffer, buffer.sz, n));
+                poll_->Write(s->GetSockFd(), s.get(), true);
+                s->mutex.unlock();
+                return 0;
             }
+            s->mutex.unlock();
         }
-        return 0;
+        s->DecSendingRef(id);
+        RequestPackage request;
+        request.u.send.id = id;
+        request.u.send.buffer = buffer.buffer.get();
+        request.u.send.sz = buffer.sz;
+        SendRequest(request, 'D', sizeof(request.u.send));
+        return E_OK;
     }
 
     SocketPtr SocketServer::GetSocket(int id) {
         return slot[HASH_ID(id)];
     }
 
+    int SocketServer::SendLowPriority(SocketSendBuffer &buffer) {
+        int id = buffer.id;
+        SocketPtr s = GetSocket(id);
+        if (s->GetId() != id || s->GetType() == SOCKET_TYPE_INVALID) {
+            buffer.FreeBuffer();
+            return E_FAILED;
+        }
+        s->DecSendingRef(id);
+        RequestPackage request;
+        request.u.send.id = id;
+        request.u.send.buffer = buffer.buffer.get();
+        request.u.send.sz = buffer.sz;
+        SendRequest(request, 'P', sizeof(request.u.send));
+        return E_OK;
+    }
 
+    static int DoBind(StringArg host, int port, int protocol, int& family) {
+        SockAddressPtr addr;
+
+        if (host.c_str() == nullptr || host.c_str()[0] == 0 ) {
+            addr = std::make_shared<SockAddress>(port, false, false);
+        } else {
+            addr = std::make_shared<SockAddress>(host, port, false);
+        }
+
+        bool is_udp = false;
+        if (protocol != IPPROTO_TCP) {
+            assert(protocol == IPPROTO_UDP);
+            is_udp = true;
+        }
+        family = addr->Family();
+        Socket s(SocketApi::Create(addr->Family(), false, is_udp));
+        s.SetReuseAddr(true);
+        s.BindAddress(*addr);
+        return s.GetSockFd();
+    }
+
+
+    static int DoListen(StringArg host, int port, int backlog) {
+        int family = 0;
+        int listen_fd = DoBind(host, port, IPPROTO_TCP, family);
+        if (listen_fd < 0) {
+            return E_FAILED;
+        }
+        if (SocketApi::Listen(listen_fd, backlog) < 0) {
+            SocketApi::Close(listen_fd);
+        }
+        return listen_fd;
+    }
+
+
+    int SocketServer::Listen(uintptr_t opaque, const string &addr, int port, int backlog) {
+        int fd = DoListen(addr, port, backlog);
+        if (fd < 0) {
+            return E_FAILED;
+        }
+        RequestPackage request;
+        int id = ReserveId();
+        if (id < 0) {
+            close(fd);
+            return id;
+        }
+        request.u.listen.opaque = opaque;
+        request.u.listen.id = id;
+        request.u.listen.fd = fd;
+        SendRequest(request, 'L', sizeof(request.u.listen));
+        return 0;
+    }
+
+    int SocketServer::ReserveId() {
+        for (int i = 0; i < MAX_SOCKET; i++) {
+            int id = alloc_id.fetch_add(1);
+            if (id < 0) {
+                id = alloc_id.fetch_and(0x7fffffff);
+            }
+            SocketPtr s = GetSocket(id);
+            if (s->GetType() == SOCKET_TYPE_INVALID) {
+                if (!s->Reserve(id)) {
+                    --i;
+                }
+            }
+        }
+        return E_FAILED;
+    }
+
+    int SocketServer::Connect(uintptr_t opaque, const string &addr, int port) {
+        RequestPackage request;
+        int len = OpenRequest(request, opaque, addr, port);
+        if (len < 0)
+            return -1;
+        SendRequest(request, 'O', sizeof(request.u.open) + len);
+        return request.u.open.id;
+    }
+
+    int SocketServer::OpenRequest(RequestPackage &req, uintptr_t opaque, const string &addr, int port) {
+        int len = addr.size();
+        if ((len + sizeof(req.u.open)) >= 256 ) {
+            fprintf(stderr, "socket server : Invalid addr %s.\n", addr.c_str());
+            return E_FAILED;
+        }
+        int id = ReserveId();
+        if (id < 0)
+            return E_FAILED;
+        req.u.open.opaque = opaque;
+        req.u.open.id = id;
+        req.u.open.port = port;
+        memcpy(req.u.open.host, addr.c_str(), len);
+        req.u.open.host[len] = '\0';
+        return len;
+    }
+
+    int SocketServer::Bind(uintptr_t opaque, int fd) {
+        RequestPackage request;
+        int id = ReserveId();
+        if (id < 0)
+            return -1;
+        request.u.bind.opaque = opaque;
+        request.u.bind.id = id;
+        request.u.bind.fd = fd;
+        SendRequest(request, 'B', sizeof(request.u.bind));
+        return id;
+    }
+
+    int SocketServer::NoDelay(int id) {
+        RequestPackage request;
+        request.u.setopt.id = id;
+        request.u.setopt.what = TCP_NODELAY;
+        request.u.setopt.value = 1;
+        SendRequest(request, 'T', sizeof(request.u.setopt));
+    }
 
 }

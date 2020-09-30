@@ -6,7 +6,7 @@ namespace tink {
 
 
     Socket::~Socket() {
-        SocketApi::Close(sock_fd_);
+
     }
 
     int Socket::GetTcpInfo(struct tcp_info *info) const {
@@ -90,7 +90,6 @@ namespace tink {
     }
 
     void Socket::Destroy() {
-
     }
 
     socklen_t Socket::UdpAddress(const uint8_t udp_address[UDP_ADDRESS_SIZE], SockAddress &sa) {
@@ -106,6 +105,67 @@ namespace tink {
                 return sa.Init(udp_address + 1 + sizeof(uint16_t), port, true);
         }
         return 0;
+    }
+
+    void Socket::IncSendingRef(int id) {
+        if (protocol_ != PROTOCOL_TCP)
+            return;
+        for (;;) {
+            if ((sending_ >> 16) == ID_TAG16(id)) {
+                if ((sending_ & 0xffff) == 0xffff) {
+                    // s->sending may overflow (rarely), so busy waiting here for socket thread dec it. see issue #794
+                    continue;
+                }
+                // inc sending only matching the same socket id
+                auto cur = sending_.load();
+                if (sending_.compare_exchange_strong(cur, sending_ + 1)) {
+                    return;
+                }
+                // atom inc failed, retry
+            } else {
+                // socket id changed, just return
+                return;
+            }
+        }
+    }
+
+    void Socket::DecSendingRef(int id) {
+        if (id == id_ && protocol_ == PROTOCOL_TCP) {
+            assert((sending_ & 0xffff) != 0);
+            sending_ -= 1;
+        }
+    }
+
+    void Socket::SetReuseAddr(bool active) {
+        int optval = active ? 1 : 0;
+        ::setsockopt(sock_fd_, SOL_SOCKET, SO_REUSEADDR,
+                     &optval, static_cast<socklen_t>(sizeof optval));
+    }
+
+    void Socket::SetReusePort(bool active) {
+        int optval = active ? 1 : 0;
+        int ret = ::setsockopt(sock_fd_, SOL_SOCKET, SO_REUSEPORT,
+                               &optval, static_cast<socklen_t>(sizeof optval));
+        if (ret < 0 && active)
+        {
+            fprintf(stderr, "SO_REUSEPORT failed.");
+        }
+    }
+
+    void Socket::Close() {
+        SocketApi::Close(sock_fd_);
+    }
+
+    bool Socket::Reserve(int id) {
+        uint8_t pl = SOCKET_TYPE_INVALID;
+        if (type_.compare_exchange_strong(pl, SOCKET_TYPE_RESERVE)) {
+            id_ = id;
+            protocol_ = PROTOCOL_UNKNOWN;
+            udp_connecting_ = 0;
+            sock_fd_ = -1;
+            return true;
+        }
+        return false;
     }
 
 }

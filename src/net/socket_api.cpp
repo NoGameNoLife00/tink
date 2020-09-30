@@ -156,15 +156,17 @@ namespace tink {
         }
     }
 
-    void SocketApi::Bind(int fd, const struct sockaddr *addr) {
-        if (::bind(fd, addr, static_cast<socklen_t>(sizeof(struct sockaddr_in6))) < 0) {
+    int SocketApi::Bind(int fd, const struct sockaddr *addr) {
+        if (int ret; (ret = ::bind(fd, addr, static_cast<socklen_t>(sizeof(struct sockaddr_in6)))) < 0) {
             spdlog::critical("socket.bind {}:{}", strerror(errno), errno);
+            return ret;
         }
     }
 
-    void SocketApi::Listen(int fd) {
-        if (::listen(fd, SOMAXCONN) < 0) {
+    int SocketApi::Listen(int fd, int backlog) {
+        if (int ret; (ret = ::listen(fd, backlog)) < 0) {
             spdlog::critical("socket.listen {}:{}", strerror(errno), errno);
+            return ret;
         }
     }
 
@@ -205,16 +207,17 @@ namespace tink {
         return conn_fd;
     }
 
-    int SocketApi::Create(sa_family_t family, bool nonblock) {
+    int SocketApi::Create(sa_family_t family, bool nonblock, bool udp) {
         int sock_fd = 0;
+        int sock_type = udp ? SOCK_DGRAM : SOCK_STREAM;
         if (nonblock) {
-            sock_fd = ::socket(family, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, IPPROTO_TCP);
+            sock_fd = ::socket(family, sock_type | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
             if (sock_fd < 0)
             {
                 spdlog::critical("sockets.Create {}:{}",strerror(errno), errno);
             }
         } else {
-            sock_fd = ::socket(family, SOCK_STREAM, IPPROTO_TCP);
+            sock_fd = ::socket(family, sock_type, 0);
             if (sock_fd < 0)
             {
                 spdlog::critical("sockets.create {}:{}", strerror(errno), errno);
