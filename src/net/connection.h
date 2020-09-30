@@ -40,7 +40,7 @@ namespace tink {
         SockAddressPtr GetRemoteAddr() { return remote_addr_; }
 
         // 发送Msg包到写线程
-        int SendMsg(uint32_t msg_id, BytePtr &data, uint32_t data_len);
+        int SendMsg(uint32_t msg_id, UBytePtr &data, uint32_t data_len);
 
         Mutex &GetMutex() { return mutex_; }
 
@@ -61,7 +61,7 @@ namespace tink {
         ServerPtr server;
         FixBufferPtr buffer_;
         mutable Mutex mutex_;
-        BytePtr tmp_buffer_;
+        UBytePtr tmp_buffer_;
         uint32_t tmp_buffer_size_;
         std::map<int, std::string> property_;
     };

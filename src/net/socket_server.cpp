@@ -4,13 +4,15 @@
 #include <cassert>
 #include <cstring>
 #include <error_code.h>
+#include <spdlog/spdlog.h>
+#include <context_manage.h>
 
 namespace tink {
     void SocketServer::UpdateTime(uint64_t time) {
         time_ = time;
     }
 
-    int SocketServer::Pool(SocketMsgPtr &result, int &more) {
+    int SocketServer::Poll_(SocketMessage &result, int &more) {
         for (;;) {
             if (checkctrl) {
                 if (HasCmd()) {
@@ -445,6 +447,62 @@ namespace tink {
         request.u.setopt.what = TCP_NODELAY;
         request.u.setopt.value = 1;
         SendRequest(request, 'T', sizeof(request.u.setopt));
+    }
+
+    // mainloop thread
+    static void ForwardMessage(int type, bool padding, SocketMessage &result) {
+        TSocketMsgPtr sm = std::make_shared<TSocketMessage>();
+
+        // todo 这里逻辑不对
+        size_t sz = sizeof(*sm);
+        if (result.data) {
+            sz += strlen(result.data.get());
+        }
+        sm->type = type;
+        sm->id = result.id;
+        sm->ud = result.ud;
+        sm->buffer.reset(result.data.release());
+
+        Message message;
+        message.source = 0;
+        message.session = 0;
+        message.data = sm;
+        message.size = sz | (static_cast<size_t>(PTYPE_SOCKET) << MESSAGE_TYPE_SHIFT);
+        ContextMngInstance.PushMessage(result.opaque, message);
+    }
+    int SocketServer::Poll() {
+        SocketMessage result;
+        int more = 1;
+        int type = Poll_(result, more);
+        switch (type) {
+            case SOCKET_EXIT:
+                return 0;
+            case SOCKET_DATA:
+                ForwardMessage(TINK_SOCKET_TYPE_DATA, false, result);
+                break;
+            case SOCKET_CLOSE:
+                ForwardMessage(TINK_SOCKET_TYPE_CLOSE, false, result);
+                break;
+            case SOCKET_OPEN:
+                ForwardMessage(TINK_SOCKET_TYPE_CONNECT, true, result);
+                break;
+            case SOCKET_ERR:
+                ForwardMessage(TINK_SOCKET_TYPE_ERROR, true, result);
+                break;
+            case SOCKET_ACCEPT:
+                ForwardMessage(TINK_SOCKET_TYPE_ACCEPT, true, result);
+                break;
+            case SOCKET_UDP:
+                ForwardMessage(TINK_SOCKET_TYPE_UDP, false, result);
+                break;
+            case SOCKET_WARNING:
+                ForwardMessage(TINK_SOCKET_TYPE_WARNING, false, result);
+                break;
+            default:
+                spdlog::error("Unknown socket message type {}.",type);
+                return -1;
+        }
+        return 0;
     }
 
 }

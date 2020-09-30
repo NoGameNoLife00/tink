@@ -10,7 +10,7 @@ namespace tink {
         return conn_;
     }
 
-    BytePtr& Request::GetData() {
+    UBytePtr& Request::GetData() {
         return msg_->GetData();
     }
 

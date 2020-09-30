@@ -90,7 +90,7 @@ namespace tink {
         return nullptr;
     }
 
-    int ContextManage::PushMessage(uint32_t handle, MsgPtr &msg) {
+    int ContextManage::PushMessage(uint32_t handle, Message &msg) {
         ContextPtr ctx = HandleGrab(handle);
         if (!ctx) {
             return E_FAILED;

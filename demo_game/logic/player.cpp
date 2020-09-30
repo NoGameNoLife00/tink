@@ -20,7 +20,7 @@ namespace logic {
 
     void Player::SendMsg(int32_t msg_id, protobuf::Message &msg) {
         int size = msg.ByteSizeLong();
-        BytePtr data = std::make_unique<byte[]>(size);
+        UBytePtr data = std::make_unique<byte[]>(size);
         spdlog::info("msg data = %v", msg.DebugString());
         if (!msg.SerializeToArray(data.get(), size)) {
             return;

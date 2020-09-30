@@ -9,7 +9,7 @@ namespace tink {
     constexpr int MESSAGE_TYPE_SHIFT = ((sizeof(size_t)-1) * 8);
     constexpr int GLOBALNAME_LENGTH = 32;
     typedef struct NetMessage_ {
-        int Init(uint32_t id, uint32_t len, BytePtr &data);
+        int Init(uint32_t id, uint32_t len, UBytePtr &data);
         int32_t GetId() const;
 
         void SetId(uint32_t id);
@@ -18,12 +18,12 @@ namespace tink {
 
         void SetDataLen(uint32_t data_len);
 
-        BytePtr &GetData();
+        UBytePtr &GetData();
 
-        void SetData(BytePtr &data);
+        void SetData(UBytePtr &data);
         uint32_t id; // 消息ID
         uint32_t data_len; // 消息长度
-        BytePtr data; // 消息数据
+        UBytePtr data; // 消息数据
         LEAK_DETECTOR(NetMessage_);
     } NetMessage;
 
@@ -33,7 +33,7 @@ namespace tink {
         DataPtr data;
         size_t size;
 
-        int Init(uint32_t source, int32_t session, BytePtr& data, size_t size);
+        int Init(uint32_t source, int32_t session, UBytePtr& data, size_t size);
     } Message ;
 
     typedef struct RemoteName_ {

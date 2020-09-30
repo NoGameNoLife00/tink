@@ -19,22 +19,22 @@ namespace tink {
         this->data_len = len;
     }
 
-    BytePtr &NetMessage::GetData() {
+    UBytePtr &NetMessage::GetData() {
         return data;
     }
 
-    void NetMessage::SetData(BytePtr &data) {
+    void NetMessage::SetData(UBytePtr &data) {
         data = std::move(data);
     }
 
-    int NetMessage::Init(uint32_t id, uint32_t len, BytePtr &data) {
+    int NetMessage::Init(uint32_t id, uint32_t len, UBytePtr &data) {
         this->id = id;
         data_len = len;
         this->data = std::move(data);
         return E_OK;
     }
 
-    int Message::Init(uint32_t source, int32_t session, BytePtr& data, size_t size) {
+    int Message::Init(uint32_t source, int32_t session, UBytePtr& data, size_t size) {
         this->source = source;
         this->session = session;
         this->data = std::move(data);

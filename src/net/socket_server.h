@@ -25,7 +25,7 @@ namespace tink {
         int id;
         uintptr_t opaque;
         int ud;
-        BytePtr data;
+        UBytePtr data;
     }SocketMessage;
 
     typedef struct RequestStart_ {
@@ -115,7 +115,8 @@ namespace tink {
         SocketServer();
         int Init(uint64_t time);
         void UpdateTime(uint64_t time);
-        int Pool(SocketMsgPtr &result, int& more);
+        int Poll_(SocketMessage &result, int &more);
+        int Poll();
         void Destroy();
         void FreeWbList(WbList &list);
 

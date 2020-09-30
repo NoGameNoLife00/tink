@@ -67,7 +67,7 @@ namespace tink {
         std::condition_variable condition_;//实现同步式获取消息
     };
 
-    typedef std::function<void(MsgPtr, void *)> MsgDrop;
+    typedef std::function<void(Message, void *)> MsgDrop;
 
     class MessageQueue : public std::enable_shared_from_this<MessageQueue> {
     public:
@@ -76,9 +76,9 @@ namespace tink {
         MessageQueue(uint32_t handle) : handle_(handle), in_global(true),
                                         release_(false), queue_(), mutex_(), condition_() {}
         virtual ~MessageQueue(){}
-        void Push(MsgPtr msg);
+        void Push(Message &msg);
         //blocked定义访问方式是同步阻塞或者非阻塞模式
-        MsgPtr Pop(bool isBlocked = true);
+        bool Pop(Message &msg, bool isBlocked = true);
 
         int32_t Size(){
             std::lock_guard<Mutex> lock(mutex_);
@@ -96,7 +96,7 @@ namespace tink {
         void Release(MsgDrop drop_func, void* ud);
     private:
         void DropQueue_(MsgDrop drop_func, void *ud);
-        std::queue<MsgPtr> queue_;//存储消息的队列
+        std::queue<Message> queue_;//存储消息的队列
         mutable Mutex mutex_;//同步锁
         std::condition_variable condition_;//实现同步式获取消息
         uint32_t handle_;

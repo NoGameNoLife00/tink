@@ -35,6 +35,14 @@
 #define HASH_ID(id) (((unsigned)id) % MAX_SOCKET)
 #define ID_TAG16(id) ((id>>MAX_SOCKET_P) & 0xffff)
 #define MIN_READ_BUFFER 64
+
+#define TINK_SOCKET_TYPE_DATA 1
+#define TINK_SOCKET_TYPE_CONNECT 2
+#define TINK_SOCKET_TYPE_CLOSE 3
+#define TINK_SOCKET_TYPE_ACCEPT 4
+#define TINK_SOCKET_TYPE_ERROR 5
+#define TINK_SOCKET_TYPE_UDP 6
+#define TINK_SOCKET_TYPE_WARNING 7
 namespace tink {
 
     typedef struct WriteBuffer_ {
@@ -52,7 +60,17 @@ namespace tink {
         uint64_t write;
     }SocketStat;
 
+
     typedef std::list<WriteBuffer> WbList;
+
+    typedef struct TSocketMessage_ {
+        int type;
+        int id;
+        int ud;
+        BytePtr buffer;
+    }TSocketMessage;
+
+    typedef std::shared_ptr<TSocketMessage> TSocketMsgPtr;
 
     class Socket : noncopyable {
     public:

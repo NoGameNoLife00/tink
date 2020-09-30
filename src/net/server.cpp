@@ -272,7 +272,7 @@ namespace tink {
     void Server::DoRead_(int id)
     {
         int head_len = DataPack::GetHeadLen();
-        BytePtr head_data = std::make_unique<byte[]>(head_len);
+        UBytePtr head_data = std::make_unique<byte[]>(head_len);
         memset(head_data.get(), 0, head_len);
         // 读取客户端的数据到buf中
         MessagePtr msg = std::make_unique<NetMessage>();
@@ -309,7 +309,7 @@ namespace tink {
         // 根据dataLen，再读取Data,放入msg中
         if (msg->GetDataLen() > 0) {
             spdlog::debug("msg data len:{}", msg->GetDataLen());
-            BytePtr buf = std::make_unique<byte[]>(msg->GetDataLen());
+            UBytePtr buf = std::make_unique<byte[]>(msg->GetDataLen());
             if ((read(fd, buf.get(), msg->GetDataLen()) == -1)) {
                 spdlog::warn("[reader] msg data error:{}", strerror(errno));
                 on_error();

@@ -16,7 +16,7 @@ namespace tink {
         // 获取当前连接
         ConnectionPtr & GetConnection();
         // 获取请求的消息数据
-        BytePtr& GetData();
+        UBytePtr& GetData();
         // 消息长度
         uint32_t GetDataLen();
         // 获取请求消息的ID

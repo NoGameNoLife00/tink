@@ -9,9 +9,9 @@ namespace tink {
         // 获取包的头的长度
         static uint32_t GetHeadLen();
         // 反序列化
-        static int Unpack(BytePtr &data, NetMessage &msg);
+        static int Unpack(UBytePtr &data, NetMessage &msg);
         // 序列化
-        static int Pack(NetMessage &msg, BytePtr &data, uint32_t &data_len);
+        static int Pack(NetMessage &msg, UBytePtr &data, uint32_t &data_len);
 
         static int Pack(NetMessage &msg, byte *buff, uint32_t &data_len);
     };

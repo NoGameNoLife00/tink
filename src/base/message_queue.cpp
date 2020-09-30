@@ -1,7 +1,7 @@
 #include <message_queue.h>
 
 namespace tink {
-    void MessageQueue::Push(MsgPtr msg){
+    void MessageQueue::Push(Message &msg){
         std::lock_guard <Mutex> lock(mutex_);
         queue_.push(msg);
         if (!in_global) {
@@ -11,8 +11,7 @@ namespace tink {
         condition_.notify_one();
     }
 
-    MsgPtr MessageQueue::Pop(bool isBlocked){
-        MsgPtr msg;
+    bool MessageQueue::Pop(Message &msg, bool isBlocked){
         if (isBlocked) {
             std::unique_lock <Mutex> lock(mutex_);
             while (queue_.empty())
@@ -20,18 +19,18 @@ namespace tink {
                 condition_.wait(lock);
             }
             //注意这一段必须放在if语句中，因为lock的生命域仅仅在if大括号内
-            msg = std::move(queue_.front());
+            msg = queue_.front();
             queue_.pop();
         } else {
             std::lock_guard<Mutex> lock(mutex_);
-            if (queue_.empty())
+            if (queue_.empty()) {
                 in_global = false;
-                return nullptr;
-
-            auto msg = std::move(queue_.front());
+                return false;
+            }
+            msg = queue_.front();
             queue_.pop();
         }
-        return msg;
+        return true;
     }
 
     void MessageQueue::MarkRelease() {
@@ -54,8 +53,8 @@ namespace tink {
     }
 
     void MessageQueue::DropQueue_(MsgDrop drop_func, void *ud) {
-        MsgPtr msg;
-        while (msg = Pop(true)) {
+        Message msg;
+        while (Pop(msg, true)) {
             drop_func(msg, ud);
         }
     }

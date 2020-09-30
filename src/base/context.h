@@ -32,7 +32,7 @@ namespace tink {
         static int handle_key;
 
         int FilterArgs_(int type, int &session, DataPtr& data, size_t &sz);
-        void DispatchMessage_(MsgPtr msg);
+        void DispatchMessage_(Message &msg);
 
         mutable std::mutex mutex_;
         MQPtr queue_;

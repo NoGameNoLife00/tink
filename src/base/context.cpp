@@ -85,27 +85,26 @@ namespace tink {
     }
 
     void Context::DispatchAll() {
-        MsgPtr msg = queue_->Pop();;
-        while (msg) {
+        Message msg;
+        while (queue_->Pop(msg, true)) {
             DispatchMessage_(msg);
-            msg = queue_->Pop();
         }
     }
 
-    void Context::DispatchMessage_(MsgPtr msg) {
+    void Context::DispatchMessage_(Message &msg) {
         assert(init_);
         std::lock_guard<Mutex> guard(mutex_);
         CurrentHandle::SetHandle(handle_);
-        int type = msg->size >> MESSAGE_TYPE_SHIFT;
-        size_t sz = msg->size & MESSAGE_TYPE_MASK;
+        int type = msg.size >> MESSAGE_TYPE_SHIFT;
+        size_t sz = msg.size & MESSAGE_TYPE_MASK;
         message_count_++;
         if (profile_) {
             cpu_start_ = TimeUtil::GetThreadTime();
-            callback_(*this, cb_ud_, type, msg->session, msg->source, msg->data, sz);
+            callback_(*this, cb_ud_, type, msg.session, msg.source, msg.data, sz);
             uint64_t cost_tm = TimeUtil::GetThreadTime() - cpu_start_;
             cpu_cost_ += cost_tm;
         } else {
-            callback_(*this, cb_ud_, type, msg->session, msg->source, msg->data, sz);
+            callback_(*this, cb_ud_, type, msg.session, msg.source, msg.data, sz);
         }
     }
 

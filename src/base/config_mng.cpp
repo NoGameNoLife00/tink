@@ -63,7 +63,7 @@ namespace tink {
         if (fp != nullptr) {
             fseek(fp, 0, SEEK_END);
             uint32_t f_size = ftell(fp);
-            BytePtr buff = std::make_unique<byte[]>(f_size+1);
+            UBytePtr buff = std::make_unique<byte[]>(f_size + 1);
             rewind(fp);
             fread(buff.get(), sizeof(byte), f_size, fp);
             buff[f_size] = '\0';

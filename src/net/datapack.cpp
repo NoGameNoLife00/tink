@@ -11,7 +11,7 @@ namespace tink {
         return 8;
     }
 
-    int DataPack::Pack(NetMessage &msg, BytePtr &data, uint32_t &data_len) {
+    int DataPack::Pack(NetMessage &msg, UBytePtr &data, uint32_t &data_len) {
         return Pack(msg, data.get(), data_len);
     }
 
@@ -30,7 +30,7 @@ namespace tink {
         memcpy(ptr, msg.GetData().get(), len);
         return 0;
     }
-    int DataPack::Unpack(BytePtr &data, NetMessage &msg) {
+    int DataPack::Unpack(UBytePtr &data, NetMessage &msg) {
         byte *ptr = data.get();
         // 读id
         uint32_t id = 0;

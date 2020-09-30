@@ -45,7 +45,7 @@ namespace tink {
         return 0;
     }
 
-    int Connection::SendMsg(uint32_t msg_id, BytePtr &data, uint32_t data_len) {
+    int Connection::SendMsg(uint32_t msg_id, UBytePtr &data, uint32_t data_len) {
         if (is_close_) {
             return E_CONN_CLOSED;
         }
