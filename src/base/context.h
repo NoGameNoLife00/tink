@@ -10,6 +10,10 @@ namespace tink {
     class Context;
     typedef std::shared_ptr<Context> ContextPtr;
     typedef std::function<int (Context& ctx, void* ud, int type, int session, uint32_t source, DataPtr& msg, size_t sz)> ContextCallBack;
+
+    struct DropT {
+        uint32_t handle;
+    };
     class Context : public std::enable_shared_from_this<Context> {
     public:
         static int Total() { return total.load(); }
@@ -27,12 +31,15 @@ namespace tink {
 
         int Send(uint32_t source, uint32_t destination, int type, int session, DataPtr &data, size_t sz);
         int SendName(uint32_t source, const std::string& addr, int type, int session, DataPtr &data, size_t sz);
+
+        static void DropMessage(Message &msg, void *ud);
+        void DispatchMessage(Message &msg);
+        ContextCallBack GetCallBack() {return callback_;}
     private:
         static std::atomic_int total;
         static int handle_key;
 
         int FilterArgs_(int type, int &session, DataPtr& data, size_t &sz);
-        void DispatchMessage_(Message &msg);
 
         mutable std::mutex mutex_;
         MQPtr queue_;

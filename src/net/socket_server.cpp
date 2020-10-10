@@ -30,32 +30,32 @@ namespace tink {
 
     int SocketServer::Poll_(SocketMessage &result, int &more) {
         for (;;) {
-            if (checkctrl) {
-                if (HasCmd()) {
-                    int type = CtrlCmd(result);
+            if (check_ctrl_) {
+                if (HasCmd_()) {
+                    int type = CtrlCmd_(result);
                     if (type != -1) {
                         ClearClosedEvent_(result, type);
                         return type;
                     } else
                         continue;
                 } else {
-                    checkctrl = 0;
+                    check_ctrl_ = 0;
                 }
             }
-            if (event_index == event_n) {
-                event_n = poll_->Wait(ev_);
-                checkctrl = 1;
+            if (event_index_ == event_n_) {
+                event_n_ = poll_->Wait(ev_);
+                check_ctrl_ = 1;
                 more = 0;
-                event_index = 0;
-                if (event_n <= 0) {
-                    event_n = 0;
+                event_index_ = 0;
+                if (event_n_ <= 0) {
+                    event_n_ = 0;
                     if (errno == EINTR) {
                         continue;
                     }
-                    return -1;
+                    return SOCKET_NONE;
                 }
             }
-            Event &e = ev_[event_index++];
+            Event &e = ev_[event_index_++];
             Socket *s = static_cast<Socket *>(e.s);
             if (s == nullptr) {
                 continue;
@@ -85,14 +85,14 @@ namespace tink {
                             type = ForwardMessageUpd_(*s, result);
                             if (type == SOCKET_UDP) {
                                 // try read again
-                                --event_index;
+                                --event_index_;
                                 return SOCKET_UDP;
                             }
                         }
                         if (e.write && type != SOCKET_CLOSE && type != SOCKET_ERR) {
                             // Try to dispatch write message next step if write flag set.
                             e.read = false;
-                            --event_index;
+                            --event_index_;
                         }
                         if (type == -1)
                             break;
@@ -109,12 +109,12 @@ namespace tink {
                     int code = SocketApi::GetSocketError(s->GetSockFd());
                     const char * err = NULL;
                     err = strerror(code);
-                    ForceClose(*s, result);
+                    ForceClose_(*s, result);
                     result.data = (char *)err;
                     return SOCKET_ERR;
                 }
                 if(e.eof) {
-                    ForceClose(*s, result);
+                    ForceClose_(*s, result);
                     return SOCKET_CLOSE;
                 }
                 break;
@@ -123,12 +123,12 @@ namespace tink {
         return 0;
     }
 
-    int SocketServer::HasCmd() {
+    int SocketServer::HasCmd_() {
         struct timeval tv = {0,0};
         int retval;
-        FD_SET(recvctrl_fd, &rfds);
+        FD_SET(recv_ctrl_fd, &rfds_);
 
-        retval = select(recvctrl_fd+1, &rfds, NULL, NULL, &tv);
+        retval = select(recv_ctrl_fd + 1, &rfds_, NULL, NULL, &tv);
         if (retval == 1) {
             return 1;
         }
@@ -152,8 +152,8 @@ namespace tink {
         }
     }
 
-    int SocketServer::CtrlCmd(SocketMessage &result) {
-        int fd = recvctrl_fd;
+    int SocketServer::CtrlCmd_(SocketMessage &result) {
+        int fd = recv_ctrl_fd;
         // the length of message is one byte, so 256+8 buffer size is enough.
         uint8_t buffer[256];
         uint8_t header[2];
@@ -195,26 +195,16 @@ namespace tink {
                 return SetUdpAddress_((RequestSetUdp *) buffer, result);
             case 'T':
                 SetOptSocket_((RequestSetOpt *)buffer);
-                return -1;
+                return SOCKET_NONE;
             case 'U':
                 AddUdpSocket_((RequestUdp *) buffer);
-                return -1;
+                return SOCKET_NONE;
             default:
                 fprintf(stderr, "socket server: Unknown ctrl %c.\n",type);
-                return -1;
+                return SOCKET_NONE;
         };
 
-        return -1;
-    }
-
-    int SocketServer::StartSocket(RequestStart *request, SocketMsgPtr result) {
-        int id = request->id;
-        result->id = id;
-        result->opaque = request->opaque;
-        result->ud = 0;
-        result->data = nullptr;
-
-        return 0;
+        return SOCKET_NONE;
     }
 
     int SocketServer::Init(uint64_t time) {
@@ -222,41 +212,39 @@ namespace tink {
         PollerPtr poll(Poller::NewDefaultPoller());
         if (poll->Invalid()) {
             fprintf(stderr, "socket server: create event pool failed.\n");
-            return E_FAILED;
+            return SOCKET_NONE;
         }
         if (pipe(fd)) {
             fprintf(stderr, "socket server: create socket pair failed.\n");
-            return E_FAILED;
+            return SOCKET_NONE;
         }
         if (poll->Add(fd[0], nullptr)) {
             fprintf(stderr, "socket server: can't add server fd to event pool.\n");
             close(fd[0]);
             close(fd[1]);
-            return E_FAILED;
+            return SOCKET_NONE;
         }
 
         time_ = time;
         poll_ = poll;
-        recvctrl_fd = fd[0];
-        sendctrl_fd = fd[1];
-        checkctrl = 1;
+        recv_ctrl_fd = fd[0];
+        send_ctrl_fd = fd[1];
+        check_ctrl_ = 1;
 
-        alloc_id = 0;
-        event_n = 0;
-        event_index = 0;
+        alloc_id_ = 0;
+        event_n_ = 0;
+        event_index_ = 0;
 
-        for (int i = 0; i < slot.max_size(); i++) {
-            slot[i] = std::make_shared<Socket>();
-            slot[i]->SetType(SOCKET_TYPE_INVALID);
+        for (int i = 0; i < slot_.max_size(); i++) {
+            slot_[i] = std::make_shared<Socket>();
+            slot_[i]->SetType(SOCKET_TYPE_INVALID);
         }
 
-        FD_ZERO(&rfds);
-        assert(recvctrl_fd < FD_SETSIZE);
+        FD_ZERO(&rfds_);
+        assert(recv_ctrl_fd < FD_SETSIZE);
         return 0;
     }
 
-    SocketServer::SocketServer() {
-    }
 
     SocketPtr SocketServer::NewSocket_(int id, int fd, int protocol, uintptr_t opaque, bool add) {
         SocketPtr s = GetSocket(id);
@@ -274,13 +262,13 @@ namespace tink {
 
     void SocketServer::Destroy() {
         SocketMessage dummy;
-        for (auto s : slot) {
+        for (auto s : slot_) {
             if (s->GetType() != SOCKET_TYPE_RESERVE) {
                 s->Destroy();
             }
         }
-        close(sendctrl_fd);
-        close(recvctrl_fd);
+        close(send_ctrl_fd);
+        close(recv_ctrl_fd);
         poll_.reset();
     }
 
@@ -315,7 +303,7 @@ namespace tink {
     }
 
 
-    void SocketServer::ForceClose(Socket &s, SocketMessage &result) {
+    void SocketServer::ForceClose_(Socket &s, SocketMessage &result) {
         result.id = s.GetId();
         result.ud = 0;
         result.data = nullptr;
@@ -343,14 +331,14 @@ namespace tink {
 
     void SocketServer::Exit() {
         RequestPackage request;
-        SendRequest(request, 'x', 0);
+        SendRequest_(request, 'x', 0);
     }
 
-    void SocketServer::SendRequest(RequestPackage &request, char type, int len) {
+    void SocketServer::SendRequest_(RequestPackage &request, char type, int len) {
         request.header[6] = (uint8_t)type;
         request.header[7] = (uint8_t)len;
         for (;;) {
-            ssize_t n = write(sendctrl_fd, &request.header[6], len+2);
+            ssize_t n = write(send_ctrl_fd, &request.header[6], len + 2);
             if (n<0) {
                 if (errno != EINTR) {
                     fprintf(stderr, "socket server : send ctrl command error %s.\n", strerror(errno));
@@ -367,7 +355,7 @@ namespace tink {
         request.u.close.id = id;
         request.u.close.shutdown = 0;
         request.u.close.opaque = opaque;
-        SendRequest(request, 'K', sizeof(request.u.close));
+        SendRequest_(request, 'K', sizeof(request.u.close));
     }
 
     void SocketServer::Shutdown(uintptr_t opaque, int id) {
@@ -375,14 +363,14 @@ namespace tink {
         request.u.close.id = id;
         request.u.close.shutdown = 1;
         request.u.close.opaque = opaque;
-        SendRequest(request, 'K', sizeof(request.u.close));
+        SendRequest_(request, 'K', sizeof(request.u.close));
     }
 
     void SocketServer::Start(uintptr_t opaque, int id) {
         RequestPackage request;
         request.u.start.id = id;
         request.u.start.opaque = opaque;
-        SendRequest(request, 'S', sizeof(request.u.start));
+        SendRequest_(request, 'S', sizeof(request.u.start));
     }
 
     int SocketServer::Send(SocketSendBuffer &buffer) {
@@ -390,7 +378,7 @@ namespace tink {
         SocketPtr s = GetSocket(id);
         if (s->GetId() != id || s->GetType() == SOCKET_TYPE_INVALID) {
             buffer.FreeBuffer();
-            return E_FAILED;
+            return SOCKET_NONE;
         }
         if (s->CanDirectWrite(id) && s->mutex.try_lock()) {
             if (s->CanDirectWrite(id)) {
@@ -405,7 +393,7 @@ namespace tink {
                     if (sa_sz == 0) {
                         fprintf(stderr, "socket-server : set udp (%d) address first.\n", id);
                         s->mutex.unlock();
-                        return E_FAILED;
+                        return SOCKET_NONE;
                     }
                     n = SocketApi::SendTo(s->GetSockFd(), so.buffer.get(), so.sz, 0, sa.GetSockAddr(), sa_sz);
                 }
@@ -431,12 +419,12 @@ namespace tink {
         request.u.send.id = id;
         request.u.send.buffer = static_cast<char *>(buffer.buffer.get());
         request.u.send.sz = buffer.sz;
-        SendRequest(request, 'D', sizeof(request.u.send));
+        SendRequest_(request, 'D', sizeof(request.u.send));
         return E_OK;
     }
 
     SocketPtr SocketServer::GetSocket(int id) {
-        return slot[HASH_ID(id)];
+        return slot_[HASH_ID(id)];
     }
 
     int SocketServer::SendLowPriority(SocketSendBuffer &buffer) {
@@ -444,14 +432,14 @@ namespace tink {
         SocketPtr s = GetSocket(id);
         if (s->GetId() != id || s->GetType() == SOCKET_TYPE_INVALID) {
             buffer.FreeBuffer();
-            return E_FAILED;
+            return SOCKET_NONE;
         }
         s->DecSendingRef(id);
         RequestPackage request;
         request.u.send.id = id;
         request.u.send.buffer = static_cast<char *>(buffer.buffer.get());
         request.u.send.sz = buffer.sz;
-        SendRequest(request, 'P', sizeof(request.u.send));
+        SendRequest_(request, 'P', sizeof(request.u.send));
         return E_OK;
     }
 
@@ -481,7 +469,7 @@ namespace tink {
         int family = 0;
         int listen_fd = DoBind(host, port, IPPROTO_TCP, family);
         if (listen_fd < 0) {
-            return E_FAILED;
+            return SOCKET_NONE;
         }
         if (SocketApi::Listen(listen_fd, backlog) < 0) {
             SocketApi::Close(listen_fd);
@@ -493,10 +481,10 @@ namespace tink {
     int SocketServer::Listen(uintptr_t opaque, const string &addr, int port, int backlog) {
         int fd = DoListen(addr, port, backlog);
         if (fd < 0) {
-            return E_FAILED;
+            return SOCKET_NONE;
         }
         RequestPackage request;
-        int id = ReserveId();
+        int id = ReserveId_();
         if (id < 0) {
             close(fd);
             return id;
@@ -504,15 +492,15 @@ namespace tink {
         request.u.listen.opaque = opaque;
         request.u.listen.id = id;
         request.u.listen.fd = fd;
-        SendRequest(request, 'L', sizeof(request.u.listen));
+        SendRequest_(request, 'L', sizeof(request.u.listen));
         return 0;
     }
 
-    int SocketServer::ReserveId() {
+    int SocketServer::ReserveId_() {
         for (int i = 0; i < MAX_SOCKET; i++) {
-            int id = alloc_id.fetch_add(1);
+            int id = alloc_id_.fetch_add(1);
             if (id < 0) {
-                id = alloc_id.fetch_and(0x7fffffff);
+                id = alloc_id_.fetch_and(0x7fffffff);
             }
             SocketPtr s = GetSocket(id);
             if (s->GetType() == SOCKET_TYPE_INVALID) {
@@ -521,27 +509,27 @@ namespace tink {
                 }
             }
         }
-        return E_FAILED;
+        return SOCKET_NONE;
     }
 
     int SocketServer::Connect(uintptr_t opaque, const string &addr, int port) {
         RequestPackage request;
-        int len = OpenRequest(request, opaque, addr, port);
+        int len = OpenRequest_(request, opaque, addr, port);
         if (len < 0)
-            return -1;
-        SendRequest(request, 'O', sizeof(request.u.open) + len);
+            return SOCKET_NONE;
+        SendRequest_(request, 'O', sizeof(request.u.open) + len);
         return request.u.open.id;
     }
 
-    int SocketServer::OpenRequest(RequestPackage &req, uintptr_t opaque, const string &addr, int port) {
+    int SocketServer::OpenRequest_(RequestPackage &req, uintptr_t opaque, const string &addr, int port) {
         int len = addr.size();
         if ((len + sizeof(req.u.open)) >= 256 ) {
             fprintf(stderr, "socket server : Invalid addr %s.\n", addr.c_str());
-            return E_FAILED;
+            return SOCKET_NONE;
         }
-        int id = ReserveId();
+        int id = ReserveId_();
         if (id < 0)
-            return E_FAILED;
+            return SOCKET_NONE;
         req.u.open.opaque = opaque;
         req.u.open.id = id;
         req.u.open.port = port;
@@ -552,13 +540,13 @@ namespace tink {
 
     int SocketServer::Bind(uintptr_t opaque, int fd) {
         RequestPackage request;
-        int id = ReserveId();
+        int id = ReserveId_();
         if (id < 0)
-            return -1;
+            return SOCKET_NONE;
         request.u.bind.opaque = opaque;
         request.u.bind.id = id;
         request.u.bind.fd = fd;
-        SendRequest(request, 'B', sizeof(request.u.bind));
+        SendRequest_(request, 'B', sizeof(request.u.bind));
         return id;
     }
 
@@ -567,7 +555,7 @@ namespace tink {
         request.u.setopt.id = id;
         request.u.setopt.what = TCP_NODELAY;
         request.u.setopt.value = 1;
-        SendRequest(request, 'T', sizeof(request.u.setopt));
+        SendRequest_(request, 'T', sizeof(request.u.setopt));
     }
 
     // mainloop thread
@@ -621,10 +609,10 @@ namespace tink {
                 break;
             default:
                 spdlog::error("Unknown socket message type {}.",type);
-                return -1;
+                return SOCKET_NONE;
         }
         if (more) {
-            return -1;
+            return SOCKET_NONE;
         }
         return 1;
     }
@@ -642,7 +630,7 @@ namespace tink {
         }
         if (s->GetType() == SOCKET_TYPE_PACCEPT || s->GetType() == SOCKET_TYPE_PLISTEN) {
             if (poll_->Add(s->GetSockFd(), s.get())) {
-                ForceClose(*s, result);
+                ForceClose_(*s, result);
                 result.data = strerror(errno);
                 return SOCKET_ERR;
             }
@@ -655,7 +643,7 @@ namespace tink {
             result.data = "transfer";
             return SOCKET_OPEN;
         }
-        return E_FAILED;
+        return SOCKET_NONE;
     }
 
     int SocketServer::BindSocket_(RequestBind *request, SocketMessage &result) {
@@ -684,11 +672,11 @@ namespace tink {
             result.id = id;
             result.ud = 0;
             result.data = "reach socket number limit";
-            slot[HASH_ID(id)]->SetType(SOCKET_TYPE_INVALID);
+            slot_[HASH_ID(id)]->SetType(SOCKET_TYPE_INVALID);
             return SOCKET_ERR;
         }
         s->SetType(SOCKET_TYPE_PLISTEN);
-        return E_FAILED;
+        return SOCKET_NONE;
     }
 
     int SocketServer::CloseSocket_(RequestClose *request, SocketMessage &result) {
@@ -708,18 +696,19 @@ namespace tink {
             }
         }
         if (request->shutdown || s->NoMoreSendingData()) {
-            ForceClose(*s, result);
+            ForceClose_(*s, result);
             result.id = id;
             result.opaque = request->opaque;
             return SOCKET_CLOSE;
         }
         s->SetType(SOCKET_TYPE_HALFCLOSE);
-        return E_FAILED;
+        return SOCKET_NONE;
     }
 
     int SocketServer::SendBuffer_(Socket &s, SocketMessage &result) {
+
         if (s.mutex.try_lock()) {
-            return E_FAILED;
+            return SOCKET_NONE;
         }
         if (s.GetDWBuffer()) {
             auto& dw_buffer = s.GetDWBuffer();
@@ -732,7 +721,9 @@ namespace tink {
             s.GetHigh().emplace_back(buf);
             s.GetDWBuffer().reset();
         }
-
+        int r = DoSendBuffer_(s, result);
+        s.mutex.unlock();
+        return r;
     }
 
     static inline int
@@ -742,81 +733,76 @@ namespace tink {
         ;
         return (void *)(*s.begin())->ptr != (*s.begin())->buffer.get();
     }
-    int SocketServer::DoSendBuffer_(SocketPtr s, SocketMessage &result) {
-        assert(!ListUncomplete(s->GetLow()));
 
-        return 0;
-    }
-
-    int SocketServer::SendList_(SocketPtr s, WriteBufferList &list, SocketMessage &result) {
-        if (s->GetProtocol() == PROTOCOL_TCP) {
+    int SocketServer::SendList_(Socket &s, WriteBufferList &list, SocketMessage &result) {
+        if (s.GetProtocol() == PROTOCOL_TCP) {
             return SendListTCP_(s, list, result);
         } else {
             return SendListUDP_(s, list, result);
         }
     }
 
-    int SocketServer::SendListTCP_(SocketPtr s, WriteBufferList &list, SocketMessage &result) {
+    int SocketServer::SendListTCP_(Socket &s, WriteBufferList &list, SocketMessage &result) {
         for (auto& tmp : list) {
             for (;;) {
-                ssize_t sz = SocketApi::Write(s->GetSockFd(), tmp->ptr, tmp->sz);
+                ssize_t sz = SocketApi::Write(s.GetSockFd(), tmp->ptr, tmp->sz);
                 if (sz < 0) {
                     switch (errno) {
                         case EINTR:
                             continue;
                         case AGAIN_WOULDBLOCK:
-                            return E_FAILED;
+                            return SOCKET_NONE;
                     }
-                    ForceClose(*s, result);
+                    ForceClose_(s, result);
                     return SOCKET_CLOSE;
                 }
-                s->StatWrite(sz, time_);
-                s->SetWbSize(s->GetWbSize()-sz);
+                s.StatWrite(sz, time_);
+                s.SetWbSize(s.GetWbSize()-sz);
                 if (sz != tmp->sz) {
                     tmp->ptr += sz;
                     tmp->sz -= sz;
-                    return E_FAILED;
+                    return SOCKET_NONE;
                 }
                 break;
             }
             tmp->buffer.reset();
         }
         list.clear();
-        return E_FAILED;
+        return SOCKET_NONE;
     }
 
-    static void DropUdp(SocketPtr &s, WriteBufferList &list, WriteBufferPtr& tmp) {
-        s->SetWbSize(s->GetWbSize()-tmp->sz);
+    static void DropUdp(Socket &s, WriteBufferList &list, WriteBufferPtr& tmp) {
+        s.SetWbSize(s.GetWbSize()-tmp->sz);
         list.erase(list.begin());
         tmp->buffer.reset();
     }
 
-    int SocketServer::SendListUDP_(SocketPtr s, WriteBufferList &list, SocketMessage &result) {
+    int SocketServer::SendListUDP_(Socket &s, WriteBufferList &list, SocketMessage &result) {
         for (auto& tmp : list) {
             SockAddress sa;
-            socklen_t sa_sz =  s->UdpAddress(tmp->upd_address, sa);
+            socklen_t sa_sz =  s.UdpAddress(tmp->upd_address, sa);
             if (sa_sz == 0) {
-                fprintf(stderr, "socket server : udp (%d) type mismatch.\n", s->GetId());
+                fprintf(stderr, "socket server : udp (%d) type mismatch.\n", s.GetId());
                 DropUdp(s, list, tmp);
-                return E_FAILED;
+                return SOCKET_NONE;
             }
-            int err = SocketApi::SendTo(s->GetSockFd(), tmp->ptr, tmp->sz, 0, sa.GetSockAddr(), sa_sz);
+            int err = SocketApi::SendTo(s.GetSockFd(), tmp->ptr, tmp->sz, 0, sa.GetSockAddr(), sa_sz);
             if (err < 0) {
                 switch(errno) {
                     case EINTR:
                     case AGAIN_WOULDBLOCK:
-                        return E_FAILED;
+                        return SOCKET_NONE;
                 }
-                fprintf(stderr, "socket server : udp (%d) sendto error %s.\n",s->GetSockFd(), strerror(errno));
+                fprintf(stderr, "socket server : udp (%d) sendto error %s.\n",s.GetSockFd(), strerror(errno));
                 DropUdp(s, list, tmp);
-                return -1;
+                return SOCKET_NONE;
             }
-            s->StatWrite(tmp->sz, time_);
-            s->SetWbSize(s->GetWbSize()-tmp->sz);
+            s.StatWrite(tmp->sz, time_);
+            s.SetWbSize(s.GetWbSize()-tmp->sz);
             tmp->buffer.reset();
         }
         list.clear();
-        return E_FAILED;
+        return SOCKET_NONE;
     }
 
     int SocketServer::OpenSocket(RequestOpen *request, SocketMessage &result) {
@@ -884,7 +870,7 @@ namespace tink {
             ns->SetType(SOCKET_TYPE_CONNECTING);
             poll_->Write(ns->GetSockFd(), ns.get(), true);
         }
-        return E_FAILED;
+        return SOCKET_NONE;
     }
 
     int SocketServer::SendSocket_(RequestSend *request, SocketMessage &result, int priority, const uint8_t *udp_address) {
@@ -896,11 +882,11 @@ namespace tink {
         if (type == SOCKET_TYPE_INVALID || s->GetId() != id
             || type == SOCKET_TYPE_HALFCLOSE
             || type == SOCKET_TYPE_PACCEPT) {
-            return -1;
+            return SOCKET_NONE;
         }
         if (type == SOCKET_TYPE_PLISTEN || type == SOCKET_TYPE_LISTEN) {
             fprintf(stderr, "socket server: write to listen fd %d.\n", id);
-            return -1;
+            return SOCKET_NONE;
         }
         if (s->SendBufferEmpty() && type == SOCKET_TYPE_CONNECTED) {
             if (s->GetProtocol() == PROTOCOL_TCP) {
@@ -913,14 +899,14 @@ namespace tink {
                 socklen_t sa_sz = s->UdpAddress(udp_address, sa);
                 if (sa_sz == 0) {
                     fprintf(stderr, "socket-server: udp socket (%d) type mistach.\n", id);
-                    return -1;
+                    return SOCKET_NONE;
                 }
                 int n = SocketApi::SendTo(s->GetSockFd(), so.buffer.get(), so.sz, 0, sa.GetSockAddr(), sa_sz);
                 if (n != so.sz) {
                     AppendSendBufferUdp(s, priority, request, udp_address);
                 } else {
                     s->StatWrite(n, time_);
-                    return -1;
+                    return SOCKET_NONE;
                 }
             }
             poll_->Write(s->GetSockFd(), s.get(), true);
@@ -949,7 +935,7 @@ namespace tink {
             return SOCKET_WARNING;
         }
 
-        return -1;
+        return SOCKET_NONE;
     }
 
     void SocketServer::DecSendingRef(int id) {
@@ -961,7 +947,7 @@ namespace tink {
         int id = request->id;
         SocketPtr s = GetSocket(id);
         if (s->GetType() == SOCKET_TYPE_INVALID || s->GetId() !=id) {
-            return -1;
+            return SOCKET_NONE;
         }
         int type = request->address[0];
         if (type != s->GetProtocol()) {
@@ -978,7 +964,7 @@ namespace tink {
             memcpy((void *) s->GetUdpAddress(), request->address, 1+2+16);	// 1 type, 2 port, 16 ipv6
         }
         --s->udp_connecting;
-        return -1;
+        return SOCKET_NONE;
     }
 
     void SocketServer::SetOptSocket_(RequestSetOpt *request) {
@@ -1013,7 +999,7 @@ namespace tink {
         if (type == SOCKET_CLOSE || type == SOCKET_ERR) {
             int id = result.id;
             int i;
-            for (i=event_index; i<event_n; i++) {
+            for (i=event_index_; i < event_n_; i++) {
                 Event &e = ev_[i];
                 Socket *s = static_cast<Socket *>(e.s);
                 if (s) {
@@ -1031,7 +1017,7 @@ namespace tink {
         socklen_t len = sizeof(error);
         int code = getsockopt(s.GetSockFd(), SOL_SOCKET, SO_ERROR, &error, &len);
         if (code < 0 || error) {
-            ForceClose(s, result);
+            ForceClose_(s, result);
             if (code >= 0)
                 result.data = strerror(error);
             else
@@ -1069,12 +1055,12 @@ namespace tink {
                 result.id = s.GetId();
                 result.ud = 0;
                 result.data = strerror(errno);
-                return -1;
+                return SOCKET_NONE;
             } else {
                 return 0;
             }
         }
-        int id = ReserveId();
+        int id = ReserveId_();
         if (id < 0) {
             SocketApi::Close(client_fd);
             return 0;
@@ -1111,19 +1097,19 @@ namespace tink {
                     break;
                 default:
                     // close when error
-                    ForceClose(s, result);
+                    ForceClose_(s, result);
                     result.data = strerror(errno);
                     return SOCKET_ERR;
             }
-            return -1;
+            return SOCKET_NONE;
         }
         if (n == 0) {
-            ForceClose(s, result);
+            ForceClose_(s, result);
             return SOCKET_CLOSE;
         }
 
         if (s.GetType() == SOCKET_TYPE_HALFCLOSE) {
-            return -1;
+            return SOCKET_NONE;
         }
 
         if (n == sz) {
@@ -1149,21 +1135,21 @@ namespace tink {
                     break;
                 default:
                     // close when error
-                    ForceClose(s, result);
+                    ForceClose_(s, result);
                     result.data = strerror(errno);
                     return SOCKET_ERR;
             }
-            return -1;
+            return SOCKET_NONE;
         }
         uint8_t * data;
         if (s_len == sizeof(struct sockaddr_in)) {
             if (s.GetProtocol() != PROTOCOL_UDP)
-                return -1;
+                return SOCKET_NONE;
             data = new uint8_t[n + 1 + 2 + 4];
             sa.GenUpdAddress(PROTOCOL_UDP, data + n);
         } else {
             if (s.GetProtocol() != PROTOCOL_UDPv6)
-                return -1;
+                return SOCKET_NONE;
             data = new uint8_t[n + 1 + 2 + 16];
             sa.GenUpdAddress(PROTOCOL_UDPv6, data + n);
         }
@@ -1175,6 +1161,43 @@ namespace tink {
         result.data = (char *)data;
 
         return 0;
+    }
+
+    int SocketServer::DoSendBuffer_(Socket &s, SocketMessage &result) {
+        assert(!ListUncomplete(s.GetLow()));
+        if (SendList_(s, s.GetHigh(), result) == SOCKET_CLOSE) {
+            return SOCKET_CLOSE;
+        }
+        if (s.GetHigh().empty()) {
+            if (!s.GetLow().empty()) {
+                if (SendList_(s, s.GetLow(), result) == SOCKET_CLOSE) {
+                    return SOCKET_CLOSE;
+                }
+
+                if (ListUncomplete(s.GetLow())) {
+                    s.RaiseUnComplete();
+                    return SOCKET_NONE;
+                }
+                if (!s.GetLow().empty()) {
+                    return SOCKET_NONE;
+                }
+            }
+            assert(s.SendBufferEmpty() && s.GetWbSize() == 0);
+            poll_->Write(s.GetSockFd(), &s, false);
+            if (s.GetType() == SOCKET_TYPE_HALFCLOSE) {
+                ForceClose_(s, result);
+                return SOCKET_CLOSE;
+            }
+            if (s.GetWarnSize() > 0){
+                s.SetWarnSize(0);
+                result.opaque = s.GetOpaque();
+                result.id = s.GetId();
+                result.ud = 0;
+                result.data = NULL;
+                return SOCKET_WARNING;
+            }
+        }
+        return SOCKET_NONE;
     }
 
 }

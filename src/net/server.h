@@ -13,7 +13,7 @@
 #include <conn_manager.h>
 #include <functional>
 #include <context.h>
-
+#include <socket_server.h>
 namespace tink {
     class Connection;
     class MessageHandler;
@@ -24,11 +24,11 @@ namespace tink {
     typedef std::shared_ptr<MessageHandler> MessageHandlerPtr;
     typedef std::shared_ptr<ConnManager> ConnManagerPtr;
 
+
+
     class Server : public std::enable_shared_from_this<Server> {
     public:
-        int Init(string &name, int ip_version,
-                 string &ip, int port,
-                 MessageHandlerPtr &&msg_handler);
+        int Init(string &name, int ip_version, string &ip, int port);
         int Start(); // 启动
         int Run(); // 运行
         int Stop(); // 停止
@@ -40,6 +40,7 @@ namespace tink {
         void SetOnConnStop(ConnHookFunc &&func);
         void CallOnConnStart(ConnectionPtr &&conn);
         void CallOnConnStop(ConnectionPtr &&conn);
+        SocketServerPtr GetSocketServer() { return socket_server_; }
 
     private:
 
@@ -66,6 +67,8 @@ namespace tink {
         // 连接启动和停止的钩子函数
         ConnHookFunc on_conn_start_;
         ConnHookFunc on_conn_stop_;
+
+        SocketServerPtr socket_server_;
     };
 }
 

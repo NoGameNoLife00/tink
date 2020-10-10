@@ -159,6 +159,7 @@ namespace tink {
 
         int64_t GetWarnSize() { return warn_size_; }
         void SetWarnSize(int64_t s) { warn_size_ = s; }
+        void RaiseUnComplete();
         std::atomic_uint16_t udp_connecting;
     private:
         int id_;

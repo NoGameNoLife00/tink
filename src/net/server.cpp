@@ -40,22 +40,21 @@ namespace tink {
     }
 
 
-    int Server::Init(string &name, int ip_version,
-                     string &ip, int port,
-                     MessageHandlerPtr &&msg_handler) {
+    int Server::Init(string &name, int ip_version, string &ip, int port) {
         name_ = name;
         listen_addr_ = std::make_shared<SockAddress>(ip, port, ip_version == AF_INET6);
-        msg_handler_ = msg_handler;
         conn_mng_ = std::make_shared<ConnManager>();
+        socket_server_ = std::make_shared<SocketServer>();
+
         CurrentHandle::InitThread(THREAD_MAIN);
-//        Sigign();
+        Sigign();
 
         // register SIGHUP for log file reopen
-//        struct sigaction sa;
-//        sa.sa_handler = &HandleHup;
-//        sa.sa_flags = SA_RESTART;
-//        sigfillset(&sa.sa_mask);
-//        sigaction(SIGHUP, &sa, NULL);
+        struct sigaction sa;
+        sa.sa_handler = &HandleHup;
+        sa.sa_flags = SA_RESTART;
+        sigfillset(&sa.sa_mask);
+        sigaction(SIGHUP, &sa, NULL);
         if (!ConfigMngInstance.GetDaemon().empty()) {
             if (Daemon::Init(ConfigMngInstance.GetDaemon())) {
                 exit(1);
@@ -65,20 +64,21 @@ namespace tink {
         ContextMngInstance.Init(ConfigMngInstance.GetHarbor());
         ModuleMngInstance.Init(ConfigMngInstance.GetModulePath());
         TimerInstance.Init();
-
+        socket_server_->Init(TimerInstance.Now());
         return 0;
     }
 
 
-    static void wakeup(MonitorPtr m, int busy) {
-        if (m->sleep >= m->count - busy) {
+    static void Wakeup(Monitor &m, int busy) {
+        if (m.sleep >= m.count - busy) {
             // signal sleep worker, "spurious wakeup" is harmless
-            m->cond.notify_one();
+            m.cond.notify_one();
         }
     }
 
 
 #define CHECK_ABORT if (Context::Total()==0) break;
+
     static void ThreadMonitor(MonitorPtr m) {
         int i;
         int n = m->count;
@@ -99,11 +99,13 @@ namespace tink {
     static void SignalHup() {
         // make log file reopen
 
-        MsgPtr smsg = std::make_shared<Message>();
-        smsg->source = 0;
-        smsg->session = 0;
-        smsg->data = NULL;
-        smsg->size = static_cast<size_t>(PTYPE_SYSTEM) << MESSAGE_TYPE_SHIFT;
+//        MsgPtr smsg = std::make_shared<Message>();
+        Message smsg;
+        smsg.source = 0;
+        smsg.session = 0;
+        smsg.data = nullptr;
+        smsg.size = static_cast<size_t>(PTYPE_SYSTEM) << MESSAGE_TYPE_SHIFT;
+
         uint32_t logger = ContextMngInstance.FindName("logger");
         if (logger) {
             ContextMngInstance.PushMessage(logger, smsg);
@@ -116,7 +118,7 @@ namespace tink {
             TimerInstance.UpdateTime();
             // socket_updatetime();
             CHECK_ABORT
-            wakeup(m,m->count-1);
+            Wakeup(*m, m->count - 1);
             usleep(2500);
             if (SIG) {
                 SignalHup();
@@ -134,8 +136,74 @@ namespace tink {
     }
 
 
-    static void ThreadSocket(MonitorPtr m) {
+    static void ThreadSocket(ServerPtr s, MonitorPtr m) {
+        CurrentHandle::InitThread(THREAD_SOCKET);
+        auto ss = s->GetSocketServer();
+        for (;;) {
+            int ret = ss->Poll();
+            if (ret == 0) {
+                break;
+            }
+            if (ret < 0) {
+                CHECK_ABORT
+                continue;
+            }
+            Wakeup(*m, 0);
+        }
+    }
 
+    MQPtr ContextMessageDispatch(MonitorNode &m_node, MQPtr q, int weight) {
+        if (!q) {
+            q = GlobalMQInstance.Pop();
+            if (!q) {
+                return nullptr;
+            }
+        }
+        uint32_t handle = q->Handle();
+        ContextPtr ctx = ContextMngInstance.HandleGrab(handle);
+        if (!ctx) {
+            struct DropT d = {handle };
+            q->Release(Context::DropMessage, &d);
+            return GlobalMQInstance.Pop();
+        }
+        int n = 1;
+        Message msg;
+        for (int i = 0; i < n; i++) {
+            if (q->Pop(msg)) {
+                return GlobalMQInstance.Pop();
+            } else if (i == 0 && weight >= 0) {
+                n = q->Size();
+                n >>= weight;
+            }
+            m_node.Trigger(msg.source, handle);
+            ctx->DispatchMessage(msg);
+            m_node.Trigger(0, 0);
+        }
+        assert(q.get() == ctx->Queue().get());
+        MQPtr nq = GlobalMQInstance.Pop();
+        if (nq) {
+            GlobalMQInstance.Push(q);
+            q = nq;
+        }
+        return q;
+    }
+
+
+    static void ThreadWorker(MonitorPtr m, int id, int weight) {
+        MonitorNodePtr m_node = m->m[id];
+        CurrentHandle::InitThread(THREAD_WORKER);
+        MQPtr q;
+        while (!m->quit) {
+            q = ContextMessageDispatch(*m_node, q, weight);
+            if (!q) {
+                std::unique_lock lock(m->mutex);
+                ++m->sleep;
+                if (!m->quit) {
+                    m->cond.wait(lock);
+                }
+                --m->sleep;
+            }
+        }
     }
 
     int Server::Start() {
@@ -152,28 +220,32 @@ namespace tink {
         for (int i = 0; i < thread; i++) {
             m->m.emplace_back(std::make_shared<MonitorNode>());
         }
+        std::vector<std::unique_ptr<Thread>> thread_list;
 
-        std::unique_ptr<Thread> t_monitor = std::make_unique<Thread>(std::bind(ThreadMonitor, m), "monitor");
-        std::unique_ptr<Thread> t_timer = std::make_unique<Thread>(std::bind(ThreadTimer, m), "timer");
-        std::unique_ptr<Thread> t_socket = std::make_unique<Thread>(std::bind(ThreadSocket, m), "timer");
+        thread_list.emplace_back(std::make_unique<Thread>([m] { return ThreadMonitor(m); }, "monitor"));
+        thread_list.emplace_back(std::make_unique<Thread>([m] { return ThreadTimer(m); }, "timer"));
+        thread_list.emplace_back(std::make_unique<Thread>([this, m] { return ThreadSocket(shared_from_this(), m); }, "timer"));
 
 
+        static int weight[] = {
+                -1, -1, -1, -1, 0, 0, 0, 0,
+                1, 1, 1, 1, 1, 1, 1, 1,
+                2, 2, 2, 2, 2, 2, 2, 2,
+                3, 3, 3, 3, 3, 3, 3, 3, };
 
-
-        // 开启worker工作池
-        msg_handler_->StartWorkerPool();
-        listen_socket_ = std::make_unique<Socket>(SocketApi::Create(listen_addr_->Family()));
-        listen_socket_->BindAddress(*listen_addr_);
-        listen_socket_->Listen();
-        spdlog::info("Start tink Server {} listening", name_.c_str());
-        epoll_fd_ = epoll_create1(EPOLL_CLOEXEC);
-        OperateEvent(listen_socket_->GetSockFd(), ListenID, EPOLL_CTL_ADD, EPOLLIN);
-        int fd_num;
-        for ( ; ; ) {
-            fd_num = epoll_wait(epoll_fd_, &*events_.begin(), events_.size(), -1);
-            HandleEvents_(fd_num);
+        for (int i = 0; i < thread; i++) {
+            int w = 0;
+            int id = i;
+            if (i < sizeof(weight)/sizeof(weight[0])) {
+                w= weight[i];
+            }
+            thread_list.emplace_back(std::make_unique<Thread>([this, m, id, w] { return ThreadWorker(m, id, w); }, "worker"));
         }
-        return 0;
+
+        for (auto& t : thread_list) {
+            t->Join();
+        }
+
     }
 
     int Server::Run() {

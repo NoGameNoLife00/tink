@@ -10,6 +10,7 @@
 #include "poller.h"
 #include "socket.h"
 
+#define SOCKET_NONE -1
 #define SOCKET_DATA 0
 #define SOCKET_CLOSE 1
 #define SOCKET_OPEN 2
@@ -117,14 +118,14 @@ namespace tink {
         }
     }SendObject;
 
-
     typedef std::list<WriteBufferPtr> WriteBufferList;
     typedef std::shared_ptr<SocketMessage> SocketMsgPtr;
+
     class SocketServer {
-        SocketServer();
+    public:
         int Init(uint64_t time);
         void UpdateTime(uint64_t time);
-        int Poll_(SocketMessage &result, int &more);
+
         int Poll();
         void Destroy();
         void FreeWbList(WriteBufferList &list);
@@ -144,25 +145,26 @@ namespace tink {
         int Bind(uintptr_t opaque, int fd);
 
         int NoDelay(int id);
+
     private:
         SocketPtr NewSocket_(int id, int fd, int protocol, uintptr_t opaque, bool add);
-        void ForceClose(Socket &s, SocketMessage &result);
-        int HasCmd();
-        int CtrlCmd(SocketMessage &result);
-        int StartSocket(RequestStart *request, SocketMsgPtr result);
-        void SendRequest(RequestPackage &request, byte type, int len);
-        int ReserveId();
-        int OpenRequest(RequestPackage &req, uintptr_t opaque, const string &addr, int port);
+        int Poll_(SocketMessage &result, int &more);
+        void ForceClose_(Socket &s, SocketMessage &result);
+        int HasCmd_();
+        int CtrlCmd_(SocketMessage &result);
+        void SendRequest_(RequestPackage &request, byte type, int len);
+        int ReserveId_();
+        int OpenRequest_(RequestPackage &req, uintptr_t opaque, const string &addr, int port);
         int StartSocket_(RequestStart *request, SocketMessage &result);
         int BindSocket_(RequestBind *request, SocketMessage& result);
         int ListenSocket_(RequestListen *request, SocketMessage& result);
         int CloseSocket_(RequestClose *request, SocketMessage& result);
         int OpenSocket(RequestOpen *request, SocketMessage& result);
         int SendBuffer_(Socket &s, SocketMessage& result);
-        int DoSendBuffer_(SocketPtr s, SocketMessage& result);
-        int SendList_(SocketPtr s, WriteBufferList& list, SocketMessage& result);
-        int SendListTCP_(SocketPtr s, WriteBufferList& list, SocketMessage& result);
-        int SendListUDP_(SocketPtr s, WriteBufferList& list, SocketMessage& result);
+        int DoSendBuffer_(Socket &s, SocketMessage& result);
+        int SendList_(Socket &s, WriteBufferList& list, SocketMessage& result);
+        int SendListTCP_(Socket &s, WriteBufferList& list, SocketMessage& result);
+        int SendListUDP_(Socket &s, WriteBufferList& list, SocketMessage& result);
         int SendSocket_(RequestSend *request, SocketMessage& result, int priority, const uint8_t *udp_address);
         int SetUdpAddress_(RequestSetUdp *request, SocketMessage& result);
         void SetOptSocket_(RequestSetOpt *request);
@@ -174,24 +176,22 @@ namespace tink {
         int ForwardMessageUpd_(Socket &s, SocketMessage &result);
         void DecSendingRef(int id);
 
-
-
         volatile uint64_t time_;
-        int recvctrl_fd;
-        int sendctrl_fd;
-        int checkctrl;
+        int recv_ctrl_fd;
+        int send_ctrl_fd;
+        int check_ctrl_;
         PollerPtr poll_;
-        std::atomic_int alloc_id;
-        int event_n;
-        int event_index;
-        fd_set rfds;
+        std::atomic_int alloc_id_;
+        int event_n_;
+        int event_index_;
+        fd_set rfds_;
         char buffer_[MAX_INFO];
         uint8_t udp_buffer_[MAX_UDP_PACKAGE];
         EventList ev_;
-        std::array<SocketPtr, MAX_SOCKET> slot;
+        std::array<SocketPtr, MAX_SOCKET> slot_;
     };
 
-
+    typedef std::shared_ptr<SocketServer> SocketServerPtr;
 }
 
 

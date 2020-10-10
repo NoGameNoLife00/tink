@@ -9,15 +9,6 @@
 
 namespace tink {
     std::atomic_int Context::total = 0;
-    struct drop_t {
-        uint32_t handle;
-    };
-    static void DropMessage(MsgPtr msg, void *ud) {
-        struct drop_t *d = static_cast<drop_t *>(ud);
-        assert(d->handle);
-        // todo send error to msg source
-
-    }
 
     int Context::Init(const std::string &name, const char *param) {
         auto mod = ModuleMngInstance.Query(name);
@@ -48,7 +39,7 @@ namespace tink {
         } else {
             spdlog::error("Failed launch {}", name);
             ContextMngInstance.Unregister(handle_);
-            struct drop_t d = {handle_};
+            struct DropT d = {handle_};
             queue_->Release(DropMessage, &d);
         }
         ++total;
@@ -62,11 +53,11 @@ namespace tink {
     }
 
     void Context::Send(DataPtr &&data, size_t sz, uint32_t source, int type, int session) {
-        MsgPtr msg = std::make_shared<Message>();
-        msg->source = source;
-        msg->session = session;
-        msg->data = std::move(data);
-        msg->size = sz | (static_cast<size_t>(type) << MESSAGE_TYPE_SHIFT);
+        Message msg;
+        msg.source = source;
+        msg.session = session;
+        msg.data = std::move(data);
+        msg.size = sz | (static_cast<size_t>(type) << MESSAGE_TYPE_SHIFT);
         queue_->Push(msg);
     }
 
@@ -87,12 +78,15 @@ namespace tink {
     void Context::DispatchAll() {
         Message msg;
         while (queue_->Pop(msg, true)) {
-            DispatchMessage_(msg);
+            DispatchMessage(msg);
         }
     }
 
-    void Context::DispatchMessage_(Message &msg) {
+    void Context::DispatchMessage(Message &msg) {
         assert(init_);
+        if (!callback_) {
+            return;
+        }
         std::lock_guard<Mutex> guard(mutex_);
         CurrentHandle::SetHandle(handle_);
         int type = msg.size >> MESSAGE_TYPE_SHIFT;
@@ -201,5 +195,11 @@ namespace tink {
         return Send(source, des, type, session, data, sz);
     }
 
+    void Context::DropMessage(Message &msg, void *ud) {
+        struct DropT *d = static_cast<DropT *>(ud);
+        msg.data.reset();
+        uint32_t source = d->handle;
+        assert(source);
+    }
 }
 

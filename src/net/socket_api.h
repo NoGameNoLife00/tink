@@ -5,8 +5,7 @@
 #include <endian.h>
 #include <cstddef>
 #include <bits/sockaddr.h>
-namespace tink {
-    namespace SocketApi {
+namespace tink::SocketApi {
         int Create(sa_family_t family, bool nonblock = false, bool udp = false);
         int Connect(int fd, const struct ::sockaddr* addr);
         int Bind(int fd, const struct sockaddr* addr);
@@ -67,6 +66,5 @@ namespace tink {
 
 
     }
-}
 
 #endif //TINK_SOCKET_API_H

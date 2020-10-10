@@ -166,5 +166,10 @@ namespace tink {
         return false;
     }
 
+    void Socket::RaiseUnComplete() {
+        high.emplace_back(low.front());
+        low.pop_front();
+    }
+
 }
 

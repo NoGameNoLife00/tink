@@ -33,6 +33,9 @@ namespace tink {
         void Init();
         void UpdateTime();
         int TimeOut(uint32_t handle, int time, int session);
+
+        uint64_t Now() { return current_; }
+        uint64_t StartTime() { return start_time_; }
     private:
         typedef std::list<TimerNodePtr> TimerNodeList;
         void Add_(int time, const TimerEvent& event);

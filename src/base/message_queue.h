@@ -67,7 +67,7 @@ namespace tink {
         std::condition_variable condition_;//实现同步式获取消息
     };
 
-    typedef std::function<void(Message, void *)> MsgDrop;
+    typedef std::function<void(Message&, void *)> MsgDrop;
 
     class MessageQueue : public std::enable_shared_from_this<MessageQueue> {
     public:

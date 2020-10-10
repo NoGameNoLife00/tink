@@ -52,8 +52,7 @@ int main(int argc, char** argv) {
     globalObj.SetServer(std::dynamic_pointer_cast<tink::Server>(s));
     handler->Init();
     s->Init(const_cast<std::string &>(globalObj.GetName()), AF_INET,
-            const_cast<std::string &>(globalObj.GetHost()), globalObj.GetPort(),
-            std::dynamic_pointer_cast<tink::MessageHandler>(handler));
+            const_cast<std::string &>(globalObj.GetHost()), globalObj.GetPort());
     s->SetOnConnStop(&DoConnectionLost);
     s->SetOnConnStart(&DoConnectionAdd);
     s->AddRouter(logic::MSG_TALK, chat_api);
