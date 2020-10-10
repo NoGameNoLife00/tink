@@ -5,6 +5,7 @@
 #include <common.h>
 #include <map>
 #include <buffer.h>
+#include <list>
 #include "poller.h"
 #include "socket.h"
 
@@ -18,6 +19,8 @@
 #define SOCKET_WARNING 7
 
 #define UDP_ADDRESS_SIZE 19	// ipv6 128bit + port 16bit + 1 byte type
+#define MAX_INFO 128
+#define MAX_EVENT 64
 
 namespace tink {
 
@@ -25,7 +28,7 @@ namespace tink {
         int id;
         uintptr_t opaque;
         int ud;
-        UBytePtr data;
+        char * data;
     }SocketMessage;
 
     typedef struct RequestStart_ {
@@ -57,7 +60,7 @@ namespace tink {
     typedef struct RequestSend_ {
         int id;
         size_t sz;
-        const void * buffer;
+        char *buffer;
     }RequestSend;
     typedef struct RequestSendUdp_ {
         RequestSend send;
@@ -107,9 +110,14 @@ namespace tink {
             buffer = buf.buffer;
             sz = buf.sz;
         }
+        void Init(const void * object, size_t sz) {
+            buffer.reset(const_cast<void*>(object));
+            this->sz = sz;
+        }
     }SendObject;
 
 
+    typedef std::list<WriteBufferPtr> WriteBufferList;
     typedef std::shared_ptr<SocketMessage> SocketMsgPtr;
     class SocketServer {
         SocketServer();
@@ -118,7 +126,7 @@ namespace tink {
         int Poll_(SocketMessage &result, int &more);
         int Poll();
         void Destroy();
-        void FreeWbList(WbList &list);
+        void FreeWbList(WriteBufferList &list);
 
         SocketPtr GetSocket(int id);
 
@@ -137,13 +145,33 @@ namespace tink {
         int NoDelay(int id);
     private:
         SocketPtr NewSocket_(int id, int fd, int protocol, uintptr_t opaque, bool add);
-        void ForceClose(const SocketPtr& s, SocketMessage &result);
+        void ForceClose(Socket &s, SocketMessage &result);
         int HasCmd();
-        int CtrlCmd(SocketMsgPtr &result);
+        int CtrlCmd(SocketMessage &result);
         int StartSocket(RequestStart *request, SocketMsgPtr result);
         void SendRequest(RequestPackage &request, byte type, int len);
         int ReserveId();
         int OpenRequest(RequestPackage &req, uintptr_t opaque, const string &addr, int port);
+        int StartSocket_(RequestStart *request, SocketMessage &result);
+        int BindSocket_(RequestBind *request, SocketMessage& result);
+        int ListenSocket_(RequestListen *request, SocketMessage& result);
+        int CloseSocket_(RequestClose *request, SocketMessage& result);
+        int OpenSocket(RequestOpen *request, SocketMessage& result);
+        int SendBuffer_(SocketPtr s, SocketMessage& result);
+        int DoSendBuffer_(SocketPtr s, SocketMessage& result);
+        int SendList_(SocketPtr s, WriteBufferList& list, SocketMessage& result);
+        int SendListTCP_(SocketPtr s, WriteBufferList& list, SocketMessage& result);
+        int SendListUDP_(SocketPtr s, WriteBufferList& list, SocketMessage& result);
+        int SendSocket_(RequestSend *request, SocketMessage& result, int priority, const uint8_t *udp_address);
+        int SetUdpAddress_(RequestSetUdp *request, SocketMessage& result);
+        void SetOptSocket_(RequestSetOpt *request);
+        void AddUdpSocket_(RequestUdp *udp);
+        void ClearClosedEvent(SocketMessage &result, int type);
+        int ReportConnect(Socket &s, SocketMessage &result);
+        int ReportAccept(Socket &s, SocketMessage &result);
+        void DecSendingRef(int id);
+
+
 
         volatile uint64_t time_;
         int recvctrl_fd;
@@ -154,9 +182,12 @@ namespace tink {
         int event_n;
         int event_index;
         fd_set rfds;
-
+        char buffer_[MAX_INFO];
+        EventList ev_;
         std::array<SocketPtr, MAX_SOCKET> slot;
     };
+
+
 }
 
 

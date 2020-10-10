@@ -8,7 +8,7 @@
 namespace tink {
     namespace SocketApi {
         int Create(sa_family_t family, bool nonblock = false, bool udp = false);
-        int Connect(int fd, const struct sockaddr* addr);
+        int Connect(int fd, const struct ::sockaddr* addr);
         int Bind(int fd, const struct sockaddr* addr);
         int Listen(int fd, int backlog = SOMAXCONN);
         int Accept(int fd, struct sockaddr_in6* addr);
@@ -19,7 +19,7 @@ namespace tink {
         void ShutdownWrite(int fd);
         int GetSocketError(int fd);
         void ToIpPort(char* buf, size_t size, const struct sockaddr* addr);
-        void ToIp(char* buf, size_t size, const struct sockaddr* addr);
+        void ToIp(char* buf, size_t size, const struct ::sockaddr* addr);
         void FromIpPort(const char* ip, uint16_t port, struct sockaddr_in* addr);
         void FromIpPort(const char* ip, uint16_t port, struct sockaddr_in6* addr);
         const struct sockaddr* SockAddrCast(const struct sockaddr_in* addr);
@@ -29,8 +29,11 @@ namespace tink {
         const struct sockaddr_in6* SockAddrIn6Cast(const struct sockaddr* addr);
         struct sockaddr_in6 GetLocalAddr(int fd);
         struct sockaddr_in6 GetPeerAddr(int fd);
-
         bool IsSelfConnect(int fd);
+        void NonBlocking(int fd);
+
+        void SetKeepAlive(int fd, bool active);
+
         inline uint64_t HostToNetwork64(uint64_t host64)
         {
             return htobe64(host64);

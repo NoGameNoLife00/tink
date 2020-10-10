@@ -68,9 +68,7 @@ namespace tink {
     }
 
     void Socket::SetKeepAlive(bool active) {
-        int optval = active ? 1 : 0;
-        ::setsockopt(sock_fd_, SOL_SOCKET, SO_KEEPALIVE,
-                     &optval, static_cast<socklen_t>(sizeof optval));
+        SocketApi::SetKeepAlive(sock_fd_, active);
     }
 
     int Socket::Init(int id, int fd, int protocol, uintptr_t opaque) {
@@ -82,8 +80,8 @@ namespace tink {
         opaque_ = opaque;
         wb_size_ = 0;
         warn_size_ = 0;
-        assert(high_.empty());
-        assert(low_.empty());
+        assert(high.empty());
+        assert(low.empty());
         dw_buffer_ = nullptr;
         memset(&stat_, 0, sizeof(stat_));
         return 0;
@@ -161,7 +159,7 @@ namespace tink {
         if (type_.compare_exchange_strong(pl, SOCKET_TYPE_RESERVE)) {
             id_ = id;
             protocol_ = PROTOCOL_UNKNOWN;
-            udp_connecting_ = 0;
+            udp_connecting = 0;
             sock_fd_ = -1;
             return true;
         }

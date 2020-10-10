@@ -46,7 +46,7 @@
 namespace tink {
 
     typedef struct WriteBuffer_ {
-        const void * buffer;
+        DataPtr buffer;
         char *ptr;
         size_t sz;
         bool userobj;
@@ -60,8 +60,7 @@ namespace tink {
         uint64_t write;
     }SocketStat;
 
-
-    typedef std::list<WriteBuffer> WbList;
+    typedef std::shared_ptr<WriteBuffer> WriteBufferPtr;
 
     typedef struct TSocketMessage_ {
         int type;
@@ -71,10 +70,12 @@ namespace tink {
     }TSocketMessage;
 
     typedef std::shared_ptr<TSocketMessage> TSocketMsgPtr;
+    typedef std::list<WriteBufferPtr> WriteBufferList;
 
     class Socket : noncopyable {
     public:
         explicit Socket(int fd):sock_fd_(fd) {}
+        explicit Socket():sock_fd_(0) {}
         int Init(int id, int fd, int protocol, uintptr_t opaque);
         void Destroy();
         void Close();
@@ -100,7 +101,7 @@ namespace tink {
         void SetId(int id) { id_ = id; }
 
         bool SendBufferEmpty() {
-            return high_.empty() && low_.empty();
+            return high.empty() && low.empty();
         }
 
         bool NoMoreSendingData() {
@@ -108,7 +109,7 @@ namespace tink {
         }
 
         bool CanDirectWrite(int id) {
-            return id_ == id && NoMoreSendingData() && type_ == SOCKET_TYPE_CONNECTED && udp_connecting_ == 0;
+            return id_ == id && NoMoreSendingData() && type_ == SOCKET_TYPE_CONNECTED && udp_connecting == 0;
         }
 
         uintptr_t GetOpaque() { return opaque_; }
@@ -117,8 +118,8 @@ namespace tink {
         uint8_t GetProtocol() const {return protocol_;}
         void SetProtocol(uint8_t protocol) { protocol_ = protocol;}
 
-        WbList& GetHigh() { return high_; }
-        WbList& GetLow() { return low_; }
+        std::list<WriteBufferPtr>& GetHigh() { return high; }
+        std::list<WriteBufferPtr>& GetLow() { return low; }
 
         DataBufferPtr& GetDWBuffer() { return dw_buffer_; }
 
@@ -140,7 +141,20 @@ namespace tink {
             stat_.wtime = time;
         }
 
+        void StatRead(int n, uint64_t time) {
+            stat_.read += n;
+            stat_.rtime = time;
+        }
+
         bool Reserve(int id);
+
+        int64_t GetWbSize() { return wb_size_; }
+        void SetWbSize(int64_t s) { wb_size_ = s; }
+        void AddWbSize(size_t s) { wb_size_ += s; }
+
+        int64_t GetWarnSize() { return warn_size_; }
+        void SetWarnSize(int64_t s) { warn_size_ = s; }
+        std::atomic_uint16_t udp_connecting;
     private:
         int id_;
         int sock_fd_;
@@ -148,11 +162,11 @@ namespace tink {
         uintptr_t opaque_;
         int protocol_;
         uint64_t wb_size_;
-        WbList high_;
-        WbList low_;
+        WriteBufferList high;
+        WriteBufferList low;
         std::atomic_uint32_t sending_;
         SocketStat stat_;
-        uint16_t udp_connecting_;
+
         int64_t warn_size_;
         union {
             int size;

@@ -6,6 +6,22 @@
 #include <error_code.h>
 #include <spdlog/spdlog.h>
 #include <context_manage.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <scope_guard.h>
+
+// EAGAIN and EWOULDBLOCK may be not the same value.
+#if (EAGAIN != EWOULDBLOCK)
+#define AGAIN_WOULDBLOCK EAGAIN : case EWOULDBLOCK
+#else
+#define AGAIN_WOULDBLOCK EAGAIN
+#endif
+
+
+#define PRIORITY_HIGH 0
+#define PRIORITY_LOW 1
+
+#define WARNING_SIZE (1024*1024)
 
 namespace tink {
     void SocketServer::UpdateTime(uint64_t time) {
@@ -16,13 +32,100 @@ namespace tink {
         for (;;) {
             if (checkctrl) {
                 if (HasCmd()) {
-                    int type = ctrl_cmd(result);
+                    int type = CtrlCmd(result);
                     if (type != -1) {
-                        clear_closed_event(result, type);
+                        ClearClosedEvent(result, type);
                         return type;
                     } else
                         continue;
+                } else {
+                    checkctrl = 0;
                 }
+            }
+            if (event_index == event_n) {
+                event_n = poll_->Wait(ev_);
+                checkctrl = 1;
+                more = 0;
+                event_index = 0;
+                if (event_n <= 0) {
+                    event_n = 0;
+                    if (errno == EINTR) {
+                        continue;
+                    }
+                    return -1;
+                }
+            }
+            Event &e = ev_[event_index++];
+            Socket *s = static_cast<Socket *>(e.s);
+            if (s == nullptr) {
+                continue;
+            }
+            switch (s->GetType()) {
+                case SOCKET_TYPE_CONNECTING:
+                    return ReportConnect(*s, result);
+                case SOCKET_TYPE_LISTEN: {
+                    int ok = ReportAccept(*s, result);
+                    if (ok > 0) {
+                        return SOCKET_ACCEPT;
+                    } if (ok < 0 ) {
+                        return SOCKET_ERR;
+                    }
+                    // when ok == 0, retry
+                    break;
+                }
+                case SOCKET_TYPE_INVALID:
+                    fprintf(stderr, "socket server: invalid socket\n");
+                break;
+                default:
+                    if (e.read) {
+                        int type;
+                        if (s->GetProtocol() == PROTOCOL_TCP) {
+                            type = forward_message_tcp(*s, result);
+                        } else {
+                            type = forward_message_udp(ss, s, &l, result);
+                            if (type == SOCKET_UDP) {
+                                // try read again
+                                --ss->event_index;
+                                return SOCKET_UDP;
+                            }
+                        }
+                        if (e->write && type != SOCKET_CLOSE && type != SOCKET_ERR) {
+                            // Try to dispatch write message next step if write flag set.
+                            e->read = false;
+                            --ss->event_index;
+                        }
+                        if (type == -1)
+                            break;
+                        return type;
+                    }
+                if (e->write) {
+                    int type = send_buffer(ss, s, &l, result);
+                    if (type == -1)
+                        break;
+                    return type;
+                }
+                if (e->error) {
+                    // close when error
+                    int error;
+                    socklen_t len = sizeof(error);
+                    int code = getsockopt(s->fd, SOL_SOCKET, SO_ERROR, &error, &len);
+                    const char * err = NULL;
+                    if (code < 0) {
+                        err = strerror(errno);
+                    } else if (error != 0) {
+                        err = strerror(error);
+                    } else {
+                        err = "Unknown error";
+                    }
+                    force_close(ss, s, &l, result);
+                    result->data = (char *)err;
+                    return SOCKET_ERR;
+                }
+                if(e->eof) {
+                    force_close(ss, s, &l, result);
+                    return SOCKET_CLOSE;
+                }
+                break;
             }
         }
 
@@ -58,7 +161,7 @@ namespace tink {
         }
     }
 
-    int SocketServer::CtrlCmd(SocketMsgPtr &result) {
+    int SocketServer::CtrlCmd(SocketMessage &result) {
         int fd = recvctrl_fd;
         // the length of message is one byte, so 256+8 buffer size is enough.
         uint8_t buffer[256];
@@ -70,43 +173,43 @@ namespace tink {
         // ctrl command only exist in local fd, so don't worry about endian.
         switch (type) {
             case 'S':
-                return start_socket((struct request_start *)buffer, result);
+                return StartSocket_((RequestStart*)(buffer), result);
             case 'B':
-                return bind_socket((struct request_bind *)buffer, result);
+                return BindSocket_((RequestBind *)buffer, result);
             case 'L':
-                return listen_socket((struct request_listen *)buffer, result);
+                return ListenSocket_((RequestListen *)buffer, result);
             case 'K':
-                return close_socket((struct request_close *)buffer, result);
+                return CloseSocket_((RequestClose *)buffer, result);
             case 'O':
-                return open_socket((struct request_open *)buffer, result);
+                return OpenSocket((RequestOpen *)buffer, result);
             case 'X':
-                result->opaque = 0;
-                result->id = 0;
-                result->ud = 0;
-                result->data = NULL;
+                result.opaque = 0;
+                result.id = 0;
+                result.ud = 0;
+                result.data = nullptr;
                 return SOCKET_EXIT;
             case 'D':
             case 'P': {
                 int priority = (type == 'D') ? PRIORITY_HIGH : PRIORITY_LOW;
-                struct request_send * request = (struct request_send *) buffer;
-                int ret = send_socket(request, result, priority, NULL);
-                dec_sending_ref(request->id);
+                RequestSend * request = (RequestSend*) buffer;
+                int ret = SendSocket_(request, result, priority, nullptr);
+                DecSendingRef(request->id);
                 return ret;
             }
             case 'A': {
-                struct request_send_udp * rsu = (struct request_send_udp *)buffer;
-                return send_socket(&rsu->send, result, PRIORITY_HIGH, rsu->address);
+                RequestSendUdp * rsu = (RequestSendUdp *)buffer;
+                return SendSocket_(&rsu->send, result, PRIORITY_HIGH, rsu->address);
             }
             case 'C':
-                return set_udp_address((struct request_setudp *)buffer, result);
+                return SetUdpAddress_((RequestSetUdp *) buffer, result);
             case 'T':
-                setopt_socket((struct request_setopt *)buffer);
+                SetOptSocket_((RequestSetOpt *)buffer);
                 return -1;
             case 'U':
-                add_udp_socket((struct request_udp *)buffer);
+                AddUdpSocket_((RequestUdp *) buffer);
                 return -1;
             default:
-                fprintf(stderr, "socket-server: Unknown ctrl %c.\n",type);
+                fprintf(stderr, "socket server: Unknown ctrl %c.\n",type);
                 return -1;
         };
 
@@ -175,7 +278,7 @@ namespace tink {
             }
         }
         s->Init(id, fd, protocol, opaque);
-        return s;;
+        return s;
     }
 
     void SocketServer::Destroy() {
@@ -190,34 +293,61 @@ namespace tink {
         poll_.reset();
     }
 
-    void SocketServer::FreeWbList(WbList &list) {
+    void SocketServer::FreeWbList(WriteBufferList &list) {
 
     }
 
-    void SocketServer::ForceClose(const SocketPtr& s, SocketMessage &result) {
-        result.id = s->GetId();
+    static WriteBufferPtr AppendSendBuffer_(WriteBufferList &s, RequestSend *request) {
+        WriteBufferPtr buf = std::make_shared<WriteBuffer>();
+        buf->ptr = static_cast<char*>(request->buffer);
+        buf->sz = request->sz;
+        buf->buffer.reset(request->buffer);
+        s.emplace_back(buf);
+        return buf;
+    }
+
+    static void AppendSendBuffer(SocketPtr s, RequestSend *request) {
+        WriteBufferPtr buf = AppendSendBuffer_(s->GetHigh(), request);
+        s->AddWbSize(buf->sz);
+    }
+
+    static void AppendSendBufferLow(SocketPtr s, RequestSend *request) {
+        WriteBufferPtr buf = AppendSendBuffer_(s->GetLow(), request);
+        s->AddWbSize(buf->sz);
+    }
+
+    static void AppendSendBufferUdp(SocketPtr s, int priority, RequestSend *request, const uint8_t udp_address[UDP_ADDRESS_SIZE]) {
+        auto&& wl = (priority == PRIORITY_HIGH) ? &s->GetHigh() : &s->GetLow();
+        WriteBufferPtr buf = AppendSendBuffer_(*wl, request);
+        memcpy(buf->upd_address, udp_address, UDP_ADDRESS_SIZE);
+        s->AddWbSize(buf->sz);
+    }
+
+
+    void SocketServer::ForceClose(Socket &s, SocketMessage &result) {
+        result.id = s.GetId();
         result.ud = 0;
         result.data = nullptr;
-        result.opaque = s->GetOpaque();
-        int type = s->GetType();
+        result.opaque = s.GetOpaque();
+        int type = s.GetType();
         if (type == SOCKET_TYPE_INVALID) {
             return;
         }
         assert(type != SOCKET_TYPE_RESERVE);
-        FreeWbList(s->GetHigh());
-        FreeWbList(s->GetLow());
+        FreeWbList(s.GetHigh());
+        FreeWbList(s.GetLow());
         if (type != SOCKET_TYPE_PACCEPT && type != SOCKET_TYPE_PLISTEN) {
-            poll_->Del(s->GetSockFd());
+            poll_->Del(s.GetSockFd());
         }
-        s->mutex.lock();
+        s.mutex.lock();
         if (type != SOCKET_TYPE_BIND) {
-            if (close(s->GetSockFd()) < 0) {
+            if (close(s.GetSockFd()) < 0) {
                 perror("close socket:");
             }
         }
-        s->SetType(SOCKET_TYPE_INVALID);
-        s->GetDWBuffer().release();
-        s->mutex.unlock();
+        s.SetType(SOCKET_TYPE_INVALID);
+        s.GetDWBuffer().reset();
+        s.mutex.unlock();
     }
 
     void SocketServer::Exit() {
@@ -308,7 +438,7 @@ namespace tink {
         s->DecSendingRef(id);
         RequestPackage request;
         request.u.send.id = id;
-        request.u.send.buffer = buffer.buffer.get();
+        request.u.send.buffer = static_cast<char *>(buffer.buffer.get());
         request.u.send.sz = buffer.sz;
         SendRequest(request, 'D', sizeof(request.u.send));
         return E_OK;
@@ -328,7 +458,7 @@ namespace tink {
         s->DecSendingRef(id);
         RequestPackage request;
         request.u.send.id = id;
-        request.u.send.buffer = buffer.buffer.get();
+        request.u.send.buffer = static_cast<char *>(buffer.buffer.get());
         request.u.send.sz = buffer.sz;
         SendRequest(request, 'P', sizeof(request.u.send));
         return E_OK;
@@ -456,12 +586,12 @@ namespace tink {
         // todo 这里逻辑不对
         size_t sz = sizeof(*sm);
         if (result.data) {
-            sz += strlen(result.data.get());
+            sz += strlen(result.data);
         }
         sm->type = type;
         sm->id = result.id;
         sm->ud = result.ud;
-        sm->buffer.reset(result.data.release());
+        sm->buffer.reset(result.data);
 
         Message message;
         message.source = 0;
@@ -502,7 +632,479 @@ namespace tink {
                 spdlog::error("Unknown socket message type {}.",type);
                 return -1;
         }
+        if (more) {
+            return -1;
+        }
+        return 1;
+    }
+
+    int SocketServer::StartSocket_(RequestStart *request, SocketMessage &result) {
+        int id = request->id;
+        result.id = id;
+        result.opaque = request->opaque;
+        result.ud = 0;
+        result.data = nullptr;
+        SocketPtr s = GetSocket(id);
+        if (s->GetType() == SOCKET_TYPE_INVALID || s->GetId() !=id) {
+            result.data = "invalid socket";
+            return SOCKET_ERR;
+        }
+        if (s->GetType() == SOCKET_TYPE_PACCEPT || s->GetType() == SOCKET_TYPE_PLISTEN) {
+            if (poll_->Add(s->GetSockFd(), s.get())) {
+                ForceClose(*s, result);
+                result.data = strerror(errno);
+                return SOCKET_ERR;
+            }
+            s->SetType((s->GetType() == SOCKET_TYPE_PACCEPT) ? SOCKET_TYPE_CONNECTED : SOCKET_TYPE_LISTEN);
+            s->SetOpaque(request->opaque);
+            result.data = "start";
+            return SOCKET_OPEN;
+        } else if (s->GetType() == SOCKET_TYPE_CONNECTED) {
+            s->SetOpaque(request->opaque);
+            result.data = "transfer";
+            return SOCKET_OPEN;
+        }
+        return E_FAILED;
+    }
+
+    int SocketServer::BindSocket_(RequestBind *request, SocketMessage &result) {
+        int id = request->id;
+        result.id = id;
+        result.opaque = request->opaque;
+        result.ud = 0;
+        SocketPtr s = NewSocket_(id, request->fd, PROTOCOL_TCP, request->opaque, true);
+        if (!s) {
+            result.data = "reach socket number limit";
+            return SOCKET_ERR;
+        }
+        SocketApi::NonBlocking(request->fd);
+        s->SetType(SOCKET_TYPE_BIND);
+        result.data = "binding";
+        return SOCKET_OPEN;
+    }
+
+    int SocketServer::ListenSocket_(RequestListen *request, SocketMessage &result) {
+        int id = request->id;
+        int listen_fd = request->fd;
+        SocketPtr s = NewSocket_(id, listen_fd, PROTOCOL_TCP, request->opaque, false);
+        if (!s) {
+            SocketApi::Close(listen_fd);
+            result.opaque = request->opaque;
+            result.id = id;
+            result.ud = 0;
+            result.data = "reach socket number limit";
+            slot[HASH_ID(id)]->SetType(SOCKET_TYPE_INVALID);
+            return SOCKET_ERR;
+        }
+        s->SetType(SOCKET_TYPE_PLISTEN);
+        return E_FAILED;
+    }
+
+    int SocketServer::CloseSocket_(RequestClose *request, SocketMessage &result) {
+        int id = request->id;
+        SocketPtr s = GetSocket(id);
+        if (s->GetType() == SOCKET_TYPE_INVALID || s->GetId() != id) {
+            result.id = id;
+            result.opaque = request->opaque;
+            result.ud = 0;
+            result.data = nullptr;
+            return SOCKET_CLOSE;
+        }
+        if (!s->NoMoreSendingData()) {
+            int type;
+            if (type != -1 && type != SOCKET_WARNING) {
+                return type;
+            }
+        }
+        if (request->shutdown || s->NoMoreSendingData()) {
+            ForceClose(*s, result);
+            result.id = id;
+            result.opaque = request->opaque;
+            return SOCKET_CLOSE;
+        }
+        s->SetType(SOCKET_TYPE_HALFCLOSE);
+        return E_FAILED;
+    }
+
+    int SocketServer::SendBuffer_(SocketPtr s, SocketMessage &result) {
+        if (s->mutex.try_lock()) {
+            return E_FAILED;
+        }
+        if (s->GetDWBuffer()) {
+            auto& dw_buffer = s->GetDWBuffer();
+            WriteBufferPtr buf = std::make_shared<WriteBuffer>();
+            buf->userobj = false;
+            buf->ptr = (reinterpret_cast<byte *>(dw_buffer->GetData().get()) + dw_buffer->GetOffset());
+            buf->buffer = dw_buffer->GetData();
+            buf->sz = dw_buffer->GetSize();
+            s->AddWbSize(buf->sz);
+            s->GetHigh().emplace_back(buf);
+            s->GetDWBuffer().reset();
+        }
+
+    }
+
+    static inline int
+    ListUncomplete(WriteBufferList &s) {
+        if (s.empty())
+            return 0;
+        ;
+        return (void *)(*s.begin())->ptr != (*s.begin())->buffer.get();
+    }
+    int SocketServer::DoSendBuffer_(SocketPtr s, SocketMessage &result) {
+        assert(!ListUncomplete(s->GetLow()));
+
         return 0;
+    }
+
+    int SocketServer::SendList_(SocketPtr s, WriteBufferList &list, SocketMessage &result) {
+        if (s->GetProtocol() == PROTOCOL_TCP) {
+            return SendListTCP_(s, list, result);
+        } else {
+            return SendListUDP_(s, list, result);
+        }
+    }
+
+    int SocketServer::SendListTCP_(SocketPtr s, WriteBufferList &list, SocketMessage &result) {
+        for (auto& tmp : list) {
+            for (;;) {
+                ssize_t sz = SocketApi::Write(s->GetSockFd(), tmp->ptr, tmp->sz);
+                if (sz < 0) {
+                    switch (errno) {
+                        case EINTR:
+                            continue;
+                        case AGAIN_WOULDBLOCK:
+                            return E_FAILED;
+                    }
+                    ForceClose(*s, result);
+                    return SOCKET_CLOSE;
+                }
+                s->StatWrite(sz, time_);
+                s->SetWbSize(s->GetWbSize()-sz);
+                if (sz != tmp->sz) {
+                    tmp->ptr += sz;
+                    tmp->sz -= sz;
+                    return E_FAILED;
+                }
+                break;
+            }
+            tmp->buffer.reset();
+        }
+        list.clear();
+        return E_FAILED;
+    }
+
+    static void DropUdp(SocketPtr &s, WriteBufferList &list, WriteBufferPtr& tmp) {
+        s->SetWbSize(s->GetWbSize()-tmp->sz);
+        list.erase(list.begin());
+        tmp->buffer.reset();
+    }
+
+    int SocketServer::SendListUDP_(SocketPtr s, WriteBufferList &list, SocketMessage &result) {
+        for (auto& tmp : list) {
+            SockAddress sa;
+            socklen_t sa_sz =  s->UdpAddress(tmp->upd_address, sa);
+            if (sa_sz == 0) {
+                fprintf(stderr, "socket server : udp (%d) type mismatch.\n", s->GetId());
+                DropUdp(s, list, tmp);
+                return E_FAILED;
+            }
+            int err = SocketApi::SendTo(s->GetSockFd(), tmp->ptr, tmp->sz, 0, sa.GetSockAddr(), sa_sz);
+            if (err < 0) {
+                switch(errno) {
+                    case EINTR:
+                    case AGAIN_WOULDBLOCK:
+                        return E_FAILED;
+                }
+                fprintf(stderr, "socket server : udp (%d) sendto error %s.\n",s->GetSockFd(), strerror(errno));
+                DropUdp(s, list, tmp);
+                return -1;
+            }
+            s->StatWrite(tmp->sz, time_);
+            s->SetWbSize(s->GetWbSize()-tmp->sz);
+            tmp->buffer.reset();
+        }
+        list.clear();
+        return E_FAILED;
+    }
+
+    int SocketServer::OpenSocket(RequestOpen *request, SocketMessage &result) {
+        int id = request->id;
+        SocketPtr ns;
+        result.opaque = request->opaque;
+        result.id = id;
+        result.ud = 0;
+        result.data = nullptr;
+        int status, sock;
+        struct addrinfo ai_hints;
+        struct addrinfo *ai_list = NULL;
+        struct addrinfo *ai_ptr = NULL;
+        char port[16];
+        sprintf(port, "%d", request->port);
+        memset(&ai_hints, 0, sizeof( ai_hints ) );
+        ai_hints.ai_family = AF_UNSPEC;
+        ai_hints.ai_socktype = SOCK_STREAM;
+        ai_hints.ai_protocol = IPPROTO_TCP;
+        status = getaddrinfo( request->host, port, &ai_hints, &ai_list );
+        ScopeGuard sg([&ai_list] {
+            freeaddrinfo( ai_list );
+        });
+        auto _failed = [this, &id] {
+            GetSocket(id)->SetType(SOCKET_TYPE_INVALID);
+            return SOCKET_ERR;
+        };
+        if ( status != 0 ) {
+            result.data = const_cast<char *>(gai_strerror(status));
+            return _failed();
+        }
+        sock = -1;
+        for (ai_ptr = ai_list; ai_ptr != NULL; ai_ptr = ai_ptr->ai_next ) {
+            sock = SocketApi::Create( ai_ptr->ai_family, true, false );
+            if ( sock < 0 ) {
+                continue;
+            }
+            SocketApi::SetKeepAlive(sock, true);
+            status = SocketApi::Connect(sock, ai_ptr->ai_addr);
+            if ( status != 0 && errno != EINPROGRESS) {
+                SocketApi::Close(sock);
+                sock = -1;
+                continue;
+            }
+            break;
+        }
+        if (sock < 0) {
+            result.data = strerror(errno);
+            return _failed();
+        }
+        ns = NewSocket_(id, sock, PROTOCOL_TCP, request->opaque, true);
+        if (!ns) {
+            SocketApi::Close(sock);
+            result.data = "reach socket number limit";
+            return _failed();
+        }
+
+        if (status == 0) {
+            ns->SetType(SOCKET_TYPE_CONNECTED);
+            struct ::sockaddr * addr = ai_ptr->ai_addr;
+            SocketApi::ToIp(buffer_, sizeof(buffer_), ai_ptr->ai_addr);
+            result.data = buffer_;
+
+        } else {
+            ns->SetType(SOCKET_TYPE_CONNECTING);
+            poll_->Write(ns->GetSockFd(), ns.get(), true);
+        }
+        return E_FAILED;
+    }
+
+    int SocketServer::SendSocket_(RequestSend *request, SocketMessage &result, int priority, const uint8_t *udp_address) {
+        int id = request->id;
+        SocketPtr s = GetSocket(id);
+        int type = s->GetType();
+        SendObject so;
+        so.Init(request->buffer, request->sz);
+        if (type == SOCKET_TYPE_INVALID || s->GetId() != id
+            || type == SOCKET_TYPE_HALFCLOSE
+            || type == SOCKET_TYPE_PACCEPT) {
+            return -1;
+        }
+        if (type == SOCKET_TYPE_PLISTEN || type == SOCKET_TYPE_LISTEN) {
+            fprintf(stderr, "socket server: write to listen fd %d.\n", id);
+            return -1;
+        }
+        if (s->SendBufferEmpty() && type == SOCKET_TYPE_CONNECTED) {
+            if (s->GetProtocol() == PROTOCOL_TCP) {
+                AppendSendBuffer(s, request);
+            } else {
+                if (udp_address == nullptr) {
+                    udp_address = s->GetUdpAddress();
+                }
+                SockAddress sa;
+                socklen_t sa_sz = s->UdpAddress(udp_address, sa);
+                if (sa_sz == 0) {
+                    fprintf(stderr, "socket-server: udp socket (%d) type mistach.\n", id);
+                    return -1;
+                }
+                int n = SocketApi::SendTo(s->GetSockFd(), so.buffer.get(), so.sz, 0, sa.GetSockAddr(), sa_sz);
+                if (n != so.sz) {
+                    AppendSendBufferUdp(s, priority, request, udp_address);
+                } else {
+                    s->StatWrite(n, time_);
+                    return -1;
+                }
+            }
+            poll_->Write(s->GetSockFd(), s.get(), true);
+        } else {
+            if (s->GetProtocol() == PROTOCOL_TCP) {
+                if (priority == PRIORITY_LOW) {
+                    AppendSendBufferLow(s, request);
+                } else {
+                    AppendSendBuffer(s, request);
+                }
+            } else {
+                if (udp_address == nullptr) {
+                    udp_address == s->GetUdpAddress();
+                }
+                AppendSendBufferUdp(s, priority, request, udp_address);
+            }
+        }
+        int warn_size = s->GetWarnSize();
+        int wb_size = s->GetWbSize();
+        if (wb_size >= WARNING_SIZE && wb_size >= warn_size) {
+            s->SetWarnSize(warn_size == 0 ? WARNING_SIZE * 2 : warn_size * 2);
+            result.opaque = s->GetOpaque();
+            result.id = s->GetId();
+            result.ud = wb_size % 1024 == 0 ? wb_size/1024 : wb_size/1024 + 1;
+            result.data = nullptr;
+            return SOCKET_WARNING;
+        }
+
+        return -1;
+    }
+
+    void SocketServer::DecSendingRef(int id) {
+        SocketPtr s = GetSocket(id);
+        s->DecSendingRef(id);
+    }
+
+    int SocketServer::SetUdpAddress_(RequestSetUdp *request, SocketMessage &result) {
+        int id = request->id;
+        SocketPtr s = GetSocket(id);
+        if (s->GetType() == SOCKET_TYPE_INVALID || s->GetId() !=id) {
+            return -1;
+        }
+        int type = request->address[0];
+        if (type != s->GetProtocol()) {
+            // protocol mismatch
+            result.opaque = s->GetOpaque();
+            result.id = s->GetId();
+            result.ud = 0;
+            result.data = "protocol mismatch";
+            return SOCKET_ERR;
+        }
+        if (type == PROTOCOL_UDP) {
+            memcpy((void *) s->GetUdpAddress(), request->address, 1 + 2 + 4);	// 1 type, 2 port, 4 ipv4
+        } else {
+            memcpy((void *) s->GetUdpAddress(), request->address, 1+2+16);	// 1 type, 2 port, 16 ipv6
+        }
+        --s->udp_connecting;
+        return -1;
+    }
+
+    void SocketServer::SetOptSocket_(RequestSetOpt *request) {
+        int id = request->id;
+        SocketPtr s = GetSocket(id);
+        if (s->GetType() == SOCKET_TYPE_INVALID || s->GetId() !=id) {
+            return;
+        }
+        int v = request->value;
+        setsockopt(s->GetSockFd(), IPPROTO_TCP, request->what, &v, sizeof(v));
+    }
+
+    void SocketServer::AddUdpSocket_(RequestUdp *udp) {
+        int id = udp->id;
+        int protocol;
+        if (udp->family == AF_INET6) {
+            protocol = PROTOCOL_UDPv6;
+        } else {
+            protocol = PROTOCOL_UDP;
+        }
+        SocketPtr ns = NewSocket_(id, udp->fd, protocol, udp->opaque, true);
+        if (!ns) {
+            close(udp->fd);
+            GetSocket(id)->SetType(SOCKET_TYPE_INVALID);
+            return;
+        }
+        ns->SetType(SOCKET_TYPE_CONNECTED);
+        memset((void *) ns->GetUdpAddress(), 0, UDP_ADDRESS_SIZE);
+    }
+
+    void SocketServer::ClearClosedEvent(SocketMessage &result, int type) {
+        if (type == SOCKET_CLOSE || type == SOCKET_ERR) {
+            int id = result.id;
+            int i;
+            for (i=event_index; i<event_n; i++) {
+                Event &e = ev_[i];
+                Socket *s = static_cast<Socket *>(e.s);
+                if (s) {
+                    if (s->GetType() == SOCKET_TYPE_INVALID && s->GetId() == id) {
+                        e.s = nullptr;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    int SocketServer::ReportConnect(Socket &s, SocketMessage &result) {
+        int error;
+        socklen_t len = sizeof(error);
+        int code = getsockopt(s.GetSockFd(), SOL_SOCKET, SO_ERROR, &error, &len);
+        if (code < 0 || error) {
+            ForceClose(s, result);
+            if (code >= 0)
+                result.data = strerror(error);
+            else
+                result.data = strerror(errno);
+            return SOCKET_ERR;
+        } else {
+            s.SetType(SOCKET_TYPE_CONNECTED);
+            result.opaque = s.GetOpaque();
+            result.id = s.GetId();
+            result.ud = 0;
+            if (s.NoMoreSendingData()) {
+                poll_->Write(s.GetSockFd(), &s, false);
+            }
+
+            sockaddr_in6 u = SocketApi::GetPeerAddr(s.GetSockFd());
+            SocketApi::ToIp(buffer_, sizeof(buffer_), static_cast<sockaddr*>((void *)&u.sin6_addr));
+            result.data = buffer_;
+            return SOCKET_OPEN;
+        }
+    }
+
+    static int GetName(SockAddress &sa, char *buffer, size_t sz) {
+        string name = sa.ToIpPort();
+        strcpy(buffer, name.c_str());
+        return 1;
+    }
+
+    // return 0 when failed, or -1 when file limit
+    int SocketServer::ReportAccept(Socket &s, SocketMessage &result) {
+        SockAddress u;
+        int client_fd = s.Accept(u);
+        if (client_fd < 0) {
+            if (errno == EMFILE || errno == ENFILE) {
+                result.opaque = s.GetOpaque();
+                result.id = s.GetId();
+                result.ud = 0;
+                result.data = strerror(errno);
+                return -1;
+            } else {
+                return 0;
+            }
+        }
+        int id = ReserveId();
+        if (id < 0) {
+            SocketApi::Close(client_fd);
+            return 0;
+        }
+        SocketApi::NonBlocking(client_fd);
+        SocketPtr ns = NewSocket_(id, client_fd, PROTOCOL_TCP, s.GetOpaque(), false);
+        if (!ns) {
+            SocketApi::Close(client_fd);
+        }
+        ns->SetKeepAlive(true);
+
+        s.StatRead(1, time_);
+        ns->SetType(SOCKET_TYPE_PACCEPT);
+        result.opaque = s.GetOpaque();
+        result.id = s.GetId();
+        result.ud = id;
+        result.data = nullptr;
+
+        GetName(u, buffer_, sizeof(buffer_));
+        result.data = buffer_;
+        return 1;
     }
 
 }

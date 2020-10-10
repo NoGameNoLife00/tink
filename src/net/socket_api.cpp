@@ -6,7 +6,7 @@
 #include <socket_api.h>
 
 namespace tink {
-    int SocketApi::Connect(int fd, const struct sockaddr *addr) {
+    int SocketApi::Connect(int fd, const struct ::sockaddr *addr) {
         return ::connect(fd, addr, static_cast<socklen_t>(sizeof(struct sockaddr_in6)));
     }
 
@@ -60,7 +60,7 @@ namespace tink {
         snprintf(buf+end, size-end, ":%u", port);
     }
 
-    void SocketApi::ToIp(char *buf, size_t size, const struct sockaddr *addr) {
+    void SocketApi::ToIp(char *buf, size_t size, const struct ::sockaddr *addr) {
         if (addr->sa_family == AF_INET)
         {
             assert(size >= INET_ADDRSTRLEN);
@@ -210,20 +210,36 @@ namespace tink {
     int SocketApi::Create(sa_family_t family, bool nonblock, bool udp) {
         int sock_fd = 0;
         int sock_type = udp ? SOCK_DGRAM : SOCK_STREAM;
+        int sock_protocol = udp ? IPPROTO_UDP : IPPROTO_TCP;
         if (nonblock) {
-            sock_fd = ::socket(family, sock_type | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
+            sock_fd = ::socket(family, sock_type | SOCK_NONBLOCK | SOCK_CLOEXEC, sock_protocol);
             if (sock_fd < 0)
             {
                 spdlog::critical("sockets.Create {}:{}",strerror(errno), errno);
             }
         } else {
-            sock_fd = ::socket(family, sock_type, 0);
+            sock_fd = ::socket(family, sock_type, sock_protocol);
             if (sock_fd < 0)
             {
                 spdlog::critical("sockets.create {}:{}", strerror(errno), errno);
             }
         }
         return sock_fd;
+    }
+
+    void SocketApi::NonBlocking(int fd) {
+        int flag = fcntl(fd, F_GETFL, 0);
+        if ( -1 == flag ) {
+            return;
+        }
+
+        fcntl(fd, F_SETFL, flag | O_NONBLOCK);
+    }
+
+    void SocketApi::SetKeepAlive(int fd, bool active) {
+        int optval = active ? 1 : 0;
+        ::setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE,
+                     &optval, static_cast<socklen_t>(sizeof optval));
     }
 
 

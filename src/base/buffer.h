@@ -55,6 +55,8 @@ namespace tink {
     public:
         explicit DataBuffer(DataPtr &buff, size_t sz = 0, int offset = 0) :
                 buffer_(buff), size_(sz), offset_(offset) {}
+        explicit DataBuffer(size_t sz) : buffer_(new byte[sz]), size_(sz), offset_(0) {
+        }
         DataPtr& GetData() {
             return buffer_;
         }
