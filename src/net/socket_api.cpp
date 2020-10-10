@@ -242,5 +242,9 @@ namespace tink {
                      &optval, static_cast<socklen_t>(sizeof optval));
     }
 
+    int SocketApi::RecvFrom(int fd, void *buffer, size_t sz, int flags, struct sockaddr *addr, socklen_t *addr_len) {
+        return ::recvfrom(fd, buffer, sz, flags, addr, addr_len);
+    }
+
 
 }

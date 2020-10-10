@@ -109,4 +109,21 @@ namespace tink {
         }
     }
 
+    int SockAddress::GenUpdAddress(int protocol, uint8_t *udp_address) {
+        int addrsz = 1;
+        udp_address[0] = (uint8_t)protocol;
+        if (protocol == PROTOCOL_UDP) {
+            memcpy(udp_address+addrsz, &addr_.sin_port, sizeof(addr_.sin_port));
+            addrsz += sizeof(addr_.sin_port);
+            memcpy(udp_address+addrsz, &addr_.sin_addr, sizeof(addr_.sin_addr));
+            addrsz += sizeof(addr_.sin_addr);
+        } else {
+            memcpy(udp_address+addrsz, &addr6_.sin6_port, sizeof(addr6_.sin6_port));
+            addrsz += sizeof(addr6_.sin6_port);
+            memcpy(udp_address+addrsz, &addr6_.sin6_addr, sizeof(addr6_.sin6_addr));
+            addrsz += sizeof(addr6_.sin6_addr);
+        }
+        return addrsz;
+    }
+
 }

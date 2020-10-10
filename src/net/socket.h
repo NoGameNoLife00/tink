@@ -12,6 +12,7 @@
 #include <copyable.h>
 #include <sock_address.h>
 #include <shared_mutex>
+#include <buffer.h>
 
 #define PROTOCOL_TCP 0
 #define PROTOCOL_UDP 1
@@ -135,6 +136,10 @@ namespace tink {
         mutable std::recursive_mutex mutex;
 
         const uint8_t * GetUdpAddress() { return p_.udp_address; }
+
+        int GetReadSize() { return p_.size; }
+
+        void SetReadSize(int sz) { p_.size = sz; }
 
         void StatWrite(int n, uint64_t time) {
             stat_.write += n;

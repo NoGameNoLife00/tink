@@ -34,7 +34,7 @@ namespace tink {
                 if (HasCmd()) {
                     int type = CtrlCmd(result);
                     if (type != -1) {
-                        ClearClosedEvent(result, type);
+                        ClearClosedEvent_(result, type);
                         return type;
                     } else
                         continue;
@@ -62,9 +62,9 @@ namespace tink {
             }
             switch (s->GetType()) {
                 case SOCKET_TYPE_CONNECTING:
-                    return ReportConnect(*s, result);
+                    return ReportConnect_(*s, result);
                 case SOCKET_TYPE_LISTEN: {
-                    int ok = ReportAccept(*s, result);
+                    int ok = ReportAccept_(*s, result);
                     if (ok > 0) {
                         return SOCKET_ACCEPT;
                     } if (ok < 0 ) {
@@ -80,55 +80,46 @@ namespace tink {
                     if (e.read) {
                         int type;
                         if (s->GetProtocol() == PROTOCOL_TCP) {
-                            type = forward_message_tcp(*s, result);
+                            type = ForwardMessageTcp_(*s, result);
                         } else {
-                            type = forward_message_udp(ss, s, &l, result);
+                            type = ForwardMessageUpd_(*s, result);
                             if (type == SOCKET_UDP) {
                                 // try read again
-                                --ss->event_index;
+                                --event_index;
                                 return SOCKET_UDP;
                             }
                         }
-                        if (e->write && type != SOCKET_CLOSE && type != SOCKET_ERR) {
+                        if (e.write && type != SOCKET_CLOSE && type != SOCKET_ERR) {
                             // Try to dispatch write message next step if write flag set.
-                            e->read = false;
-                            --ss->event_index;
+                            e.read = false;
+                            --event_index;
                         }
                         if (type == -1)
                             break;
                         return type;
                     }
-                if (e->write) {
-                    int type = send_buffer(ss, s, &l, result);
+                if (e.write) {
+                    int type = SendBuffer_(*s, result);
                     if (type == -1)
                         break;
                     return type;
                 }
-                if (e->error) {
+                if (e.error) {
                     // close when error
-                    int error;
-                    socklen_t len = sizeof(error);
-                    int code = getsockopt(s->fd, SOL_SOCKET, SO_ERROR, &error, &len);
+                    int code = SocketApi::GetSocketError(s->GetSockFd());
                     const char * err = NULL;
-                    if (code < 0) {
-                        err = strerror(errno);
-                    } else if (error != 0) {
-                        err = strerror(error);
-                    } else {
-                        err = "Unknown error";
-                    }
-                    force_close(ss, s, &l, result);
-                    result->data = (char *)err;
+                    err = strerror(code);
+                    ForceClose(*s, result);
+                    result.data = (char *)err;
                     return SOCKET_ERR;
                 }
-                if(e->eof) {
-                    force_close(ss, s, &l, result);
+                if(e.eof) {
+                    ForceClose(*s, result);
                     return SOCKET_CLOSE;
                 }
                 break;
             }
         }
-
         return 0;
     }
 
@@ -726,20 +717,20 @@ namespace tink {
         return E_FAILED;
     }
 
-    int SocketServer::SendBuffer_(SocketPtr s, SocketMessage &result) {
-        if (s->mutex.try_lock()) {
+    int SocketServer::SendBuffer_(Socket &s, SocketMessage &result) {
+        if (s.mutex.try_lock()) {
             return E_FAILED;
         }
-        if (s->GetDWBuffer()) {
-            auto& dw_buffer = s->GetDWBuffer();
+        if (s.GetDWBuffer()) {
+            auto& dw_buffer = s.GetDWBuffer();
             WriteBufferPtr buf = std::make_shared<WriteBuffer>();
             buf->userobj = false;
             buf->ptr = (reinterpret_cast<byte *>(dw_buffer->GetData().get()) + dw_buffer->GetOffset());
             buf->buffer = dw_buffer->GetData();
             buf->sz = dw_buffer->GetSize();
-            s->AddWbSize(buf->sz);
-            s->GetHigh().emplace_back(buf);
-            s->GetDWBuffer().reset();
+            s.AddWbSize(buf->sz);
+            s.GetHigh().emplace_back(buf);
+            s.GetDWBuffer().reset();
         }
 
     }
@@ -1018,7 +1009,7 @@ namespace tink {
         memset((void *) ns->GetUdpAddress(), 0, UDP_ADDRESS_SIZE);
     }
 
-    void SocketServer::ClearClosedEvent(SocketMessage &result, int type) {
+    void SocketServer::ClearClosedEvent_(SocketMessage &result, int type) {
         if (type == SOCKET_CLOSE || type == SOCKET_ERR) {
             int id = result.id;
             int i;
@@ -1035,7 +1026,7 @@ namespace tink {
         }
     }
 
-    int SocketServer::ReportConnect(Socket &s, SocketMessage &result) {
+    int SocketServer::ReportConnect_(Socket &s, SocketMessage &result) {
         int error;
         socklen_t len = sizeof(error);
         int code = getsockopt(s.GetSockFd(), SOL_SOCKET, SO_ERROR, &error, &len);
@@ -1069,7 +1060,7 @@ namespace tink {
     }
 
     // return 0 when failed, or -1 when file limit
-    int SocketServer::ReportAccept(Socket &s, SocketMessage &result) {
+    int SocketServer::ReportAccept_(Socket &s, SocketMessage &result) {
         SockAddress u;
         int client_fd = s.Accept(u);
         if (client_fd < 0) {
@@ -1105,6 +1096,85 @@ namespace tink {
         GetName(u, buffer_, sizeof(buffer_));
         result.data = buffer_;
         return 1;
+    }
+
+    int SocketServer::ForwardMessageTcp_(Socket &s, SocketMessage &result) {
+        int sz = s.GetReadSize();
+        UBytePtr buffer = std::make_unique<byte[]>(sz);
+        int n = SocketApi::Read(s.GetSockFd(), buffer.get(), sz);
+        if (n < 0) {
+            switch(errno) {
+                case EINTR:
+                    break;
+                case AGAIN_WOULDBLOCK:
+                    fprintf(stderr, "socket server: EAGAIN capture.\n");
+                    break;
+                default:
+                    // close when error
+                    ForceClose(s, result);
+                    result.data = strerror(errno);
+                    return SOCKET_ERR;
+            }
+            return -1;
+        }
+        if (n == 0) {
+            ForceClose(s, result);
+            return SOCKET_CLOSE;
+        }
+
+        if (s.GetType() == SOCKET_TYPE_HALFCLOSE) {
+            return -1;
+        }
+
+        if (n == sz) {
+            s.SetReadSize(sz * 2);
+        } else if (sz >= MIN_READ_BUFFER && n*2 < sz) {
+            s.SetReadSize(sz / 2);
+        }
+        result.opaque = s.GetOpaque();
+        result.id = s.GetId();
+        result.ud = n;
+        result.data = buffer.release();
+        return SOCKET_DATA;
+    }
+
+    int SocketServer::ForwardMessageUpd_(Socket &s, SocketMessage &result) {
+        SockAddress sa;
+        socklen_t s_len = sizeof(sa);
+        int n = ::recvfrom(s.GetSockFd(), udp_buffer_, MAX_UDP_PACKAGE, 0, const_cast<sockaddr *>(sa.GetSockAddr()), &s_len);
+        if (n < 0) {
+            switch(errno) {
+                case EINTR:
+                case AGAIN_WOULDBLOCK:
+                    break;
+                default:
+                    // close when error
+                    ForceClose(s, result);
+                    result.data = strerror(errno);
+                    return SOCKET_ERR;
+            }
+            return -1;
+        }
+        uint8_t * data;
+        if (s_len == sizeof(struct sockaddr_in)) {
+            if (s.GetProtocol() != PROTOCOL_UDP)
+                return -1;
+            data = new uint8_t[n + 1 + 2 + 4];
+            sa.GenUpdAddress(PROTOCOL_UDP, data + n);
+        } else {
+            if (s.GetProtocol() != PROTOCOL_UDPv6)
+                return -1;
+            data = new uint8_t[n + 1 + 2 + 16];
+            sa.GenUpdAddress(PROTOCOL_UDPv6, data + n);
+        }
+        memcpy(data, udp_buffer_, n);
+
+        result.opaque = s.GetOpaque();
+        result.id = s.GetId();
+        result.ud = n;
+        result.data = (char *)data;
+
+        return 0;
     }
 
 }

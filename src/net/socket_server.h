@@ -6,6 +6,7 @@
 #include <map>
 #include <buffer.h>
 #include <list>
+#include <atomic>
 #include "poller.h"
 #include "socket.h"
 
@@ -21,7 +22,7 @@
 #define UDP_ADDRESS_SIZE 19	// ipv6 128bit + port 16bit + 1 byte type
 #define MAX_INFO 128
 #define MAX_EVENT 64
-
+#define MAX_UDP_PACKAGE 65535
 namespace tink {
 
     typedef struct SocketMessage_ {
@@ -157,7 +158,7 @@ namespace tink {
         int ListenSocket_(RequestListen *request, SocketMessage& result);
         int CloseSocket_(RequestClose *request, SocketMessage& result);
         int OpenSocket(RequestOpen *request, SocketMessage& result);
-        int SendBuffer_(SocketPtr s, SocketMessage& result);
+        int SendBuffer_(Socket &s, SocketMessage& result);
         int DoSendBuffer_(SocketPtr s, SocketMessage& result);
         int SendList_(SocketPtr s, WriteBufferList& list, SocketMessage& result);
         int SendListTCP_(SocketPtr s, WriteBufferList& list, SocketMessage& result);
@@ -166,9 +167,11 @@ namespace tink {
         int SetUdpAddress_(RequestSetUdp *request, SocketMessage& result);
         void SetOptSocket_(RequestSetOpt *request);
         void AddUdpSocket_(RequestUdp *udp);
-        void ClearClosedEvent(SocketMessage &result, int type);
-        int ReportConnect(Socket &s, SocketMessage &result);
-        int ReportAccept(Socket &s, SocketMessage &result);
+        void ClearClosedEvent_(SocketMessage &result, int type);
+        int ReportConnect_(Socket &s, SocketMessage &result);
+        int ReportAccept_(Socket &s, SocketMessage &result);
+        int ForwardMessageTcp_(Socket &s, SocketMessage &result);
+        int ForwardMessageUpd_(Socket &s, SocketMessage &result);
         void DecSendingRef(int id);
 
 
@@ -183,6 +186,7 @@ namespace tink {
         int event_index;
         fd_set rfds;
         char buffer_[MAX_INFO];
+        uint8_t udp_buffer_[MAX_UDP_PACKAGE];
         EventList ev_;
         std::array<SocketPtr, MAX_SOCKET> slot;
     };

@@ -15,6 +15,7 @@ namespace tink {
         int Read(int fd, void *buf, size_t count);
         int Write(int fd, const void *buf, size_t count);
         int SendTo(int fd, const void *buf, size_t count, int flag, const struct sockaddr* addr, socklen_t addr_len);
+        int RecvFrom(int fd, void *buffer, size_t sz, int flags, struct sockaddr * addr, socklen_t *addr_len);
         void Close(int fd);
         void ShutdownWrite(int fd);
         int GetSocketError(int fd);
