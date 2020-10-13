@@ -16,7 +16,7 @@ namespace tink {
     };
 
     typedef std::shared_ptr<BaseModule> ModulePtr;
-    typedef BaseModule* (ModuleCreateInstance)(void);
+    typedef std::function<BaseModule*(void)>  ModuleCreateInstance;
 }
 
 #endif //TINK_BASE_MODULE_H

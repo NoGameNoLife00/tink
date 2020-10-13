@@ -2,14 +2,13 @@
 // Created by Ёблн on 2020/8/20.
 //
 
-#include <assert.h>
+#include <cassert>
 #include <memory>
 #include <execinfo.h>
 #include <cxxabi.h>
 #include <thread.h>
 #include <config_mng.h>
 #include <sys/prctl.h>
-#include "thread.h"
 
 namespace tink {
     namespace CurrentThread {

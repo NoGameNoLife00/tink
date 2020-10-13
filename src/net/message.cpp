@@ -34,7 +34,7 @@ namespace tink {
         return E_OK;
     }
 
-    int Message::Init(uint32_t source, int32_t session, UBytePtr& data, size_t size) {
+    int TinkMessage::Init(uint32_t source, int32_t session, UBytePtr& data, size_t size) {
         this->source = source;
         this->session = session;
         this->data = std::move(data);

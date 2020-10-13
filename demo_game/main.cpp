@@ -53,12 +53,8 @@ int main(int argc, char** argv) {
     handler->Init();
     s->Init(const_cast<std::string &>(globalObj.GetName()), AF_INET,
             const_cast<std::string &>(globalObj.GetHost()), globalObj.GetPort());
-    s->SetOnConnStop(&DoConnectionLost);
-    s->SetOnConnStart(&DoConnectionAdd);
-    s->AddRouter(logic::MSG_TALK, chat_api);
-    s->AddRouter(logic::MSG_MOVE, move_api);
     WorldMngInstance.Init();
-    s->Run();
+    s->Start();
 //    spdlog::drop_all();
     return 0;
 }

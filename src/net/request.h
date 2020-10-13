@@ -5,7 +5,6 @@
 #include <connection.h>
 #include <server.h>
 namespace tink {
-    class NetMessage;
     class Connection;
 
     typedef std::unique_ptr<NetMessage> MessagePtr;

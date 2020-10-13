@@ -8,7 +8,7 @@
 #include <memory>
 #include <mutex>
 #include "noncopyable.h"
-
+#include <cassert>
 namespace tink {
     template<typename T>
     struct has_no_destroy

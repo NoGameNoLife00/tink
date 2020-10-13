@@ -128,7 +128,7 @@ namespace tink {
         int retval;
         FD_SET(recv_ctrl_fd, &rfds_);
 
-        retval = select(recv_ctrl_fd + 1, &rfds_, NULL, NULL, &tv);
+        retval = select(recv_ctrl_fd + 1, &rfds_, nullptr, nullptr, &tv);
         if (retval == 1) {
             return 1;
         }
@@ -407,7 +407,7 @@ namespace tink {
                     s->mutex.unlock();
                     return 0;
                 }
-                s->SetDwBuffer(std::make_shared<DataBuffer>(buffer.buffer, buffer.sz, n));
+                s->SetDwBuffer(std::make_shared<DynamicBuffer>(buffer.buffer, buffer.sz, n));
                 poll_->Write(s->GetSockFd(), s.get(), true);
                 s->mutex.unlock();
                 return 0;
@@ -572,7 +572,7 @@ namespace tink {
         sm->ud = result.ud;
         sm->buffer.reset(result.data);
 
-        Message message;
+        TinkMessage message;
         message.source = 0;
         message.session = 0;
         message.data = sm;

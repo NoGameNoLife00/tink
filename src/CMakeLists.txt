@@ -4,6 +4,7 @@ set(BINARY ${CMAKE_PROJECT_NAME})
 
 include_directories(base)
 include_directories(net)
+include_directories(service)
 
 file(GLOB_RECURSE SOURCES LIST_DIRECTORIES true *.h *.cpp)
 set(SOURCES ${SOURCES} ../3rdparty/cjson/cJSON.c)

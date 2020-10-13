@@ -9,6 +9,7 @@ namespace tink {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         handle_index_ = 1;
         harbor_ = (harbor & 0xff) << HANDLE_REMOTE_SHIFT;
+        return E_OK;
     }
 
     uint32_t ContextManage::Register(ContextPtr ctx) {
@@ -65,7 +66,7 @@ namespace tink {
     int ContextManage::BindName(uint32_t handle, std::string &name) {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         // todo 需要优化效率
-        for (auto it : name_map_) {
+        for (auto& it : name_map_) {
             if (it.first == name) {
                 return E_FAILED;
             }
@@ -90,7 +91,7 @@ namespace tink {
         return nullptr;
     }
 
-    int ContextManage::PushMessage(uint32_t handle, Message &msg) {
+    int ContextManage::PushMessage(uint32_t handle, TinkMessage &msg) {
         ContextPtr ctx = HandleGrab(handle);
         if (!ctx) {
             return E_FAILED;
@@ -100,7 +101,7 @@ namespace tink {
     }
 
     void ContextManage::ContextEndless(uint32_t handle) {
-        ContextPtr ctx = ContextMngInstance.HandleGrab(handle);
+        ContextPtr ctx = HandleGrab(handle);
         if (!ctx) {
             return ;
         }

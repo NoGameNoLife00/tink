@@ -20,7 +20,7 @@ namespace tink {
         int Init(const std::string& name, const char * param);
         void Destroy();
         void Send(DataPtr &&data, size_t sz, uint32_t source, int type, int session);
-        void SetCallBack(ContextCallBack cb, void *ud);
+        void SetCallBack(const ContextCallBack &cb, void *ud);
         uint32_t Handle() { return handle_; }
         void Reserve() { --total; }
         int NewSession();
@@ -32,8 +32,8 @@ namespace tink {
         int Send(uint32_t source, uint32_t destination, int type, int session, DataPtr &data, size_t sz);
         int SendName(uint32_t source, const std::string& addr, int type, int session, DataPtr &data, size_t sz);
 
-        static void DropMessage(Message &msg, void *ud);
-        void DispatchMessage(Message &msg);
+        static void DropMessage(TinkMessage &msg, void *ud);
+        void DispatchMessage(TinkMessage &msg);
         ContextCallBack GetCallBack() {return callback_;}
     private:
         static std::atomic_int total;

@@ -112,9 +112,9 @@ namespace tink {
             buffer = buf.buffer;
             sz = buf.sz;
         }
-        void Init(const void * object, size_t sz) {
-            buffer.reset(const_cast<void*>(object));
-            this->sz = sz;
+        void Init(void * object, size_t size) {
+            buffer.reset(object);
+            this->sz = size;
         }
     }SendObject;
 

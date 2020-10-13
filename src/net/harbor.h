@@ -4,18 +4,20 @@
 #include <common.h>
 #include <context.h>
 
+#define HarborInstance tink::Singleton<tink::Harbor>::GetInstance()
+
 namespace tink {
     class Harbor {
     public:
-        static void Init(int harbor);
-        static void Start(ContextPtr ctx);
-        static void Exit();
-        static void Send(RemoteMsgPtr r_msg, uint32_t source, int session);
-        static int MessageIsRemote(uint32_t handle);
+        void Init(int harbor);
+        void Start(ContextPtr ctx);
+        void Exit();
+        void Send(RemoteMessagePtr r_msg, uint32_t source, int session);
+        int MessageIsRemote(uint32_t handle);
 
     private:
-        static uint32_t HARBOR;
-        static ContextPtr REMOTE;
+        static uint32_t harbor_;
+        static ContextPtr remote_;
     };
 }
 

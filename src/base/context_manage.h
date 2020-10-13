@@ -21,7 +21,7 @@ namespace tink {
             t_handle = static_cast<uint32_t>(-m);
         }
 
-        inline int SetHandle(uint32_t h) {
+        inline void SetHandle(uint32_t h) {
             t_handle = h;
         }
     }
@@ -35,7 +35,7 @@ namespace tink {
         void UnregisterAll();
         uint32_t FindName(const std::string& name);
         ContextPtr HandleGrab(uint32_t handle);
-        int PushMessage(uint32_t handle, Message &msg);
+        int PushMessage(uint32_t handle, TinkMessage &msg);
         void ContextEndless(uint32_t handle);
     private:
         uint32_t harbor_;

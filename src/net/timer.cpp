@@ -82,7 +82,7 @@ namespace tink {
     void Timer::DispatchList_(TimerNodeList &curr) {
         for (auto& node : curr) {
             TimerEvent& event = node->event;
-            MsgPtr msg = std::make_shared<Message>();
+            TinkMessagePtr msg = std::make_shared<TinkMessage>();
             msg->source = 0;
             msg->session = event.session;
             msg->data = nullptr;
@@ -147,7 +147,7 @@ namespace tink {
 
     int Timer::TimeOut(uint32_t handle, int time, int session) {
         if (time <= 0) {
-            MsgPtr msg = std::make_shared<Message>();
+            TinkMessagePtr msg = std::make_shared<TinkMessage>();
             msg->source = 0;
             msg->session = session;
             msg->data = nullptr;

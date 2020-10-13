@@ -9,7 +9,7 @@
 namespace tink {
     class MessageQueue;
     typedef std::shared_ptr<MessageQueue> MQPtr;
-    class GlobalMQ : public Singleton<GlobalMQ>  {
+    class GlobalMQ {
     public:
         void Push(MQPtr mq);
         MQPtr Pop();

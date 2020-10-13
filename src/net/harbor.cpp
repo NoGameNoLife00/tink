@@ -1,28 +1,32 @@
 #include "harbor.h"
 
 namespace tink {
-    uint32_t Harbor::HARBOR = ~0;
-    ContextPtr REMOTE = nullptr;
     static inline int invalid_type(int type) {
         return type != PTYPE_SYSTEM && type != PTYPE_HARBOR;
     }
 
-    void Harbor::Send(tink::RemoteMsgPtr r_msg, uint32_t source, int session) {
-        assert(invalid_type(r_msg->type) && REMOTE);
-        REMOTE->Send(std::static_pointer_cast<void>(r_msg), sizeof(*r_msg), source, PTYPE_SYSTEM, session);
+    void Harbor::Send(tink::RemoteMessagePtr r_msg, uint32_t source, int session) {
+        assert(invalid_type(r_msg->type) && remote_);
+        remote_->Send(std::static_pointer_cast<void>(r_msg), sizeof(*r_msg), source, PTYPE_SYSTEM, session);
     }
 
     void Harbor::Init(int harbor) {
-        HARBOR = static_cast<uint32_t>(harbor) << HANDLE_REMOTE_SHIFT;
+        harbor_ = static_cast<uint32_t>(harbor) << HANDLE_REMOTE_SHIFT;
     }
 
     void Harbor::Start(ContextPtr ctx) {
         ctx->Reserve();
-        REMOTE = ctx;
+        remote_ = ctx;
     }
 
     void Harbor::Exit() {
-        REMOTE.reset();
+        remote_.reset();
+    }
+
+    int Harbor::MessageIsRemote(uint32_t handle) {
+        assert(harbor_ != ~0);
+        int h = (handle & ~HANDLE_MASK);
+        return h != harbor_ && h != 0;
     }
 
 

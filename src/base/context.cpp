@@ -53,7 +53,7 @@ namespace tink {
     }
 
     void Context::Send(DataPtr &&data, size_t sz, uint32_t source, int type, int session) {
-        Message msg;
+        TinkMessage msg;
         msg.source = source;
         msg.session = session;
         msg.data = std::move(data);
@@ -61,7 +61,7 @@ namespace tink {
         queue_->Push(msg);
     }
 
-    void Context::SetCallBack(ContextCallBack cb, void *ud) {
+    void Context::SetCallBack(const ContextCallBack &cb, void *ud) {
         this->callback_ = cb;
         cb_ud_ = ud;
     }
@@ -76,13 +76,13 @@ namespace tink {
     }
 
     void Context::DispatchAll() {
-        Message msg;
+        TinkMessage msg;
         while (queue_->Pop(msg, true)) {
             DispatchMessage(msg);
         }
     }
 
-    void Context::DispatchMessage(Message &msg) {
+    void Context::DispatchMessage(TinkMessage &msg) {
         assert(init_);
         if (!callback_) {
             return;
@@ -120,19 +120,19 @@ namespace tink {
             }
             return session;
         }
-        if (Harbor::MessageIsRemote(destination)) {
-            RemoteMsgPtr r_msg = std::make_shared<RemoteMessage>();
+        if (HarborInstance.MessageIsRemote(destination)) {
+            RemoteMessagePtr r_msg = std::make_shared<RemoteMessage>();
             r_msg->destination.handle = destination;
             r_msg->message = data;
             r_msg->size = sz & MESSAGE_TYPE_MASK;
             r_msg->type = sz >> MESSAGE_TYPE_SHIFT;
-            Harbor::Send(r_msg, source, session);
+            HarborInstance.Send(r_msg, source, session);
         } else {
-            MsgPtr s_msg = std::make_shared<Message>();
-            s_msg->source = source;
-            s_msg->session = session;
-            s_msg->data = data;
-            s_msg->size = sz;
+            TinkMessage s_msg;
+            s_msg.source = source;
+            s_msg.session = session;
+            s_msg.data = data;
+            s_msg.size = sz;
             if (ContextMngInstance.PushMessage(destination, s_msg)) {
                 return E_FAILED;
             }
@@ -183,19 +183,19 @@ namespace tink {
             }
             FilterArgs_(type, session, data, sz);
 
-            RemoteMsgPtr r_msg = std::make_shared<RemoteMessage>();
+            RemoteMessagePtr r_msg = std::make_shared<RemoteMessage>();
             CopyName(r_msg->destination.name, addr.c_str());
             r_msg->destination.handle = 0;
             r_msg->message = data;
             r_msg->size = sz & MESSAGE_TYPE_MASK;
             r_msg->type = sz >> MESSAGE_TYPE_SHIFT;
-            Harbor::Send(r_msg, source, session);
+            HarborInstance.Send(r_msg, source, session);
             return session;
         }
         return Send(source, des, type, session, data, sz);
     }
 
-    void Context::DropMessage(Message &msg, void *ud) {
+    void Context::DropMessage(TinkMessage &msg, void *ud) {
         struct DropT *d = static_cast<DropT *>(ud);
         msg.data.reset();
         uint32_t source = d->handle;

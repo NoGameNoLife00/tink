@@ -5,9 +5,10 @@
 #include <common.h>
 
 namespace tink {
-    constexpr int MESSAGE_TYPE_MASK = (SIZE_MAX >> 8);
+    constexpr auto MESSAGE_TYPE_MASK = (SIZE_MAX >> 8);
     constexpr int MESSAGE_TYPE_SHIFT = ((sizeof(size_t)-1) * 8);
     constexpr int GLOBALNAME_LENGTH = 32;
+
     typedef struct NetMessage_ {
         int Init(uint32_t id, uint32_t len, UBytePtr &data);
         int32_t GetId() const;
@@ -27,14 +28,13 @@ namespace tink {
         LEAK_DETECTOR(NetMessage_);
     } NetMessage;
 
-    typedef struct Message_ {
+    typedef struct TinkMessage_ {
         uint32_t source;
         int32_t session;
         DataPtr data;
         size_t size;
-
         int Init(uint32_t source, int32_t session, UBytePtr& data, size_t size);
-    } Message ;
+    } TinkMessage ;
 
     typedef struct RemoteName_ {
         char name[GLOBALNAME_LENGTH];
@@ -47,8 +47,8 @@ namespace tink {
         size_t size;
         int type;
     } RemoteMessage;
-    typedef std::shared_ptr<RemoteMessage> RemoteMsgPtr;
-    typedef std::shared_ptr<Message> MsgPtr;
+    typedef std::shared_ptr<RemoteMessage> RemoteMessagePtr;
+    typedef std::shared_ptr<TinkMessage> TinkMessagePtr;
 }
 
 

@@ -1,7 +1,7 @@
 #include <message_queue.h>
 
 namespace tink {
-    void MessageQueue::Push(Message &msg){
+    void MessageQueue::Push(TinkMessage &msg){
         std::lock_guard <Mutex> lock(mutex_);
         queue_.push(msg);
         if (!in_global) {
@@ -11,7 +11,7 @@ namespace tink {
         condition_.notify_one();
     }
 
-    bool MessageQueue::Pop(Message &msg, bool isBlocked){
+    bool MessageQueue::Pop(TinkMessage &msg, bool isBlocked){
         if (isBlocked) {
             std::unique_lock <Mutex> lock(mutex_);
             while (queue_.empty())
@@ -53,7 +53,7 @@ namespace tink {
     }
 
     void MessageQueue::DropQueue_(MsgDrop drop_func, void *ud) {
-        Message msg;
+        TinkMessage msg;
         while (Pop(msg, true)) {
             drop_func(msg, ud);
         }

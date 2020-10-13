@@ -49,20 +49,18 @@ namespace tink {
     };
     typedef std::unique_ptr<FixBuffer> FixBufferPtr;
 
-
-
-    class DataBuffer {
+    class DynamicBuffer {
     public:
-        explicit DataBuffer(DataPtr &buff, size_t sz = 0, int offset = 0) :
+        explicit DynamicBuffer(DataPtr &buff, size_t sz = 0, int offset = 0) :
                 buffer_(buff), size_(sz), offset_(offset) {}
-        explicit DataBuffer(size_t sz) : buffer_(new byte[sz]), size_(sz), offset_(0) {
+        explicit DynamicBuffer(size_t sz) : buffer_(new byte[sz]), size_(sz), offset_(0) {
         }
         DataPtr& GetData() {
             return buffer_;
         }
         int GetOffset() const { return offset_; }
         int GetSize() const { return size_; }
-        int SetOffset(int n) { offset_ = n; }
+        void SetOffset(int n) { offset_ = n; }
 
     private:
         DataPtr buffer_;
@@ -70,7 +68,7 @@ namespace tink {
         int offset_;
     } ;
 
-    typedef std::shared_ptr<DataBuffer> DataBufferPtr;
+    typedef std::shared_ptr<DynamicBuffer> DataBufferPtr;
 
     typedef struct SocketSendBuffer_ {
         int id;
