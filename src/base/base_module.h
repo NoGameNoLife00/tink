@@ -7,7 +7,7 @@ namespace tink {
     class Context;
     class BaseModule {
     public:
-        virtual int Init(Context& ctx, const char* param) = 0;
+        virtual int Init(std::shared_ptr<Context> ctx, const string &param) = 0;
         virtual void Release() = 0;
         virtual void Signal(int signal) = 0;
         virtual const std::string& Name() {return name_;}
