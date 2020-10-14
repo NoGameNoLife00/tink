@@ -4,6 +4,8 @@
 #include <data_buffer.h>
 #include <memory>
 #include <common.h>
+#include <string>
+
 namespace tink::Service {
     typedef struct Connection_ {
         int id;	// socket id
@@ -18,7 +20,8 @@ namespace tink::Service {
         ServiceGate();
 
         int Init(ContextPtr ctx, const std::string &param) override;
-        static int CallBack(Context& ctx, void* ud, int type, int session, uint32_t source, DataPtr& msg, size_t sz);
+        int StartListen(std::string& listen_addr);
+        void Ctrl(DataPtr &msg, int sz);
         void Release() override;
         ContextPtr ctx;
         int listen_id;
@@ -29,6 +32,8 @@ namespace tink::Service {
         int max_connection;
         std::vector<ConnectionPtr> conn;
         MessagePool mp;
+    private:
+        static int CallBack_(Context& ctx, void* ud, int type, int session, uint32_t source, DataPtr& msg, size_t sz);
     };
 }
 

@@ -67,7 +67,7 @@ namespace tink {
         int type;
         int id;
         int ud;
-        BytePtr buffer;
+        UBytePtr buffer;
     }TSocketMessage;
 
     typedef std::shared_ptr<TSocketMessage> TSocketMsgPtr;

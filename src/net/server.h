@@ -44,8 +44,6 @@ namespace tink {
         // 连接启动和停止的钩子函数
         ConnHookFunc on_conn_start_;
         ConnHookFunc on_conn_stop_;
-
-        SocketServerPtr socket_server_;
     };
 }
 

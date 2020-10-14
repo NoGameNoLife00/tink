@@ -39,6 +39,7 @@ namespace tink {
         static std::atomic_int total;
         static int handle_key;
 
+
         int FilterArgs_(int type, int &session, DataPtr& data, size_t &sz);
 
         mutable std::mutex mutex_;

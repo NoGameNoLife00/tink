@@ -39,7 +39,6 @@ namespace tink {
     int Server::Init(string &name, int ip_version, string &ip, int port) {
         name_ = name;
         listen_addr_ = std::make_shared<SockAddress>(ip, port, ip_version == AF_INET6);
-        socket_server_ = std::make_shared<SocketServer>();
         CurrentHandle::InitThread(THREAD_MAIN);
         Sigign();
 
@@ -58,7 +57,7 @@ namespace tink {
         ContextMngInstance.Init(ConfigMngInstance.GetHarbor());
         ModuleMngInstance.Init(ConfigMngInstance.GetModulePath());
         TimerInstance.Init();
-        socket_server_->Init(TimerInstance.Now());
+        SOCKET_SERVER.Init(TimerInstance.Now());
         return 0;
     }
 

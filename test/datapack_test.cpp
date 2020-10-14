@@ -11,7 +11,7 @@ TEST(datapackTest, test1) {
     auto globalObj = ConfigMngInstance;
     tink::DataPack dp;
     tink::NetMessage msg;
-    BytePtr buf(new byte[5] {'t','i','n','k','\0'});
+    UBytePtr buf(new byte[5] {'t','i','n','k','\0'});
     std::shared_ptr<tink::MessageHandler> msg_handler(new tink::MessageHandler);
 
     msg.SetId(1);
@@ -19,7 +19,7 @@ TEST(datapackTest, test1) {
     msg.SetData(buf);
 
 //    std::shared_ptr<tink::NetMessage> msg_ptr(&msg);
-    BytePtr out(new byte[1024]);
+    UBytePtr out(new byte[1024]);
     uint out_len;
     dp.Pack(msg, out, out_len);
 

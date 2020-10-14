@@ -2,10 +2,11 @@
 #include <error_code.h>
 #include <spdlog/spdlog.h>
 #include <context_manage.h>
+#include <socket_server.h>
 
 #include "service_gate.h"
 
-
+#define BACKLOG 128
 namespace tink::Service {
     ServiceGate::ServiceGate() : listen_id(-1) {
 
@@ -50,11 +51,67 @@ namespace tink::Service {
 
         this->client_tag = client_tag;
         this->header_size = header == 'S' ? 2 : 4;
-        ctx->SetCallBack(CallBack, this);
+        ctx->SetCallBack(CallBack_, this);
         return 0;
     }
 
     void ServiceGate::Release() {
 
+    }
+
+    int ServiceGate::StartListen(std::string &listen_addr) {
+        char * port_str = const_cast<char *>(strrchr(listen_addr.c_str(), ':'));
+        string host = "";
+        int port;
+        if (port_str == nullptr) {
+            port = strtol(listen_addr.c_str(), nullptr, 10);
+            if (port <= 0) {
+                spdlog::error("invalid gate address {}", listen_addr);
+                return E_FAILED;
+            }
+        } else {
+            port = strtol(port_str + 1, nullptr, 10);
+            if (port <= 0) {
+                spdlog::error("invalid gate address {}", listen_addr);
+                return E_FAILED;
+            }
+            port_str[0] = '\0';
+            host = listen_addr;
+        }
+        listen_id = SOCKET_SERVER.Listen(ctx->Handle(), host, port, BACKLOG);
+        if (listen_id < 0) {
+            return E_FAILED;
+        }
+        SOCKET_SERVER.Start(ctx->Handle(), listen_id);
+        return E_OK;
+    }
+
+    int
+    ServiceGate::CallBack_(Context &ctx, void *ud, int type, int session, uint32_t source, DataPtr &msg, size_t sz) {
+        ServiceGate *g = static_cast<ServiceGate *>(ud);
+        switch (type) {
+            case PTYPE_TEXT:
+                g->Ctrl(msg, sz);
+                break;
+            case PTYPE_CLIENT:
+
+        }
+        return 0;
+    }
+
+    void ServiceGate::Ctrl(DataPtr &msg, int sz) {
+        char tmp[sz+1];
+        memcpy(tmp, msg.get(), sz);
+        tmp[sz] = '\0';
+        std::string command(tmp);
+
+        int i = command.find(' ');
+        if (command.compare(0, i, "kick") == 0) {
+            int end = command.find(' ', i);
+            std::string&& param = command.substr(i, end);
+            int uid = std::stol(param);
+
+
+        }
     }
 }
