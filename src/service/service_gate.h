@@ -24,6 +24,8 @@ namespace tink::Service {
         int StartListen(std::string& listen_addr);
         void Ctrl(DataPtr &msg, int sz);
         void Release() override;
+        void DispatchSocketMessage(TinkSocketMessage &msg, int sz);
+        void DispatchMessage(Connection &c, int id, DataPtr data, int sz);
         typedef PoolSet<Connection> ConnPool;
         ContextPtr ctx;
         int listen_id;
@@ -38,6 +40,7 @@ namespace tink::Service {
     private:
         static int CallBack_(Context& ctx, void* ud, int type, int session, uint32_t source, DataPtr& msg, size_t sz);
         void ForwardAgent_(int fd, uint32_t agent_addr, uint32_t client_addr);
+        void Forward_(Connection& c, int size);
     };
 }
 

@@ -4,11 +4,13 @@
 #include <array>
 #include <list>
 #include <pool_set.h>
+#include <common.h>
+
 namespace tink::Service {
     constexpr auto MESSAGEPOOL = 1023;
 
     typedef struct Message_ {
-        BytePtr buffer;
+        DataPtr buffer;
         int size;
     } Message;
 
@@ -20,9 +22,10 @@ namespace tink::Service {
         int size;
         std::list<Message*> list;
         int ReadHeader(MessagePool& mp, int header_size);
-        void Push(MessagePool& mp, void * data, int sz);
-        void Read(MessagePool& mp, void * buffer, int sz);
+        void Push(MessagePool& mp, DataPtr data, int sz);
+        void Read(MessagePool& mp, void *buffer, int sz);
         void Clear(MessagePool& mp);
+        void Reset() { header = 0; }
     private:
         void ReturnMessage_(MessagePool &mp);
     } ;

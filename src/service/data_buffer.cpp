@@ -2,6 +2,7 @@
 #include <error_code.h>
 #include <cstdint>
 #include <cassert>
+#include <string.h>
 #include "data_buffer.h"
 
 namespace tink::Service {
@@ -14,8 +15,7 @@ namespace tink::Service {
     void DataBuffer::ReturnMessage_(MessagePool &mp) {
         Message * m = list.front();
         list.pop_front();
-        delete m->buffer;
-        m->buffer = nullptr;
+        m->buffer.reset();
         m->size = 0;
         mp.ReusePoolItem(m);
     }
@@ -47,16 +47,16 @@ namespace tink::Service {
             Message *current = list.front();
             int bsz = current->size - offset;
             if (bsz > sz) {
-                memcpy(buffer, current->buffer + offset, sz);
+                memcpy(buffer, static_cast<byte*>(current->buffer.get()) + offset, sz);
                 offset += sz;
                 return;
             }
             if (bsz == sz) {
-                memcpy(buffer, current->buffer + offset, sz);
+                memcpy(buffer, static_cast<byte*>(current->buffer.get()) + offset, sz);
                 offset = 0;
                 ReturnMessage_(mp);
             } else {
-                memcpy(buffer, current->buffer + offset, bsz);
+                memcpy(buffer, static_cast<byte*>(current->buffer.get()) + offset, bsz);
                 ReturnMessage_(mp);
                 offset = 0;
                 buffer = static_cast<char*>(buffer) + bsz;
@@ -65,7 +65,7 @@ namespace tink::Service {
         }
     }
 
-    void DataBuffer::Push(MessagePool &mp, void *data, int sz) {
+    void DataBuffer::Push(MessagePool &mp, DataPtr data, int sz) {
         Message * m = mp.GetPoolItem();
         m->buffer = data;
         m->size = sz;

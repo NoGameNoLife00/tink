@@ -377,9 +377,9 @@ namespace tink {
         int id = buffer.id;
         SocketPtr s = GetSocket(id);
         if (s->GetId() != id || s->GetType() == SOCKET_TYPE_INVALID) {
-            buffer.FreeBuffer();
             return SOCKET_NONE;
         }
+
         if (s->CanDirectWrite(id) && s->mutex.try_lock()) {
             if (s->CanDirectWrite(id)) {
                 SendObject so;
@@ -560,7 +560,7 @@ namespace tink {
 
     // mainloop thread
     static void ForwardMessage(int type, bool padding, SocketMessage &result) {
-        TSocketMsgPtr sm = std::make_shared<TSocketMessage>();
+        TinkSocketMsgPtr sm = std::make_shared<TinkSocketMessage>();
 
         // todo 这里逻辑不对
         size_t sz = sizeof(*sm);
@@ -1198,6 +1198,13 @@ namespace tink {
             }
         }
         return SOCKET_NONE;
+    }
+
+    int SocketServer::Send(int id, DataPtr buffer, int sz) {
+        SocketSendBuffer tmp;
+        tmp.Init(id, buffer, sz);
+        Send(tmp);
+        return 0;
     }
 
 }

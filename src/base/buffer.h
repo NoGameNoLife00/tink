@@ -70,11 +70,20 @@ namespace tink {
 
     typedef std::shared_ptr<DynamicBuffer> DataBufferPtr;
 
+    constexpr int SOCKET_BUFFER_MEMORY = 0;
+    constexpr int SOCKET_BUFFER_OBJECT = 1;
+    constexpr int SOCKET_BUFFER_RAWPOINTER = 2;
     typedef struct SocketSendBuffer_ {
         int id;
         int type;
         DataPtr buffer;
         size_t sz;
+        void Init(int id, DataPtr buffer, int sz) {
+            this->id = id;
+            this->buffer = buffer;
+            this->type = sz < 0 ? SOCKET_BUFFER_OBJECT : SOCKET_BUFFER_MEMORY;
+            this->sz = sz;
+        }
         void FreeBuffer() {
             buffer.reset();
         }

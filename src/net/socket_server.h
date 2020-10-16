@@ -140,6 +140,7 @@ namespace tink {
         void Start(uintptr_t opaque, int id);
 
         int Send(SocketSendBuffer &buffer);
+        int Send(int id, DataPtr buffer, int sz);
         int SendLowPriority(SocketSendBuffer &buffer);
 
         int Listen(uintptr_t opaque, const string &addr, int port, int backlog);

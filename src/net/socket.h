@@ -63,14 +63,14 @@ namespace tink {
 
     typedef std::shared_ptr<WriteBuffer> WriteBufferPtr;
 
-    typedef struct TSocketMessage_ {
+    typedef struct TinkSocketMessage_ {
         int type;
         int id;
         int ud;
         UBytePtr buffer;
-    }TSocketMessage;
+    }TinkSocketMessage;
 
-    typedef std::shared_ptr<TSocketMessage> TSocketMsgPtr;
+    typedef std::shared_ptr<TinkSocketMessage> TinkSocketMsgPtr;
     typedef std::list<WriteBufferPtr> WriteBufferList;
 
     class Socket : noncopyable {

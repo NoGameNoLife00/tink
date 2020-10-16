@@ -14,6 +14,9 @@
 #include <functional>
 #include <context.h>
 #include <socket_server.h>
+
+//#define TINK_SERVER tink::Singleton<tink::Server>::GetInstance()
+
 namespace tink {
     class Connection;
     class MessageHandler;

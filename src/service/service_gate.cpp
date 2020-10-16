@@ -3,6 +3,7 @@
 #include <spdlog/spdlog.h>
 #include <context_manage.h>
 #include <socket_server.h>
+#include <server.h>
 
 #include "service_gate.h"
 
@@ -91,13 +92,34 @@ namespace tink::Service {
     ServiceGate::CallBack_(Context &ctx, void *ud, int type, int session, uint32_t source, DataPtr &msg, size_t sz) {
         ServiceGate *g = static_cast<ServiceGate *>(ud);
         switch (type) {
-            case PTYPE_TEXT:
+            case PTYPE_TEXT: {
                 g->Ctrl(msg, sz);
                 break;
-            case PTYPE_CLIENT:
+            }
+
+            case PTYPE_CLIENT: {
+                if (sz <= 4) {
+                    spdlog::error("Invalid client message from {}", source);
+                    break;
+                }
+                const uint8_t *id_buf = static_cast<uint8_t *>(msg.get()) + sz - 4;
+                uint32_t uid = id_buf[0] | id_buf[1] << 8 | id_buf[2] << 16 | id_buf[3] << 24;
+                if (auto it = g->conn.find(uid); it != g->conn.end()) {
+                    SOCKET_SERVER.Send(uid, msg, sz-4);
+                    return E_OK;
+                } else {
+                    spdlog::error("Invalid client id {} from {}", uid, source);
+                    break;
+                }
+            }
+
+            case PTYPE_SOCKET: {
+                DispatchSocketMessage();
+                break;
+            }
 
         }
-        return 0;
+        return E_OK;
     }
 
     void ServiceGate::Ctrl(DataPtr &msg, int sz) {
@@ -154,6 +176,61 @@ namespace tink::Service {
             Connection* agent = it->second;
             agent->agent = agent_addr;
             agent->client = client_addr;
+        }
+    }
+
+    void ServiceGate::DispatchSocketMessage(TinkSocketMessage &msg, int sz) {
+        switch (msg.type) {
+            case TINK_SOCKET_TYPE_DATA: {
+                if (auto it = conn.find(msg.id); it != conn.end()) {
+                    Connection * c = it->second;
+
+                }
+            }
+        }
+    }
+
+    void ServiceGate::DispatchMessage(Connection &c, int id, DataPtr data, int sz) {
+        c.buffer.Push(mp, data, sz);
+        for (;;) {
+            int size = c.buffer.ReadHeader(mp, header_size);
+            if (size < 0) {
+                return ;
+            } else if (size > 0) {
+                if (size >= 0x1000000) {
+                    c.buffer.Clear(mp);
+                    SOCKET_SERVER.Close(ctx->Handle(), id);
+                    spdlog::error("Recv socket message > 16M");
+                    return ;
+                } else {
+
+                    c.buffer.Reset();
+                }
+            }
+        }
+    }
+
+    void ServiceGate::Forward_(Connection &c, int size) {
+        int fd = c.id;
+        if (fd <= 0) {
+            // socket error
+            return;
+        }
+        if (broker) {
+            DataPtr temp = std::make_shared<byte[]>(size);
+            c.buffer.Read(mp, temp.get(), size);
+            ctx->Send(0, broker, client_tag, fd, temp, size);
+            return ;
+        }
+        if (c.agent) {
+            DataPtr temp = std::make_shared<byte[]>(size);
+            c.buffer.Read(mp, temp.get(), size);
+            ctx->Send(c.client, c.agent, client_tag, fd, temp, size);
+        } else if (watchdog) {
+            DataPtr tmp = std::make_shared<byte[]>(size+32);
+            int n = snprintf(static_cast<byte*>(tmp.get()), 32, "%d data", c.id);
+            c.buffer.Read(mp, static_cast<byte*>(tmp.get())+n, size);
+            ctx->Send(0, watchdog, PTYPE_TEXT, fd, tmp, size + n);
         }
     }
 }
