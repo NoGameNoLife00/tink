@@ -34,6 +34,7 @@ namespace tink {
         int Unregister(int handle);
         void UnregisterAll();
         uint32_t FindName(const std::string& name);
+        uint32_t QueryName(const std::string& name);
         ContextPtr HandleGrab(uint32_t handle);
         int PushMessage(uint32_t handle, TinkMessage &msg);
         void ContextEndless(uint32_t handle);

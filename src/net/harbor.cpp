@@ -28,7 +28,5 @@ namespace tink {
         int h = (handle & ~HANDLE_MASK);
         return h != harbor_ && h != 0;
     }
-
-
 }
 

@@ -42,13 +42,14 @@ namespace tink::Service {
             }
         }
         this->ctx = ctx;
-        for (int i = 0 ; i < max; i++) {
-            ConnectionPtr cn = std::make_shared<Connection>();
-            cn->id = -1;
-            conn.emplace_back(cn);
-        }
-        max_connection = max;
+//        for (int i = 0 ; i < max; i++) {
+//            ConnectionPtr cn = std::make_shared<Connection>();
+//            cn->id = -1;
+//            conn.emplace_back(cn);
+//        }
 
+        max_connection = max;
+        conn_pool = std::make_shared<ConnPool>(max, 0);
         this->client_tag = client_tag;
         this->header_size = header == 'S' ? 2 : 4;
         ctx->SetCallBack(CallBack_, this);
@@ -104,14 +105,55 @@ namespace tink::Service {
         memcpy(tmp, msg.get(), sz);
         tmp[sz] = '\0';
         std::string command(tmp);
+        StringList param_list;
+        StringUtil::Split(command, ' ', param_list);
+        if (param_list.size() < 2) {
+            return;
+        }
+        if (param_list[0] == "kick") {
+            int uid = std::stol(param_list[1]);
+            if (conn.find(uid) != conn.end()) {
+                SOCKET_SERVER.Close(ctx->Handle(), uid);
+            }
+            return ;
+        }
+        if (param_list[0] == "forward") {
+            if (param_list.size() < 4) {
+                return;
+            }
+            int id = std::stol(param_list[1]);
+            uint32_t agent_handle = std::stoul(param_list[2], 0, 16);
+            uint32_t client_handle = std::stoul(param_list[3], 0, 16);
+            ForwardAgent_(id, agent_handle, client_handle);
+            return ;
+        }
+        if (param_list[0] == "broker") {
+            broker = ContextMngInstance.QueryName(param_list[1]);
+            return;
+        }
+        if (param_list[0] == "start") {
+            int uid = std::stol(param_list[1]);
+            if (conn.find(uid) != conn.end()) {
+                SOCKET_SERVER.Start(ctx->Handle(), uid);
+            }
+            return ;
+        }
+        if (param_list[0] == "close") {
+            if (listen_id >= 0) {
+                SOCKET_SERVER.Close(ctx->Handle(), listen_id);
+                listen_id = -1;
+            }
+            return;
+        }
+        spdlog::error("[gate] unknown command : {}", command);
+    }
 
-        int i = command.find(' ');
-        if (command.compare(0, i, "kick") == 0) {
-            int end = command.find(' ', i);
-            std::string&& param = command.substr(i, end);
-            int uid = std::stol(param);
-
-
+    void ServiceGate::ForwardAgent_(int fd, uint32_t agent_addr, uint32_t client_addr) {
+        auto it =conn.find(fd);
+        if (it != conn.end()) {
+            Connection* agent = it->second;
+            agent->agent = agent_addr;
+            agent->client = client_addr;
         }
     }
 }

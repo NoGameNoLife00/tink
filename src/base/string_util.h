@@ -21,6 +21,11 @@ namespace tink {
     private:
         const char* str_;
     };
+    typedef std::vector<string> StringList;
+    namespace StringUtil {
+        void Split(const string& str, char split, StringList& out);
+    };
+
 }
 
 #endif //TINK_STRING_UTIL_H

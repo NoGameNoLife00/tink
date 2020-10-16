@@ -1,5 +1,6 @@
 #include <error_code.h>
 #include <cassert>
+#include <spdlog/spdlog.h>
 #include "context_manage.h"
 namespace tink {
 
@@ -106,6 +107,17 @@ namespace tink {
             return ;
         }
         ctx->SetEndless(true);
+    }
+
+    uint32_t ContextManage::QueryName(const std::string &name) {
+        switch (name[0]) {
+            case ':':
+                return strtoul(name.c_str() + 1, nullptr, 16);
+            case '.':
+                return FindName(name.c_str() + 1);
+        }
+        spdlog::error("don't support query global name %s");
+        return 0;
     }
 }
 

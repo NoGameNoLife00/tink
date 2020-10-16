@@ -46,7 +46,7 @@ namespace tink {
             {
                 AutoExtend();
                 if(free_pool_ables_.empty())
-                    return 0;
+                    return nullptr;
             }
             // Get a new Object
             T* new_pool_item = free_pool_ables_.back();

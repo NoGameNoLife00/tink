@@ -14,7 +14,8 @@ namespace tink::Service {
         char remote_name[32];
         DataBuffer buffer;
     }Connection;
-    typedef std::shared_ptr<Connection> ConnectionPtr;
+//    typedef std::shared_ptr<Connection> ConnectionPtr;
+
     class ServiceGate : public BaseModule {
     public:
         ServiceGate();
@@ -23,6 +24,7 @@ namespace tink::Service {
         int StartListen(std::string& listen_addr);
         void Ctrl(DataPtr &msg, int sz);
         void Release() override;
+        typedef PoolSet<Connection> ConnPool;
         ContextPtr ctx;
         int listen_id;
         uint32_t watchdog;
@@ -30,10 +32,12 @@ namespace tink::Service {
         int client_tag;
         int header_size;
         int max_connection;
-        std::vector<ConnectionPtr> conn;
+        std::unordered_map<int, Connection*> conn;
+        std::shared_ptr<ConnPool> conn_pool;
         MessagePool mp;
     private:
         static int CallBack_(Context& ctx, void* ud, int type, int session, uint32_t source, DataPtr& msg, size_t sz);
+        void ForwardAgent_(int fd, uint32_t agent_addr, uint32_t client_addr);
     };
 }
 
