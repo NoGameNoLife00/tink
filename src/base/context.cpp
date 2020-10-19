@@ -31,7 +31,7 @@ namespace tink {
         }
         queue_ = std::make_shared<MessageQueue>(handle_);
         mutex_.lock();
-        int ret = mod->Init(*this, param);
+        int ret = mod->Init(shared_from_this(), param);
         mutex_.unlock();
         if (ret == E_OK) {
             init_ = true;

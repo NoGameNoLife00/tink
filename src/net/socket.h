@@ -13,6 +13,8 @@
 #include <sock_address.h>
 #include <shared_mutex>
 #include <buffer.h>
+#include <list>
+
 
 #define PROTOCOL_TCP 0
 #define PROTOCOL_UDP 1
@@ -67,7 +69,7 @@ namespace tink {
         int type;
         int id;
         int ud;
-        UBytePtr buffer;
+        DataPtr buffer;
     }TinkSocketMessage;
 
     typedef std::shared_ptr<TinkSocketMessage> TinkSocketMsgPtr;

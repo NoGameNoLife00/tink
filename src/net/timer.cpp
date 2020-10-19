@@ -82,11 +82,11 @@ namespace tink {
     void Timer::DispatchList_(TimerNodeList &curr) {
         for (auto& node : curr) {
             TimerEvent& event = node->event;
-            TinkMessagePtr msg = std::make_shared<TinkMessage>();
-            msg->source = 0;
-            msg->session = event.session;
-            msg->data = nullptr;
-            msg->size = static_cast<size_t>(PTYPE_RESPONSE) << MESSAGE_TYPE_SHIFT;
+            TinkMessage msg;
+            msg.source = 0;
+            msg.session = event.session;
+            msg.data = nullptr;
+            msg.size = static_cast<size_t>(PTYPE_RESPONSE) << MESSAGE_TYPE_SHIFT;
             ContextMngInstance.PushMessage(event.handle, msg);
         }
     }
@@ -147,11 +147,11 @@ namespace tink {
 
     int Timer::TimeOut(uint32_t handle, int time, int session) {
         if (time <= 0) {
-            TinkMessagePtr msg = std::make_shared<TinkMessage>();
-            msg->source = 0;
-            msg->session = session;
-            msg->data = nullptr;
-            msg->size = static_cast<size_t>(PTYPE_RESPONSE) << MESSAGE_TYPE_SHIFT;
+            TinkMessage msg;
+            msg.source = 0;
+            msg.session = session;
+            msg.data = nullptr;
+            msg.size = static_cast<size_t>(PTYPE_RESPONSE) << MESSAGE_TYPE_SHIFT;
             if (ContextMngInstance.PushMessage(handle, msg)) {
                 return E_FAILED;
             }

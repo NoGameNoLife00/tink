@@ -56,13 +56,13 @@ namespace tink {
         if (!result && m_.size() > MAX_MODULE_TYPE) {
             void * dl = TryOpen(path_, name);
             if (dl) {
-                auto* create = reinterpret_cast<ModuleCreateInstance*>(dlsym(dl, "CreateModule"));
+                auto* create = reinterpret_cast<ModuleCreateCallBack*>(dlsym(dl, "CreateModule"));
                 const char * error = dlerror();
                 if (error) {
                     fprintf(stderr, "load module instance %s failed : %s\n", name.c_str(), error);
                     return result;
                 }
-                result = m_.emplace_back(std::shared_ptr<BaseModule>(create()));
+                result = m_.emplace_back(std::shared_ptr<BaseModule>((*create)()));
             }
         }
         return result;

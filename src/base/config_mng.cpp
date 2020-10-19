@@ -92,10 +92,6 @@ namespace tink {
         return 0;
     }
 
-    const std::shared_ptr<Server>& ConfigMng::GetServer() const {
-        return server_;
-    }
-
     const string& ConfigMng::GetHost() const {
         return host_;
     }
@@ -124,9 +120,6 @@ namespace tink {
         return worker_pool_size_;
     }
 
-    void ConfigMng::SetServer(std::shared_ptr<Server>&& s) {
-        server_ = s;
-    }
 
 
 

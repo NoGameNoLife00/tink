@@ -43,14 +43,9 @@ namespace tink::Service {
             }
         }
         this->ctx = ctx;
-//        for (int i = 0 ; i < max; i++) {
-//            ConnectionPtr cn = std::make_shared<Connection>();
-//            cn->id = -1;
-//            conn.emplace_back(cn);
-//        }
-
         max_connection = max;
         conn_pool = std::make_shared<ConnPool>(max, 0);
+        msg_pool = std::make_shared<MessagePool>(100, 100);
         this->client_tag = client_tag;
         this->header_size = header == 'S' ? 2 : 4;
         ctx->SetCallBack(CallBack_, this);
@@ -58,7 +53,15 @@ namespace tink::Service {
     }
 
     void ServiceGate::Release() {
-
+        for (auto& it : conn) {
+            Connection *c = it.second;
+            SOCKET_SERVER.Close(ctx->Handle(), c->id);
+            conn_pool->ReusePoolItem(c);
+        }
+        conn.clear();
+        conn_pool->DeletePool();
+        msg_pool->DeletePool();
+        conn_pool.reset();
     }
 
     int ServiceGate::StartListen(std::string &listen_addr) {
@@ -92,11 +95,9 @@ namespace tink::Service {
     ServiceGate::CallBack_(Context &ctx, void *ud, int type, int session, uint32_t source, DataPtr &msg, size_t sz) {
         ServiceGate *g = static_cast<ServiceGate *>(ud);
         switch (type) {
-            case PTYPE_TEXT: {
+            case PTYPE_TEXT:
                 g->Ctrl(msg, sz);
                 break;
-            }
-
             case PTYPE_CLIENT: {
                 if (sz <= 4) {
                     spdlog::error("Invalid client message from {}", source);
@@ -113,11 +114,9 @@ namespace tink::Service {
                 }
             }
 
-            case PTYPE_SOCKET: {
-                DispatchSocketMessage();
+            case PTYPE_SOCKET:
+                g->DispatchSocketMessage(std::reinterpret_pointer_cast<TinkSocketMessage>(msg), int(sz-sizeof(TinkSocketMessage)));
                 break;
-            }
-
         }
         return E_OK;
     }
@@ -179,31 +178,76 @@ namespace tink::Service {
         }
     }
 
-    void ServiceGate::DispatchSocketMessage(TinkSocketMessage &msg, int sz) {
-        switch (msg.type) {
+    void ServiceGate::DispatchSocketMessage(TinkSocketMsgPtr msg, int sz) {
+        switch (msg->type) {
             case TINK_SOCKET_TYPE_DATA: {
-                if (auto it = conn.find(msg.id); it != conn.end()) {
+                if (auto it = conn.find(msg->id); it != conn.end()) {
                     Connection * c = it->second;
-
+                    DispatchMessage(*c, msg->id, msg->buffer, msg->ud);
+                } else {
+                    spdlog::error("drop unknown connection {} message", msg->id);
+                    SOCKET_SERVER.Close(ctx->Handle(), msg->id);
+                    msg->buffer.reset();
                 }
             }
+            case TINK_SOCKET_TYPE_CONNECT: {
+                if (msg->id == listen_id) {
+                    // start listening
+                    break;
+                }
+                if (conn.find(msg->id) == conn.end()) {
+                    spdlog::error("close unknown connection {}", msg->id);
+                    SOCKET_SERVER.Close(ctx->Handle(), msg->id);
+                }
+                break;
+            }
+            case TINK_SOCKET_TYPE_CLOSE:
+            case TINK_SOCKET_TYPE_ERROR: {
+                if (auto it = conn.find(msg->id); it != conn.end()) {
+                    Connection *c = it->second;
+                    c->buffer.Clear(*msg_pool);
+                    conn_pool->ReusePoolItem(c);
+                    conn.erase(it);
+                    Report_("%d close", msg->id);
+                }
+                break;
+            }
+            case TINK_SOCKET_TYPE_ACCEPT: {
+                if (conn_pool->IsFreePoolEmpty()) {
+                    SOCKET_SERVER.Close(ctx->Handle(), msg->ud);
+                } else {
+                    Connection * c = conn_pool->GetPoolItem();
+                    if (sz >= sizeof(c->remote_name)) {
+                        sz = sizeof(c->remote_name) - 1;
+                    }
+                    c->id = msg->ud;
+                    memcpy(c->remote_name, msg.get() + 1, sz);
+                    c->remote_name[sz] = '\0';
+                    Report_("%d open %d %s:0", c->id, c->id, c->remote_name);
+                    conn.emplace(std::make_pair(msg->ud, c));
+                    spdlog::info("socket open:{0:x}", c->id);
+                }
+                break;
+            }
+            case TINK_SOCKET_TYPE_WARNING:
+                spdlog::error("fd (%d) send buffer (%d)K", msg->id, msg->ud);
+                break;
         }
     }
 
     void ServiceGate::DispatchMessage(Connection &c, int id, DataPtr data, int sz) {
-        c.buffer.Push(mp, data, sz);
+        c.buffer.Push(*msg_pool, data, sz);
         for (;;) {
-            int size = c.buffer.ReadHeader(mp, header_size);
+            int size = c.buffer.ReadHeader(*msg_pool, header_size);
             if (size < 0) {
                 return ;
             } else if (size > 0) {
                 if (size >= 0x1000000) {
-                    c.buffer.Clear(mp);
+                    c.buffer.Clear(*msg_pool);
                     SOCKET_SERVER.Close(ctx->Handle(), id);
                     spdlog::error("Recv socket message > 16M");
                     return ;
                 } else {
-
                     c.buffer.Reset();
                 }
             }
@@ -218,19 +262,32 @@ namespace tink::Service {
         }
         if (broker) {
             DataPtr temp = std::make_shared<byte[]>(size);
-            c.buffer.Read(mp, temp.get(), size);
+            c.buffer.Read(*msg_pool, temp.get(), size);
             ctx->Send(0, broker, client_tag, fd, temp, size);
             return ;
         }
         if (c.agent) {
             DataPtr temp = std::make_shared<byte[]>(size);
-            c.buffer.Read(mp, temp.get(), size);
+            c.buffer.Read(*msg_pool, temp.get(), size);
             ctx->Send(c.client, c.agent, client_tag, fd, temp, size);
         } else if (watchdog) {
             DataPtr tmp = std::make_shared<byte[]>(size+32);
             int n = snprintf(static_cast<byte*>(tmp.get()), 32, "%d data", c.id);
-            c.buffer.Read(mp, static_cast<byte*>(tmp.get())+n, size);
+            c.buffer.Read(*msg_pool, static_cast<byte*>(tmp.get()) + n, size);
             ctx->Send(0, watchdog, PTYPE_TEXT, fd, tmp, size + n);
         }
+    }
+
+    void ServiceGate::Report_(const char *data, ...) {
+        if (watchdog == 0) {
+            return;
+        }
+        va_list ap;
+        va_start(ap, data);
+//        char tmp[1024];
+        DataPtr tmp = std::make_shared<byte[]>(1024);
+        int n = vsnprintf(static_cast<byte*>(tmp.get()), 1024, data, ap);
+        va_end(ap);
+        ctx->Send(0, watchdog, PTYPE_TEXT, 0, tmp, n);
     }
 }

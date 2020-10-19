@@ -3,14 +3,11 @@
 
 #include <string>
 #include <memory>
-#include <message_handler.h>
 #include <sys/epoll.h>
 #include <unordered_map>
 #include <map>
 #include <vector>
 #include <socket.h>
-#include <connection.h>
-#include <conn_manager.h>
 #include <functional>
 #include <context.h>
 #include <socket_server.h>
@@ -34,7 +31,6 @@ namespace tink {
         int Init(string &name, int ip_version, string &ip, int port);
         int Start(); // 启动
         int Stop(); // 停止
-        SocketServerPtr GetSocketServer() { return socket_server_; }
     private:
         static const int ListenID = 0;
         static const int ConnStartID = 1000;

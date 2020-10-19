@@ -9,25 +9,6 @@ namespace tink {
     constexpr int MESSAGE_TYPE_SHIFT = ((sizeof(size_t)-1) * 8);
     constexpr int GLOBALNAME_LENGTH = 32;
 
-    typedef struct NetMessage_ {
-        int Init(uint32_t id, uint32_t len, UBytePtr &data);
-        int32_t GetId() const;
-
-        void SetId(uint32_t id);
-
-        uint32_t GetDataLen() const;
-
-        void SetDataLen(uint32_t data_len);
-
-        UBytePtr &GetData();
-
-        void SetData(UBytePtr &data);
-        uint32_t id; // 消息ID
-        uint32_t data_len; // 消息长度
-        UBytePtr data; // 消息数据
-        LEAK_DETECTOR(NetMessage_);
-    } NetMessage;
-
     typedef struct TinkMessage_ {
         uint32_t source;
         int32_t session;

@@ -114,8 +114,8 @@ namespace tink {
             buffer = buf.buffer;
             sz = buf.sz;
         }
-        void Init(void * object, size_t size) {
-            buffer.reset(object);
+        void Init(char * object, size_t size) {
+            buffer = std::shared_ptr<byte>(object);
             this->sz = size;
         }
     }SendObject;

@@ -1,7 +1,6 @@
 #include <server.h>
 #include <cstring>
 #include <unistd.h>
-#include <connection.h>
 #include <config_mng.h>
 #include <scope_guard.h>
 #include <common.h>
@@ -11,6 +10,7 @@
 #include <signal.h>
 #include <daemon.h>
 #include <module_manage.h>
+#include <thread.h>
 #include "harbor.h"
 #include "timer.h"
 #include "monitor.h"
@@ -127,11 +127,10 @@ namespace tink {
     }
 
 
-    static void ThreadSocket(ServerPtr s, MonitorPtr m) {
+    static void ThreadSocket(MonitorPtr m) {
         CurrentHandle::InitThread(THREAD_SOCKET);
-        auto ss = s->GetSocketServer();
         for (;;) {
-            int ret = ss->Poll();
+            int ret = SOCKET_SERVER.Poll();
             if (ret == 0) {
                 break;
             }
@@ -215,7 +214,7 @@ namespace tink {
 
         thread_list.emplace_back(std::make_unique<Thread>([m] { return ThreadMonitor(m); }, "monitor"));
         thread_list.emplace_back(std::make_unique<Thread>([m] { return ThreadTimer(m); }, "timer"));
-        thread_list.emplace_back(std::make_unique<Thread>([this, m] { return ThreadSocket(shared_from_this(), m); }, "timer"));
+        thread_list.emplace_back(std::make_unique<Thread>([this, m] { return ThreadSocket(m); }, "timer"));
 
 
         static int weight[] = {
@@ -236,13 +235,13 @@ namespace tink {
         for (auto& t : thread_list) {
             t->Join();
         }
-
+        return E_OK;
     }
 
 
     int Server::Stop() {
         spdlog::info("[Stop] tink server name %s", name_);
-        return 0;
+        return E_OK;
     }
 
 

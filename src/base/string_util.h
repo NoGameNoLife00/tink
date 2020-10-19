@@ -2,7 +2,7 @@
 #define TINK_STRING_UTIL_H
 
 #include <string>
-
+#include <vector>
 namespace tink {
     using std::string;
     class StringArg // copyable

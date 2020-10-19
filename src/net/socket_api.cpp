@@ -161,6 +161,7 @@ namespace tink {
             spdlog::critical("socket.bind {}:{}", strerror(errno), errno);
             return ret;
         }
+        return E_OK;
     }
 
     int SocketApi::Listen(int fd, int backlog) {
@@ -168,6 +169,7 @@ namespace tink {
             spdlog::critical("socket.listen {}:{}", strerror(errno), errno);
             return ret;
         }
+        return E_OK;
     }
 
     int SocketApi::Accept(int fd, struct sockaddr_in6 *addr) {

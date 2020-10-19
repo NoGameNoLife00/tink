@@ -22,9 +22,6 @@ namespace tink {
         // 配置初始化
         int Init();
         int Reload();
-        const std::shared_ptr<Server>& GetServer() const;
-
-        void SetServer(std::shared_ptr<Server>&& s);
 
         const string& GetHost() const;
 
@@ -50,9 +47,6 @@ namespace tink {
         void Default_();
         int max_conn_;
         uint32_t max_package_size_;
-
-        // 全局Server对象
-        std::shared_ptr<Server> server_;
         string version_;
         string host_;
         string name_;

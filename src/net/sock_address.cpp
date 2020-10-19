@@ -99,7 +99,7 @@ namespace tink {
             addr6_.sin6_family = AF_INET6;
             addr6_.sin6_port = SocketApi::HostToNetwork16(port);
             memcpy(&addr6_.sin6_addr, addr, sizeof(addr_.sin_addr));
-            return sizeof(addr6_)
+            return sizeof(addr6_);
         } else {
             memset(&addr_, 0, sizeof addr_);
             addr_.sin_family = AF_INET;
