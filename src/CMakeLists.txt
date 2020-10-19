@@ -4,7 +4,7 @@ set(BINARY ${CMAKE_PROJECT_NAME})
 
 include_directories(base)
 include_directories(net)
-include_directories(service)
+#include_directories(service)
 
 file(GLOB_RECURSE SOURCES LIST_DIRECTORIES true *.h *.cpp)
 set(SOURCES ${SOURCES} ../3rdparty/cjson/cJSON.c)
@@ -17,6 +17,7 @@ add_definitions(-DELPP_THREAD_SAFE
 #add_definitions(-std=c++2a)
 
 # 将框架代码作为静态链接库使用
-add_library(${BINARY}_lib STATIC ${SOURCES})
-target_link_libraries(${BINARY}_lib ${SPDLOG_LIBS} -pthread)
-set_property(TARGET ${BINARY}_lib  PROPERTY CXX_STANDARD 20)
+#add_library(${BINARY}_lib STATIC ${SOURCES})
+#target_link_libraries(${BINARY}_lib ${SPDLOG_LIBS} -pthread)
+add_executable(${BINARY} ${SOURCES})
+set_property(TARGET ${BINARY}  PROPERTY CXX_STANDARD 20)

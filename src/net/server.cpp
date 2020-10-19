@@ -36,9 +36,8 @@ namespace tink {
     }
 
 
-    int Server::Init(string &name, int ip_version, string &ip, int port) {
-        name_ = name;
-        listen_addr_ = std::make_shared<SockAddress>(ip, port, ip_version == AF_INET6);
+    int Server::Init(ConfigPtr config) {
+        config_ = config;
         CurrentHandle::InitThread(THREAD_MAIN);
         Sigign();
 
@@ -48,14 +47,14 @@ namespace tink {
         sa.sa_flags = SA_RESTART;
         sigfillset(&sa.sa_mask);
         sigaction(SIGHUP, &sa, NULL);
-        if (!ConfigMngInstance.GetDaemon().empty()) {
-            if (Daemon::Init(ConfigMngInstance.GetDaemon())) {
+        if (!config_->GetDaemon().empty()) {
+            if (Daemon::Init(config_->GetDaemon())) {
                 exit(1);
             }
         }
-        HarborInstance.Init(ConfigMngInstance.GetHarbor());
-        ContextMngInstance.Init(ConfigMngInstance.GetHarbor());
-        ModuleMngInstance.Init(ConfigMngInstance.GetModulePath());
+        HarborInstance.Init(config_->GetHarbor());
+        ContextMngInstance.Init(config_->GetHarbor());
+        ModuleMngInstance.Init(config_->GetModulePath());
         TimerInstance.Init();
         SOCKET_SERVER.Init(TimerInstance.Now());
         return 0;
@@ -197,13 +196,7 @@ namespace tink {
     }
 
     int Server::Start() {
-        auto& config = ConfigMngInstance;
-        spdlog::info("[tink] Server Name:{}, listener at IP:{}, Port:{}, is starting.",
-                name_, listen_addr_->ToIp(), listen_addr_->ToPort());
-        spdlog::info("[tink] Version: {}, MaxConn:{}, MaxPacketSize:{}", config.GetVersion().c_str(),
-                     config.GetMaxConn(), config.GetMaxPackageSize());
-
-        int thread = config.GetWorkerPoolSize();
+        int thread = config_->GetWorkerPoolSize();
         MonitorPtr m = std::shared_ptr<Monitor>();
         m->count = thread;
         m->sleep = 0;
@@ -240,7 +233,7 @@ namespace tink {
 
 
     int Server::Stop() {
-        spdlog::info("[Stop] tink server name %s", name_);
+        spdlog::info("[Stop] tink server name %s", config_->GetName());
         return E_OK;
     }
 

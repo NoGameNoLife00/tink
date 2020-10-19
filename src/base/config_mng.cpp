@@ -10,7 +10,7 @@
 
 namespace tink {
 
-    void ConfigMng::Default_() {
+    void Config::Default_() {
         name_ = "tink_server";
         host_ = "0.0.0.0";
         version_ = TINK_VERSION_STR;
@@ -49,7 +49,18 @@ namespace tink {
         }
     }
 
-    int ConfigMng::Init() {
+    // init log
+    void Config::InitLog_() {
+        spdlog::init_thread_pool(8192, 1);
+        auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+        auto file_sink = std::make_shared<spdlog::sinks::daily_file_sink_mt>(log_name_, 0, 0);
+        auto logger = std::make_shared<spdlog::async_logger>("tink", spdlog::sinks_init_list{file_sink, console_sink}, spdlog::thread_pool());
+        logger->set_pattern("[%Y-%m-%d.%e %T] [t-%t] [%l] %v");
+        logger->flush_on(spdlog::level::debug);
+        spdlog::set_default_logger(logger);
+    }
+
+    int Config::Init() {
         Default_();
         FILE *fp = nullptr;
         cJSON *json;
@@ -77,14 +88,7 @@ namespace tink {
             GetJsonValue(json, daemon_, "daemon", "");
             GetJsonValue(json, profile_, "profile", false);
             GetJsonValue(json, module_path_, "module_path", "./cservice/?.so");
-            // init log
-            spdlog::init_thread_pool(8192, 1);
-            auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-            auto file_sink = std::make_shared<spdlog::sinks::daily_file_sink_mt>(log_name_, 0, 0);
-            auto logger = std::make_shared<spdlog::async_logger>("tink", spdlog::sinks_init_list{file_sink, console_sink}, spdlog::thread_pool());
-            logger->set_pattern("[%Y-%m-%d.%e %T] [t-%t] [%l] %v");
-            logger->flush_on(spdlog::level::debug);
-            spdlog::set_default_logger(logger);
+            InitLog_();
         } else {
             fprintf(stderr,"tink open file etc/config.json failed");
             exit(0);
@@ -92,31 +96,31 @@ namespace tink {
         return 0;
     }
 
-    const string& ConfigMng::GetHost() const {
+    const string& Config::GetHost() const {
         return host_;
     }
 
-    const string& ConfigMng::GetName() const {
+    const string& Config::GetName() const {
         return name_;
     }
 
-    int ConfigMng::GetPort() const {
+    int Config::GetPort() const {
         return port_;
     }
 
-    const string& ConfigMng::GetVersion() const {
+    const string& Config::GetVersion() const {
         return version_;
     }
 
-    int ConfigMng::GetMaxConn() const {
+    int Config::GetMaxConn() const {
         return max_conn_;
     }
 
-    uint32_t ConfigMng::GetMaxPackageSize() const {
+    uint32_t Config::GetMaxPackageSize() const {
         return max_package_size_;
     }
 
-    uint32_t ConfigMng::GetWorkerPoolSize() const {
+    uint32_t Config::GetWorkerPoolSize() const {
         return worker_pool_size_;
     }
 

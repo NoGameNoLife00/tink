@@ -11,8 +11,9 @@
 #include <functional>
 #include <context.h>
 #include <socket_server.h>
+#include <config_mng.h>
 
-//#define TINK_SERVER tink::Singleton<tink::Server>::GetInstance()
+#define TINK_SERVER tink::Singleton<tink::Server>::GetInstance()
 
 namespace tink {
     class Connection;
@@ -28,21 +29,14 @@ namespace tink {
 
     class Server : public std::enable_shared_from_this<Server> {
     public:
-        int Init(string &name, int ip_version, string &ip, int port);
+        int Init(ConfigPtr config);
         int Start(); // 启动
         int Stop(); // 停止
     private:
-        static const int ListenID = 0;
-        static const int ConnStartID = 1000;
-        static const int InitEvenListCount = 32;
-        string name_;
-        // server的消息管理模块
-        MessageHandlerPtr msg_handler_;
-        SockAddressPtr listen_addr_;
-        EventList events_;
-        // 连接启动和停止的钩子函数
-        ConnHookFunc on_conn_start_;
-        ConnHookFunc on_conn_stop_;
+        ConfigPtr config_;
+
+
+
     };
 }
 
