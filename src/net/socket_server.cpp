@@ -443,10 +443,10 @@ namespace tink {
         return E_OK;
     }
 
-    static int DoBind(StringArg host, int port, int protocol, int& family) {
+    static int DoBind(std::string_view host, int port, int protocol, int& family) {
         SockAddressPtr addr;
 
-        if (host.c_str() == nullptr || host.c_str()[0] == 0 ) {
+        if (host.empty()) {
             addr = std::make_shared<SockAddress>(port, false, false);
         } else {
             addr = std::make_shared<SockAddress>(host, port, false);
@@ -465,7 +465,7 @@ namespace tink {
     }
 
 
-    static int DoListen(StringArg host, int port, int backlog) {
+    static int DoListen(std::string_view host, int port, int backlog) {
         int family = 0;
         int listen_fd = DoBind(host, port, IPPROTO_TCP, family);
         if (listen_fd < 0) {
@@ -478,7 +478,7 @@ namespace tink {
     }
 
 
-    int SocketServer::Listen(uintptr_t opaque, const string &addr, int port, int backlog) {
+    int SocketServer::Listen(uintptr_t opaque, std::string_view addr, int port, int backlog) {
         int fd = DoListen(addr, port, backlog);
         if (fd < 0) {
             return SOCKET_NONE;

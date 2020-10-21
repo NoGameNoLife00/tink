@@ -65,25 +65,24 @@ namespace tink::Service {
         conn_pool_.reset();
     }
 
-    int ServiceGate::StartListen(std::string &listen_addr) {
-        char * port_str = const_cast<char *>(strrchr(listen_addr.c_str(), ':'));
-        string host = "";
+    int ServiceGate::StartListen(std::string_view listen_addr) {
+        int port_idx = listen_addr.find_last_of(':');
         int port;
-        if (port_str == nullptr) {
-            port = strtol(listen_addr.c_str(), nullptr, 10);
+        if (port_idx == listen_addr.npos) {
+            port = strtol(listen_addr.data(), nullptr, 10);
             if (port <= 0) {
                 spdlog::error("invalid gate address {}", listen_addr);
                 return E_FAILED;
             }
         } else {
-            port = strtol(port_str + 1, nullptr, 10);
+            port = strtol(listen_addr.substr(port_idx+1).data(), nullptr, 10);
             if (port <= 0) {
                 spdlog::error("invalid gate address {}", listen_addr);
                 return E_FAILED;
             }
-            port_str[0] = '\0';
-            host = listen_addr;
+
         }
+        auto host = listen_addr.substr(0, port_idx);
         listen_id_ = SOCKET_SERVER.Listen(ctx_->Handle(), host, port, BACKLOG);
         if (listen_id_ < 0) {
             return E_FAILED;

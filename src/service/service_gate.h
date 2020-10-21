@@ -21,7 +21,7 @@ namespace tink::Service {
         ServiceGate();
 
         int Init(ContextPtr ctx, std::string_view param) override;
-        int StartListen(std::string& listen_addr);
+        int StartListen(std::string_view listen_addr);
         void Ctrl(DataPtr &msg, int sz);
         void Release() override;
         void DispatchSocketMessage(TinkSocketMsgPtr msg, int sz);

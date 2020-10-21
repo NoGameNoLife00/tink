@@ -33,13 +33,13 @@ namespace tink {
         void DispatchAll();
 
         int Send(uint32_t source, uint32_t destination, int type, int session, DataPtr &data, size_t sz);
-        int SendName(uint32_t source, const std::string& addr, int type, int session, DataPtr &data, size_t sz);
+        int SendName(uint32_t source, std::string_view addr, int type, int session, DataPtr &data, size_t sz);
 
         static void DropMessage(TinkMessage &msg, void *ud);
         void DispatchMessage(TinkMessage &msg);
         ContextCallBack GetCallBack() {return callback_;}
 
-        const char * Command(const std::string& cmd, std::string_view param);
+        const char * Command(std::string_view cmd, std::string_view param);
         char * Result() { return result; }
         friend class ContextManage;
     private:

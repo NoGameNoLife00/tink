@@ -28,16 +28,17 @@ namespace tink {
 
     }
 
-    SockAddress::SockAddress(StringArg ip, uint16_t port, bool ipv6) {
+    SockAddress::SockAddress(std::string_view ip, uint16_t port, bool ipv6) {
+        string str_ip(ip);
         if (ipv6)
         {
             memset(&addr6_, 0, sizeof addr6_);
-            SocketApi::FromIpPort(ip.c_str(), port, &addr6_);
+            SocketApi::FromIpPort(str_ip.c_str(), port, &addr6_);
         }
         else
         {
             memset(&addr_, 0, sizeof addr_);
-            SocketApi::FromIpPort(ip.c_str(), port, &addr_);
+            SocketApi::FromIpPort(str_ip.c_str(), port, &addr_);
         }
     }
 
@@ -63,7 +64,7 @@ namespace tink {
     }
     static thread_local char t_resolveBuffer[64 * 1024];
 
-    bool SockAddress::Resolve(StringArg hostname, SockAddress *result) {
+    bool SockAddress::Resolve(std::string_view hostname, SockAddress *result) {
         assert(result != NULL);
         struct hostent hent;
         struct hostent* he = NULL;

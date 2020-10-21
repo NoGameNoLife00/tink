@@ -127,15 +127,15 @@ namespace tink {
         }
     }
 
-    int Context::SendName(uint32_t source, const std::string &addr, int type, int session, DataPtr &data, size_t sz) {
+    int Context::SendName(uint32_t source, std::string_view addr, int type, int session, DataPtr &data, size_t sz) {
         if (source == 0) {
             source = handle_;
         }
         uint32_t  des = 0;
         if (addr[0] == ':') {
-            des = strtoul(addr.c_str()+1, NULL, 16);
+            des = strtoul(addr.data()+1, nullptr, 16);
         } else if ( addr[0] == '.') {
-            des = CONTEXT_MNG.FindName(addr.c_str() + 1);
+            des = CONTEXT_MNG.FindName(addr.substr(1));
             if (des == 0) {
                 return E_FAILED;
             }
@@ -147,7 +147,7 @@ namespace tink {
             FilterArgs_(type, session, data, sz);
 
             RemoteMessagePtr r_msg = std::make_shared<RemoteMessage>();
-            CopyName(r_msg->destination.name, addr.c_str());
+            CopyName(r_msg->destination.name, addr.data());
             r_msg->destination.handle = 0;
             r_msg->message = data;
             r_msg->size = sz & MESSAGE_TYPE_MASK;
@@ -206,7 +206,7 @@ namespace tink {
 
 
 
-    const char *Context::Command(const std::string &cmd, std::string_view param) {
+    const char *Context::Command(std::string_view cmd, std::string_view param) {
 
         return nullptr;
     }

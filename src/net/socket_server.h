@@ -144,7 +144,7 @@ namespace tink {
         int Send(int id, DataPtr buffer, int sz);
         int SendLowPriority(SocketSendBuffer &buffer);
 
-        int Listen(uintptr_t opaque, const string &addr, int port, int backlog);
+        int Listen(uintptr_t opaque, std::string_view addr, int port, int backlog);
         int Connect(uintptr_t opaque, const string &addr, int port);
         int Bind(uintptr_t opaque, int fd);
 

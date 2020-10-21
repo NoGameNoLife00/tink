@@ -12,7 +12,7 @@ namespace tink {
     class SockAddress : public copyable {
     public:
         explicit SockAddress(uint16_t port = 0, bool loopback_only = false, bool ipv6 = false );
-        SockAddress(StringArg ip, uint16_t port, bool ipv6 = false);
+        SockAddress(std::string_view ip, uint16_t port, bool ipv6 = false);
         explicit SockAddress(const struct sockaddr_in& addr) : addr_(addr) {}
         explicit SockAddress(const struct sockaddr_in6& addr) : addr6_(addr) {}
         int Init(const void *addr, uint16_t port, bool ipv6 = false);
@@ -24,7 +24,7 @@ namespace tink {
         void SetSockAddrInet6(const struct sockaddr_in6& addr6) { addr6_ = addr6; }
         uint32_t IpNetEndian() const;
         uint16_t PortNetEndian() const { return addr_.sin_port; }
-        static bool Resolve(StringArg hostname, SockAddress* result);
+        static bool Resolve(std::string_view hostname, SockAddress* result);
         void SetScopeId(uint32_t scope_id);
 
         int GenUpdAddress(int protocol, uint8_t *udp_address);

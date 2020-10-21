@@ -68,7 +68,7 @@ namespace tink {
     }
 
     std::atomic_uint Thread::num_created_;
-    Thread::Thread(tink::Thread::ThreadFunc func, const std::string &name)
+    Thread::Thread(tink::Thread::ThreadFunc func, std::string_view name)
         : started_(false), joined_(false),
         pid_(0), func_(std::move(func)),
         name_(name), latch_(1)

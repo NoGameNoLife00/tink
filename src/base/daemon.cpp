@@ -6,9 +6,9 @@
 #include "daemon.h"
 
 namespace tink {
-    static int CheckPid(const std::string &pid_file) {
+    static int CheckPid(std::string_view pid_file) {
         int pid = 0;
-        FILE *f = fopen(pid_file.c_str(),"r");
+        FILE *f = fopen(pid_file.data(),"r");
         if (f == nullptr)
             return 0;
         int n = fscanf(f,"%d", &pid);
@@ -25,16 +25,16 @@ namespace tink {
 
     }
 
-    static int WritePid(const std::string &pid_file) {
+    static int WritePid(std::string_view pid_file) {
         int pid = 0;
-        int fd = open(pid_file.c_str(), O_RDWR|O_CREAT, 0644);
+        int fd = open(pid_file.data(), O_RDWR|O_CREAT, 0644);
         if (fd == -1) {
-            fprintf(stderr, "Can't create pidfile [%s].\n", pid_file.c_str());
+            fprintf(stderr, "Can't create pidfile [%s].\n", pid_file.data());
             return 0;
         }
         FILE *f = fdopen(fd, "w+");
         if (f == nullptr) {
-            fprintf(stderr, "Can't open pidfile [%s].\n", pid_file.c_str());
+            fprintf(stderr, "Can't open pidfile [%s].\n", pid_file.data());
             return 0;
         }
 
@@ -82,7 +82,7 @@ namespace tink {
         return 0;
     }
 
-    int Daemon::Init(const std::string &pid_file) {
+    int Daemon::Init(std::string_view pid_file) {
         if (int pid = CheckPid(pid_file)) {
             fprintf(stderr, "Server is already running, pid = %d.\n", pid);
             return E_FAILED;
@@ -102,8 +102,8 @@ namespace tink {
         return E_OK;
     }
 
-    int Daemon::Exit(const std::string &pid_file) {
-        return unlink(pid_file.c_str());
+    int Daemon::Exit(std::string_view pid_file) {
+        return unlink(pid_file.data());
     }
 
 }

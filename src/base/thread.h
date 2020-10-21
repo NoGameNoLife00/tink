@@ -23,7 +23,7 @@ namespace tink{
     class Thread : noncopyable {
     public:
         typedef std::function<void()> ThreadFunc;
-        explicit Thread(ThreadFunc func, const std::string& name = "");
+        explicit Thread(ThreadFunc func, std::string_view name = "");
         ~Thread();
         void Start();
         int Join();

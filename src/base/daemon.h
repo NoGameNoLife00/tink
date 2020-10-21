@@ -5,8 +5,8 @@
 
 namespace tink {
     namespace Daemon {
-        int Init(const std::string& pid_file);
-        int Exit(const std::string& pid_file);
+        int Init(std::string_view pid_file);
+        int Exit(std::string_view pid_file);
     };
 }
 
