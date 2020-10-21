@@ -6,8 +6,9 @@
 #include <context.h>
 #include <map>
 #include <singleton.h>
+#include <string>
 
-#define ContextMngInstance tink::Singleton<tink::ContextManage>::GetInstance()
+#define CONTEXT_MNG tink::Singleton<tink::ContextManage>::GetInstance()
 
 namespace tink {
     namespace CurrentHandle {
@@ -29,6 +30,7 @@ namespace tink {
     class ContextManage {
     public:
         int Init(int harbor);
+        ContextPtr CreateContext(const std::string &name, const string &param);
         uint32_t Register(ContextPtr ctx);
         int BindName(uint32_t handle, std::string& name);
         int Unregister(int handle);

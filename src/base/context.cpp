@@ -10,46 +10,9 @@
 namespace tink {
     std::atomic_int Context::total = 0;
 
-    int Context::Init(const std::string &name, const char *param) {
-        auto mod = ModuleMngInstance.Query(name);
-        if (!mod) {
-            return E_QUERY_MODULE;
-        }
-        this->mod_ = mod;
-        callback_ = nullptr;
-        cb_ud_ = nullptr;
-        session_id_ = 0;
-        init_ = false;
-        endless_ = false;
-        cpu_cost_ = 0;
-        cpu_start_ = 0;
-        profile_ = false;
-        message_count_ = 0;
-        handle_ = ContextMngInstance.Register(shared_from_this());
-        if (handle_ == 0) {
-            return E_FAILED;
-        }
-        queue_ = std::make_shared<MessageQueue>(handle_);
-        mutex_.lock();
-        int ret = mod->Init(shared_from_this(), param);
-        mutex_.unlock();
-        if (ret == E_OK) {
-            init_ = true;
-            GlobalMQInstance.Push(queue_);
-        } else {
-            spdlog::error("Failed launch {}", name);
-            ContextMngInstance.Unregister(handle_);
-            struct DropT d = {handle_};
-            queue_->Release(DropMessage, &d);
-        }
-        ++total;
-        return ret;
-    }
-
     void Context::Destroy() {
         mod_->Release();
         queue_->MarkRelease();
-        --total;
     }
 
     void Context::Send(DataPtr &&data, size_t sz, uint32_t source, int type, int session) {
@@ -133,7 +96,7 @@ namespace tink {
             s_msg.session = session;
             s_msg.data = data;
             s_msg.size = sz;
-            if (ContextMngInstance.PushMessage(destination, s_msg)) {
+            if (CONTEXT_MNG.PushMessage(destination, s_msg)) {
                 return E_FAILED;
             }
         }
@@ -172,7 +135,7 @@ namespace tink {
         if (addr[0] == ':') {
             des = strtoul(addr.c_str()+1, NULL, 16);
         } else if ( addr[0] == '.') {
-            des = ContextMngInstance.FindName(addr.c_str()+1);
+            des = CONTEXT_MNG.FindName(addr.c_str() + 1);
             if (des == 0) {
                 return E_FAILED;
             }

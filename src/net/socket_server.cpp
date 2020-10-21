@@ -578,7 +578,7 @@ namespace tink {
         message.session = 0;
         message.data = sm;
         message.size = sz | (static_cast<size_t>(PTYPE_SOCKET) << MESSAGE_TYPE_SHIFT);
-        ContextMngInstance.PushMessage(result.opaque, message);
+        CONTEXT_MNG.PushMessage(result.opaque, message);
     }
     int SocketServer::Poll() {
         SocketMessage result;

@@ -32,6 +32,7 @@ namespace tink {
         int Init(ConfigPtr config);
         int Start(); // 启动
         int Stop(); // 停止
+        void Bootstrap(const std::string& cmdline);
     private:
         ConfigPtr config_;
     };

@@ -25,6 +25,7 @@
 #define MAX_UDP_PACKAGE 65535
 
 #define SOCKET_SERVER tink::Singleton<tink::SocketServer>::GetInstance()
+
 namespace tink {
 
     typedef struct SocketMessage_ {

@@ -37,7 +37,7 @@ namespace tink::Service {
         if (watchdog[0] = '!') {
             this->watchdog_ = 0;
         } else {
-            this->watchdog_ = ContextMngInstance.FindName(watchdog);
+            this->watchdog_ = CONTEXT_MNG.FindName(watchdog);
             if (this->watchdog_ == 0) {
                 spdlog::error("Invalid watchdog {}", watchdog);
                 return E_FAILED;
@@ -150,7 +150,7 @@ namespace tink::Service {
             return ;
         }
         if (param_list[0] == "broker") {
-            broker_ = ContextMngInstance.QueryName(param_list[1]);
+            broker_ = CONTEXT_MNG.QueryName(param_list[1]);
             return;
         }
         if (param_list[0] == "start") {

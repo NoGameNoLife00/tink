@@ -1,7 +1,10 @@
 #include <error_code.h>
 #include <cassert>
 #include <spdlog/spdlog.h>
+#include <string>
 #include "context_manage.h"
+#include "module_manage.h"
+
 namespace tink {
 
     thread_local uint32_t CurrentHandle::t_handle = 0;
@@ -118,6 +121,42 @@ namespace tink {
         }
         spdlog::error("don't support query global name %s");
         return 0;
+    }
+
+    ContextPtr ContextManage::CreateContext(const std::string &name, const string &param) {
+        ContextPtr ctx = std::make_shared<Context>();
+        auto mod = MODULE_MNG.Query(name);
+        if (!mod) {
+            return nullptr;
+        }
+        ctx->mod_ = mod;
+        ctx->callback_ = nullptr;
+        ctx->cb_ud_ = nullptr;
+        ctx->session_id_ = 0;
+        ctx->init_ = false;
+        ctx->endless_ = false;
+        ctx->cpu_cost_ = 0;
+        ctx->cpu_start_ = 0;
+        ctx->profile_ = false;
+        ctx->message_count_ = 0;
+        ctx->handle_ = CONTEXT_MNG.Register(ctx);
+        if (ctx->handle_ == 0) {
+            return nullptr;
+        }
+        ctx->queue_ = std::make_shared<MessageQueue>(ctx->handle_);
+        ctx->mutex_.lock();
+        int ret = mod->Init(ctx, param);
+        ctx->mutex_.unlock();
+        if (ret == E_OK) {
+            ctx->init_ = true;
+            GLOBAL_MQ.Push(ctx->queue_);
+        } else {
+            spdlog::error("Failed launch {}", name);
+            CONTEXT_MNG.Unregister(ctx->handle_);
+            struct DropT d = {ctx->handle_};
+            ctx->queue_->Release(Context::DropMessage, &d);
+        }
+        return ctx;
     }
 }
 

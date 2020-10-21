@@ -92,7 +92,7 @@ namespace tink {
             msg.session = event.session;
             msg.data = nullptr;
             msg.size = static_cast<size_t>(PTYPE_RESPONSE) << MESSAGE_TYPE_SHIFT;
-            ContextMngInstance.PushMessage(event.handle, msg);
+            CONTEXT_MNG.PushMessage(event.handle, msg);
         }
     }
 
@@ -157,7 +157,7 @@ namespace tink {
             msg.session = session;
             msg.data = nullptr;
             msg.size = static_cast<size_t>(PTYPE_RESPONSE) << MESSAGE_TYPE_SHIFT;
-            if (ContextMngInstance.PushMessage(handle, msg)) {
+            if (CONTEXT_MNG.PushMessage(handle, msg)) {
                 return E_FAILED;
             }
         } else {

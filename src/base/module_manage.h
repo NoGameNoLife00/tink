@@ -3,7 +3,7 @@
 
 #include <base_module.h>
 #include <singleton.h>
-#define ModuleMngInstance tink::Singleton<tink::ModuleManage>::GetInstance()
+#define MODULE_MNG tink::Singleton<tink::ModuleManage>::GetInstance()
 namespace tink {
     class ModuleManage {
     public:

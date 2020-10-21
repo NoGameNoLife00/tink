@@ -11,6 +11,7 @@
 #include <daemon.h>
 #include <module_manage.h>
 #include <thread.h>
+#include <sstream>
 #include "harbor.h"
 #include "timer.h"
 #include "monitor.h"
@@ -53,10 +54,11 @@ namespace tink {
             }
         }
         HarborInstance.Init(config_->GetHarbor());
-        ContextMngInstance.Init(config_->GetHarbor());
-        ModuleMngInstance.Init(config_->GetModulePath());
+        CONTEXT_MNG.Init(config_->GetHarbor());
+        MODULE_MNG.Init(config_->GetModulePath());
         TimerInstance.Init();
         SOCKET_SERVER.Init(TimerInstance.Now());
+        Bootstrap(config->GetBootstrap());
         return 0;
     }
 
@@ -96,9 +98,9 @@ namespace tink {
         smsg.data = nullptr;
         smsg.size = static_cast<size_t>(PTYPE_SYSTEM) << MESSAGE_TYPE_SHIFT;
 
-        uint32_t logger = ContextMngInstance.FindName("logger");
+        uint32_t logger = CONTEXT_MNG.FindName("logger");
         if (logger) {
-            ContextMngInstance.PushMessage(logger, smsg);
+            CONTEXT_MNG.PushMessage(logger, smsg);
         }
     }
 
@@ -143,23 +145,23 @@ namespace tink {
 
     MQPtr ContextMessageDispatch(MonitorNode &m_node, MQPtr q, int weight) {
         if (!q) {
-            q = GlobalMQInstance.Pop();
+            q = GLOBAL_MQ.Pop();
             if (!q) {
                 return nullptr;
             }
         }
         uint32_t handle = q->Handle();
-        ContextPtr ctx = ContextMngInstance.HandleGrab(handle);
+        ContextPtr ctx = CONTEXT_MNG.HandleGrab(handle);
         if (!ctx) {
             struct DropT d = {handle };
             q->Release(Context::DropMessage, &d);
-            return GlobalMQInstance.Pop();
+            return GLOBAL_MQ.Pop();
         }
         int n = 1;
         TinkMessage msg;
         for (int i = 0; i < n; i++) {
             if (q->Pop(msg)) {
-                return GlobalMQInstance.Pop();
+                return GLOBAL_MQ.Pop();
             } else if (i == 0 && weight >= 0) {
                 n = q->Size();
                 n >>= weight;
@@ -169,9 +171,9 @@ namespace tink {
             m_node.Trigger(0, 0);
         }
         assert(q.get() == ctx->Queue().get());
-        MQPtr nq = GlobalMQInstance.Pop();
+        MQPtr nq = GLOBAL_MQ.Pop();
         if (nq) {
-            GlobalMQInstance.Push(q);
+            GLOBAL_MQ.Push(q);
             q = nq;
         }
         return q;
@@ -207,7 +209,7 @@ namespace tink {
 
         thread_list.emplace_back(std::make_shared<Thread>([m] { return ThreadMonitor(m); }, "monitor"));
         thread_list.emplace_back(std::make_shared<Thread>([m] { return ThreadTimer(m); }, "timer"));
-        thread_list.emplace_back(std::make_shared<Thread>([this, m] { return ThreadSocket(m); }, "timer"));
+        thread_list.emplace_back(std::make_shared<Thread>( [m] { return ThreadSocket(m); }, "timer"));
 
 
         static int weight[] = {
@@ -239,6 +241,17 @@ namespace tink {
     int Server::Stop() {
         spdlog::info("[Stop] tink server name %s", config_->GetName());
         return E_OK;
+    }
+
+    void Server::Bootstrap(const string &cmdline) {
+        std::istringstream is(cmdline);
+        string name, args;
+        is >> name >> args;
+        ContextPtr ctx = CONTEXT_MNG.CreateContext(name, args);
+        if (!ctx) {
+            spdlog::error("bootstrap error: {}", cmdline);
+            exit(1);
+        }
     }
 
 

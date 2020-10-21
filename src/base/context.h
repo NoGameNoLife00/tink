@@ -16,13 +16,18 @@ namespace tink {
     };
     class Context : public std::enable_shared_from_this<Context> {
     public:
+        Context() {
+            ++total;
+        }
+        ~Context() {
+            --total;
+        }
         static int Total() { return total.load(); }
-        int Init(const std::string& name, const char * param);
         void Destroy();
         void Send(DataPtr &&data, size_t sz, uint32_t source, int type, int session);
         void SetCallBack(const ContextCallBack &cb, void *ud);
         uint32_t Handle() { return handle_; }
-        void Reserve() { --total; }
+        void Reserve() { }
         int NewSession();
         MQPtr Queue() { return queue_; }
         bool Endless() { return endless_; }
@@ -35,6 +40,7 @@ namespace tink {
         static void DropMessage(TinkMessage &msg, void *ud);
         void DispatchMessage(TinkMessage &msg);
         ContextCallBack GetCallBack() {return callback_;}
+        friend class ContextManage;
     private:
         static std::atomic_int total;
         static int handle_key;

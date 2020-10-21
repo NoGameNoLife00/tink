@@ -87,6 +87,7 @@ namespace tink {
             GetJsonValue(json, daemon_, "daemon", "");
             GetJsonValue(json, profile_, "profile", false);
             GetJsonValue(json, module_path_, "module_path", "./cservice/?.so");
+            GetJsonValue(json, bootstrap_, "bootstrap", "lua bootstrap");
             InitLog_();
         } else {
             fprintf(stderr,"tink open file etc/config.json failed");

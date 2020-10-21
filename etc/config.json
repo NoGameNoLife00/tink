@@ -6,6 +6,6 @@
   "worker_pool_size": 8,
   "log_name" : "./logs/game.log",
   "harbor" : 1,
-  "daemon" : "",
+  "daemon" : "tink.pid",
   "profile" : false
 }

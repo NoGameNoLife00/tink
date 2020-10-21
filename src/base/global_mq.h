@@ -5,7 +5,7 @@
 #include <list>
 #include <message.h>
 #include <message_queue.h>
-#define GlobalMQInstance tink::Singleton<tink::GlobalMQ>::GetInstance()
+#define GLOBAL_MQ tink::Singleton<tink::GlobalMQ>::GetInstance()
 namespace tink {
     class MessageQueue;
     typedef std::shared_ptr<MessageQueue> MQPtr;

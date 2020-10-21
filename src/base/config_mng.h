@@ -34,6 +34,7 @@ namespace tink {
         int GetHarbor() const { return harbor_; }
         uint32_t GetMaxPackageSize() const;
         uint32_t GetWorkerPoolSize() const;
+        const string& GetBootstrap() { return bootstrap_; }
     private:
         void Default_();
         void InitLog_();
@@ -45,10 +46,10 @@ namespace tink {
         string log_name_;
         int port_;
         uint32_t worker_pool_size_;
-        // 框架允许的最大任务数量
         uint32_t max_worker_task_len_;
         string daemon_;
         string module_path_;
+        string bootstrap_;
         bool profile_;
         int harbor_;
     };

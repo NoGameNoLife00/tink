@@ -5,7 +5,7 @@ namespace tink {
         std::lock_guard <Mutex> lock(mutex_);
         queue_.push(msg);
         if (!in_global) {
-            GlobalMQInstance.Push(shared_from_this());
+            GLOBAL_MQ.Push(shared_from_this());
         }
         //当使用阻塞模式从消息队列中获取消息时，由condition在新消息到达时提醒等待线程
         condition_.notify_one();
@@ -38,7 +38,7 @@ namespace tink {
         assert(!release_);
         release_ = true;
         if (!in_global) {
-            GlobalMQInstance.Push(shared_from_this());
+            GLOBAL_MQ.Push(shared_from_this());
         }
     }
 
@@ -48,7 +48,7 @@ namespace tink {
             lock.unlock();
             DropQueue_(drop_func, ud);
         } else {
-            GlobalMQInstance.Push(shared_from_this());
+            GLOBAL_MQ.Push(shared_from_this());
         }
     }
 
