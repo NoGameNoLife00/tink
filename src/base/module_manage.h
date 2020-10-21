@@ -8,10 +8,10 @@ namespace tink {
     class ModuleManage {
     public:
         constexpr static int MAX_MODULE_TYPE = 64;
-        int Init(const std::string& path);
-        ModulePtr Query(const std::string& name);
+        int Init(std::string_view path);
+        ModulePtr Query(std::string_view name);
     private:
-        ModulePtr Query_(const std::string& name);
+        ModulePtr Query_(std::string_view name);
         std::vector<ModulePtr> m_;
         std::string path_;
         mutable Mutex mutex_;

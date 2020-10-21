@@ -67,20 +67,17 @@ namespace tink {
         name_map_.clear();
     }
 
-    int ContextManage::BindName(uint32_t handle, std::string &name) {
+    std::string ContextManage::BindName(uint32_t handle, std::string_view name) {
         std::unique_lock<std::shared_mutex> lock(mutex_);
-        // todo 需要优化效率
-        for (auto& it : name_map_) {
-            if (it.first == name) {
-                return E_FAILED;
-            }
+        if (auto it = name_map_.find(name.data()); it != name_map_.end()) {
+            return "";
         }
         name_map_.emplace(std::make_pair(name, handle));
-        return E_OK;
+        return name.data();
     }
 
-    uint32_t ContextManage::FindName(const std::string & name) {
-        if (auto it = name_map_.find(name); it != name_map_.end()) {
+    uint32_t ContextManage::FindName(std::string_view name) {
+        if (auto it = name_map_.find(name.data()); it != name_map_.end()) {
             return it->second;
         }
         return 0;
@@ -112,18 +109,18 @@ namespace tink {
         ctx->SetEndless(true);
     }
 
-    uint32_t ContextManage::QueryName(const std::string &name) {
+    uint32_t ContextManage::QueryName(std::string_view name) {
         switch (name[0]) {
             case ':':
-                return strtoul(name.c_str() + 1, nullptr, 16);
+                return strtoul(name.data() + 1, nullptr, 16);
             case '.':
-                return FindName(name.c_str() + 1);
+                return FindName( name.substr(1));
         }
         spdlog::error("don't support query global name %s");
         return 0;
     }
 
-    ContextPtr ContextManage::CreateContext(const std::string &name, const string &param) {
+    ContextPtr ContextManage::CreateContext(std::string_view name, std::string_view param) {
         ContextPtr ctx = std::make_shared<Context>();
         auto mod = MODULE_MNG.Query(name);
         if (!mod) {

@@ -14,14 +14,12 @@ namespace tink {
     struct DropT {
         uint32_t handle;
     };
+
+
     class Context : public std::enable_shared_from_this<Context> {
     public:
-        Context() {
-            ++total;
-        }
-        ~Context() {
-            --total;
-        }
+        Context() { ++total; }
+        ~Context() { --total; }
         static int Total() { return total.load(); }
         void Destroy();
         void Send(DataPtr &&data, size_t sz, uint32_t source, int type, int session);
@@ -40,6 +38,9 @@ namespace tink {
         static void DropMessage(TinkMessage &msg, void *ud);
         void DispatchMessage(TinkMessage &msg);
         ContextCallBack GetCallBack() {return callback_;}
+
+        const char * Command(const std::string& cmd, std::string_view param);
+        char * Result() { return result; }
         friend class ContextManage;
     private:
         static std::atomic_int total;
@@ -61,6 +62,7 @@ namespace tink {
         bool init_;
         bool profile_;
         void *cb_ud_;
+        char result[32];
         ModulePtr mod_;
     };
 }

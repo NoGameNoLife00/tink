@@ -5,7 +5,7 @@
 #include "string_util.h"
 
 namespace tink {
-    static void *TryOpen(const std::string& path_str, const std::string& name_str) {
+    static void *TryOpen(std::string_view path_str, std::string_view name_str) {
         const char *l;
         size_t path_size = path_str.length();
         size_t name_size = name_str.length();
@@ -14,8 +14,8 @@ namespace tink {
         //search path
         void * dl = NULL;
         char tmp[sz];
-        const char *path = path_str.c_str();
-        const char *name = name_str.c_str();
+        const char *path = path_str.data();
+        const char *name = name_str.data();
         do
         {
             memset(tmp,0,sz);
@@ -46,7 +46,7 @@ namespace tink {
         return dl;
     }
 
-    ModulePtr ModuleManage::Query(const std::string &name) {
+    ModulePtr ModuleManage::Query(std::string_view name) {
         ModulePtr result = Query_(name);
         if (result) {
             return result;
@@ -59,7 +59,7 @@ namespace tink {
                 auto* create = reinterpret_cast<ModuleCreateCallBack*>(dlsym(dl, "CreateModule"));
                 const char * error = dlerror();
                 if (error) {
-                    fprintf(stderr, "load module instance %s failed : %s\n", name.c_str(), error);
+                    fprintf(stderr, "load module instance %s failed : %s\n", name.data(), error);
                     return result;
                 }
                 result = m_.emplace_back(std::shared_ptr<BaseModule>((*create)()));
@@ -68,16 +68,16 @@ namespace tink {
         return result;
     }
 
-    ModulePtr ModuleManage::Query_(const string &name) {
+    ModulePtr ModuleManage::Query_(std::string_view name) {
         for (auto &it : m_) {
-            if (strcmp(it->Name().c_str(), name.c_str())) {
+            if (strcmp(it->Name().c_str(), name.data())) {
                 return it;
             }
         }
         return nullptr;
     }
 
-    int ModuleManage::Init(const std::string& path) {
+    int ModuleManage::Init(std::string_view path) {
         path_ = path;
         return E_OK;
     }

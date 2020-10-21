@@ -30,13 +30,13 @@ namespace tink {
     class ContextManage {
     public:
         int Init(int harbor);
-        ContextPtr CreateContext(const std::string &name, const string &param);
+        ContextPtr CreateContext(std::string_view name, std::string_view param);
         uint32_t Register(ContextPtr ctx);
-        int BindName(uint32_t handle, std::string& name);
+        std::string BindName(uint32_t handle, std::string_view name);
         int Unregister(int handle);
         void UnregisterAll();
-        uint32_t FindName(const std::string& name);
-        uint32_t QueryName(const std::string& name);
+        uint32_t FindName(std::string_view name);
+        uint32_t QueryName(std::string_view name);
         ContextPtr HandleGrab(uint32_t handle);
         int PushMessage(uint32_t handle, TinkMessage &msg);
         void ContextEndless(uint32_t handle);

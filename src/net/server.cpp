@@ -56,8 +56,8 @@ namespace tink {
         HarborInstance.Init(config_->GetHarbor());
         CONTEXT_MNG.Init(config_->GetHarbor());
         MODULE_MNG.Init(config_->GetModulePath());
-        TimerInstance.Init();
-        SOCKET_SERVER.Init(TimerInstance.Now());
+        TIMER.Init();
+        SOCKET_SERVER.Init(TIMER.Now());
         Bootstrap(config->GetBootstrap());
         return 0;
     }
@@ -107,7 +107,7 @@ namespace tink {
     static void ThreadTimer(MonitorPtr m) {
         CurrentHandle::InitThread(THREAD_TIMER);
         for (;;) {
-            TimerInstance.UpdateTime();
+            TIMER.UpdateTime();
             // socket_updatetime();
             CHECK_ABORT
             Wakeup(*m, m->count - 1);

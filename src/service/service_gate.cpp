@@ -13,7 +13,7 @@ namespace tink::Service {
 
     }
 
-    int ServiceGate::Init(ContextPtr ctx, const std::string &param) {
+    int ServiceGate::Init(ContextPtr ctx, std::string_view param) {
         if (param.empty()) {
             return E_FAILED;
         }

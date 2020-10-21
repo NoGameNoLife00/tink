@@ -20,7 +20,7 @@ namespace tink::Service {
     public:
         ServiceGate();
 
-        int Init(ContextPtr ctx, const std::string &param) override;
+        int Init(ContextPtr ctx, std::string_view param) override;
         int StartListen(std::string& listen_addr);
         void Ctrl(DataPtr &msg, int sz);
         void Release() override;

@@ -5,7 +5,7 @@
 #include <list>
 #include <shared_mutex>
 
-#define TimerInstance tink::Singleton<tink::Timer>::GetInstance()
+#define TIMER tink::Singleton<tink::Timer>::GetInstance()
 
 namespace tink {
     // 定时器事件

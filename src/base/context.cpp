@@ -164,5 +164,51 @@ namespace tink {
         uint32_t source = d->handle;
         assert(source);
     }
+
+
+    std::string _CmdTimeout(Context& context, std::string_view& param) {
+        char* end_ptr = nullptr;
+        int ti = strtol(param.data(), &end_ptr, 10);
+        int session = context.NewSession();
+        TIMER.TimeOut(context.Handle(), ti, session);
+        sprintf(context.Result(), "%d", session);
+        return context.Result();
+    }
+
+    std::string _CmdReg(Context& context, std::string_view& param) {
+        if (param.empty()) {
+            sprintf(context.Result(), ":%x", context.Handle());
+            return context.Result();
+        } else if (param[0] == '.') {
+            auto&& name = param.substr(1);
+            return CONTEXT_MNG.BindName(context.Handle(), name);
+        }
+    }
+    static struct command_func cmd_funcs[] = {
+            { "TIMEOUT", _CmdTimeout },
+            { "REG", cmd_reg },
+            { "QUERY", cmd_query },
+            { "NAME", cmd_name },
+            { "EXIT", cmd_exit },
+            { "KILL", cmd_kill },
+            { "LAUNCH", cmd_launch },
+            { "GETENV", cmd_getenv },
+            { "SETENV", cmd_setenv },
+            { "STARTTIME", cmd_starttime },
+            { "ABORT", cmd_abort },
+            { "MONITOR", cmd_monitor },
+            { "STAT", cmd_stat },
+            { "LOGON", cmd_logon },
+            { "LOGOFF", cmd_logoff },
+            { "SIGNAL", cmd_signal },
+            { nullptr, nullptr },
+    };
+
+
+
+    const char *Context::Command(const std::string &cmd, std::string_view param) {
+
+        return nullptr;
+    }
 }
 
