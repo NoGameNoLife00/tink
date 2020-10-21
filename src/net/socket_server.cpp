@@ -556,6 +556,7 @@ namespace tink {
         request.u.setopt.what = TCP_NODELAY;
         request.u.setopt.value = 1;
         SendRequest_(request, 'T', sizeof(request.u.setopt));
+        return SOCKET_NONE;
     }
 
     // mainloop thread
@@ -1205,6 +1206,10 @@ namespace tink {
         tmp.Init(id, buffer, sz);
         Send(tmp);
         return 0;
+    }
+
+    SocketServer::SocketServer() : ev_(MAX_EVENT) {
+
     }
 
 }

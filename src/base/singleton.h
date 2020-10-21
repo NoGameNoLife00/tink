@@ -1,14 +1,13 @@
-//
-// Created by admin on 2020/5/29.
-//
 
 #ifndef TINK_SINGLETON_H
 #define TINK_SINGLETON_H
 
 #include <memory>
 #include <mutex>
-#include "noncopyable.h"
+#include <noncopyable.h>
 #include <cassert>
+#include <pthread.h>
+
 namespace tink {
     template<typename T>
     struct has_no_destroy

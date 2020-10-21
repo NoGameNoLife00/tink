@@ -1,9 +1,10 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <config_mng.h>
-#include <assert.h>
+#include <cassert>
 #include <arpa/inet.h>
 #include <socket_api.h>
+#include <error_code.h>
 
 namespace tink {
     int SocketApi::Connect(int fd, const struct ::sockaddr *addr) {

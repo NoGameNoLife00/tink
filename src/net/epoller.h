@@ -1,7 +1,3 @@
-//
-// Created by Ёблн on 2020/9/28.
-//
-
 #ifndef TINK_EPOLLER_H
 #define TINK_EPOLLER_H
 
@@ -14,7 +10,7 @@ namespace tink {
 
         bool Invalid() override;
 
-        ~EPoller() override;
+        ~EPoller();
 
         int Add(int sock, void *ud) override;
 

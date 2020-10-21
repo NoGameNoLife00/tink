@@ -1,4 +1,4 @@
-#include "epoller.h"
+#include <epoller.h>
 #include <unistd.h>
 #include <sys/epoll.h>
 #include <error_code.h>
@@ -34,8 +34,8 @@ namespace tink {
     }
 
     int EPoller::Wait(tink::EventList &e) {
-        struct epoll_event ev[e.size()];
-        int n = epoll_wait(poll_fd_ , ev, e.size(), -1);
+        struct epoll_event ev[MAX_EVENT];
+        int n = epoll_wait(poll_fd_ , ev, MAX_EVENT, -1);
         int i;
         for (i=0;i<n;i++) {
             e[i].s = ev[i].data.ptr;

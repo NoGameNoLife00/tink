@@ -4,6 +4,7 @@
 #include <common.h>
 
 namespace tink {
+    constexpr int MAX_EVENT = 64;
     typedef int PollFd;
     typedef struct Event_ {
         void * s;
@@ -16,13 +17,13 @@ namespace tink {
     class Poller {
     public:
         static Poller* NewDefaultPoller();
-        virtual bool Invalid();
-        virtual void Release();
-        virtual int Add(int sock, void *ud);
-        virtual void Del(int sock);
-        virtual void Write(int sock, void *ud, bool enable);
-        virtual int Wait(EventList& e);
-        virtual ~Poller();
+        virtual bool Invalid() { return false; }
+        virtual void Release() {}
+        virtual int Add(int sock, void *ud) {return 0;}
+        virtual void Del(int sock) {}
+        virtual void Write(int sock, void *ud, bool enable) {}
+        virtual int Wait(EventList& e) { return 0; }
+        virtual ~Poller() {};
     protected:
         PollFd poll_fd_;
     };

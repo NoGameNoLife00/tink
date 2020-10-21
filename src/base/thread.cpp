@@ -9,6 +9,7 @@
 #include <thread.h>
 #include <config_mng.h>
 #include <sys/prctl.h>
+#include <pthread.h>
 
 namespace tink {
     namespace CurrentThread {

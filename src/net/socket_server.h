@@ -22,7 +22,6 @@
 
 #define UDP_ADDRESS_SIZE 19	// ipv6 128bit + port 16bit + 1 byte type
 #define MAX_INFO 128
-#define MAX_EVENT 64
 #define MAX_UDP_PACKAGE 65535
 
 #define SOCKET_SERVER tink::Singleton<tink::SocketServer>::GetInstance()
@@ -125,6 +124,7 @@ namespace tink {
 
     class SocketServer {
     public:
+        SocketServer();
         int Init(uint64_t time);
         void UpdateTime(uint64_t time);
 

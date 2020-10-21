@@ -27,21 +27,21 @@ namespace tink::Service {
         void DispatchSocketMessage(TinkSocketMsgPtr msg, int sz);
         void DispatchMessage(Connection &c, int id, DataPtr data, int sz);
         typedef PoolSet<Connection> ConnPool;
-        ContextPtr ctx;
-        int listen_id;
-        uint32_t watchdog;
-        uint32_t broker;
-        int client_tag;
-        int header_size;
-        int max_connection;
-        std::unordered_map<int, Connection*> conn;
-        std::shared_ptr<ConnPool> conn_pool;
-        std::shared_ptr<MessagePool> msg_pool;
     private:
         static int CallBack_(Context& ctx, void* ud, int type, int session, uint32_t source, DataPtr& msg, size_t sz);
         void ForwardAgent_(int fd, uint32_t agent_addr, uint32_t client_addr);
         void Forward_(Connection& c, int size);
         void Report_(const char * data, ...);
+        ContextPtr ctx_;
+        int listen_id_;
+        uint32_t watchdog_;
+        uint32_t broker_;
+        int client_tag_;
+        int header_size_;
+        int max_connection_;
+        std::unordered_map<int, Connection*> conn_;
+        std::shared_ptr<ConnPool> conn_pool_;
+        std::shared_ptr<MessagePool> msg_pool_;
     };
 }
 

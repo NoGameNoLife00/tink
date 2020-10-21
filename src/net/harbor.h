@@ -16,8 +16,8 @@ namespace tink {
         int MessageIsRemote(uint32_t handle);
 
     private:
-        static uint32_t harbor_;
-        static ContextPtr remote_;
+        uint32_t harbor_;
+        ContextPtr remote_;
     };
 }
 

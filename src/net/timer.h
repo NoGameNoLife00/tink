@@ -26,6 +26,7 @@ namespace tink {
         constexpr static int MICRO_SEC = 1000000;
         uint64_t GetTime();
         uint64_t GetThreadTime();
+        void SysTime(uint32_t &sec, uint32_t &cs);
     }
 
     class Timer {

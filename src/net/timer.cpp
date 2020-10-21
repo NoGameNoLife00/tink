@@ -24,6 +24,13 @@ namespace tink {
             clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ti);
             return (uint64_t)ti.tv_sec * MICRO_SEC + (uint64_t)ti.tv_nsec / (NANO_SEC / MICRO_SEC);
         }
+
+        void SysTime(uint32_t &sec, uint32_t &cs) {
+            struct timespec ti;
+            clock_gettime(CLOCK_REALTIME, &ti);
+            sec = (uint32_t)ti.tv_sec;
+            cs = (uint32_t)(ti.tv_nsec / 10000000);
+        }
     }
 
     void Timer::Init() {
@@ -35,12 +42,10 @@ namespace tink {
                 list.clear();
             }
         }
-        current_ = 0;
-        struct timespec ti;
-        clock_gettime(CLOCK_REALTIME, &ti);
-        start_time_ = static_cast<uint32_t>(ti.tv_sec);
-        current_ = static_cast<uint32_t>(ti.tv_nsec / 10000000);
-        current_point_ = static_cast<uint64_t>(ti.tv_sec) * 100 + ti.tv_nsec / 10000000;
+        uint32_t  current;
+        TimeUtil::SysTime(start_time_, current);
+        current_ = current;
+        current_point_ = TimeUtil::GetTime();
     }
 
     void Timer::UpdateTime() {

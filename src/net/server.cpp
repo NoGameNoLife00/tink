@@ -40,7 +40,7 @@ namespace tink {
         config_ = config;
         CurrentHandle::InitThread(THREAD_MAIN);
         Sigign();
-
+        srand(static_cast<unsigned>(time(nullptr)));
         // register SIGHUP for log file reopen
         struct sigaction sa;
         sa.sa_handler = &HandleHup;
@@ -197,17 +197,17 @@ namespace tink {
 
     int Server::Start() {
         int thread = config_->GetWorkerPoolSize();
-        MonitorPtr m = std::shared_ptr<Monitor>();
+        MonitorPtr m = std::make_shared<Monitor>();
         m->count = thread;
         m->sleep = 0;
         for (int i = 0; i < thread; i++) {
             m->m.emplace_back(std::make_shared<MonitorNode>());
         }
-        std::vector<std::unique_ptr<Thread>> thread_list;
+        std::vector<std::shared_ptr<Thread>> thread_list;
 
-        thread_list.emplace_back(std::make_unique<Thread>([m] { return ThreadMonitor(m); }, "monitor"));
-        thread_list.emplace_back(std::make_unique<Thread>([m] { return ThreadTimer(m); }, "timer"));
-        thread_list.emplace_back(std::make_unique<Thread>([this, m] { return ThreadSocket(m); }, "timer"));
+        thread_list.emplace_back(std::make_shared<Thread>([m] { return ThreadMonitor(m); }, "monitor"));
+        thread_list.emplace_back(std::make_shared<Thread>([m] { return ThreadTimer(m); }, "timer"));
+        thread_list.emplace_back(std::make_shared<Thread>([this, m] { return ThreadSocket(m); }, "timer"));
 
 
         static int weight[] = {
@@ -222,7 +222,11 @@ namespace tink {
             if (i < sizeof(weight)/sizeof(weight[0])) {
                 w= weight[i];
             }
-            thread_list.emplace_back(std::make_unique<Thread>([this, m, id, w] { return ThreadWorker(m, id, w); }, "worker"));
+            thread_list.emplace_back(std::make_shared<Thread>([this, m, id, w] { return ThreadWorker(m, id, w); }, "worker"));
+        }
+
+        for (auto &t : thread_list) {
+            t->Start();
         }
 
         for (auto& t : thread_list) {

@@ -34,9 +34,6 @@ namespace tink {
         int Stop(); // 停止
     private:
         ConfigPtr config_;
-
-
-
     };
 }
 

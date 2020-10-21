@@ -6,10 +6,10 @@
 #define TINK_CONFIG_MNG_H
 
 #include <memory>
-#include <server.h>
 #include <singleton.h>
 #include <string>
 #include <spdlog/spdlog.h>
+#include <string_util.h>
 
 #define READ_BUF_SIZE 1024
 
@@ -17,30 +17,21 @@
 
 namespace tink {
     // 存储框架的全局参数
+    using std::string;
     class Config {
     public:
         // 配置初始化
-        int Init();
+        int Init(StringArg path);
         int Reload();
-
         const string& GetHost() const;
-
         const string& GetName() const;
-
         int GetPort() const;
-
         const string& GetVersion() const;
-
         int GetMaxConn() const;
-
         const string& GetDaemon() const { return daemon_; }
-
         const string& GetModulePath() const { return module_path_; }
-
         bool GetProfile() const { return profile_; }
-
         int GetHarbor() const { return harbor_; }
-
         uint32_t GetMaxPackageSize() const;
         uint32_t GetWorkerPoolSize() const;
     private:

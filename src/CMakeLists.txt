@@ -15,9 +15,8 @@ add_definitions(-DELPP_THREAD_SAFE
         -DELPP_LOG_UNORDERED_SET)
 
 #add_definitions(-std=c++2a)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../etc DESTINATION ./)
 
-# 将框架代码作为静态链接库使用
-#add_library(${BINARY}_lib STATIC ${SOURCES})
-#target_link_libraries(${BINARY}_lib ${SPDLOG_LIBS} -pthread)
 add_executable(${BINARY} ${SOURCES})
+target_link_libraries(${BINARY} ${SPDLOG_LIBS} -pthread -ldl)
 set_property(TARGET ${BINARY}  PROPERTY CXX_STANDARD 20)

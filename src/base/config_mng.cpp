@@ -1,12 +1,13 @@
-#include "config_mng.h"
-#include "scope_guard.h"
-#include <stdio.h>
+#include <config_mng.h>
+#include <scope_guard.h>
+#include <string_util.h>
 #include <cJSON.h>
 #include <version.h>
 #include <spdlog/sinks/daily_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/async_logger.h>
 #include <spdlog/async.h>
+#include <common.h>
 
 namespace tink {
 
@@ -34,7 +35,7 @@ namespace tink {
     void GetJsonValue(cJSON *json, string& val, StringArg key, const string& default_val = "") {
         cJSON *item = cJSON_GetObjectItem(json, key.c_str());
         if (item != nullptr) {
-            val = item->valueint;
+            val = item->valuestring;
         } else {
             val = default_val;
         }
@@ -43,7 +44,7 @@ namespace tink {
     void GetJsonValue(cJSON *json, bool& val, StringArg key, bool default_val = false) {
         cJSON *item = cJSON_GetObjectItem(json, key.c_str());
         if (item != nullptr) {
-            val = item->valueint;
+            val = (item->valueint == 1);
         } else {
             val = default_val;
         }
@@ -60,13 +61,11 @@ namespace tink {
         spdlog::set_default_logger(logger);
     }
 
-    int Config::Init() {
+    int Config::Init(StringArg path) {
         Default_();
         FILE *fp = nullptr;
         cJSON *json;
-        char *out;
-        char line[READ_BUF_SIZE] = {0};
-        fp = fopen("../etc/config.json", "r");
+        fp = fopen(path.c_str(), "r");
         ON_SCOPE_EXIT([&] {
             cJSON_Delete(json);
             fclose(fp);
