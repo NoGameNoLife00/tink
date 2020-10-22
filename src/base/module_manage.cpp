@@ -12,7 +12,7 @@ namespace tink {
 
         int sz = path_size + name_size;
         //search path
-        void * dl = NULL;
+        void * dl = nullptr;
         char tmp[sz];
         const char *path = path_str.data();
         const char *name = name_str.data();
@@ -22,7 +22,7 @@ namespace tink {
             while (*path == ';') path++;
             if (*path == '\0') break;
             l = strchr(path, ';');
-            if (l == NULL) l = path + strlen(path);
+            if (l == nullptr) l = path + strlen(path);
             int len = l - path;
             int i;
             for (i=0;path[i]!='?' && i < len ;i++) {
@@ -37,9 +37,9 @@ namespace tink {
             }
             dl = dlopen(tmp, RTLD_NOW | RTLD_GLOBAL);
             path = l;
-        }while(dl == NULL);
+        }while(dl == nullptr);
 
-        if (dl == NULL) {
+        if (dl == nullptr) {
             fprintf(stderr, "try open %s failed : %s\n",name,dlerror());
         }
 
@@ -70,7 +70,7 @@ namespace tink {
 
     ModulePtr ModuleManage::Query_(std::string_view name) {
         for (auto &it : m_) {
-            if (strcmp(it->Name().c_str(), name.data())) {
+            if (strcmp(it->Name().c_str(), name.data()) != 0) {
                 return it;
             }
         }

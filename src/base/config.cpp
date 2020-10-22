@@ -1,13 +1,13 @@
 #include "config.h"
 namespace tink {
-    void GlobalMQ::Push(MQPtr mq) {
+    void GlobalMQ::Push(const MQPtr& mq) {
         std::lock_guard<Mutex> lock(mutex_);
         list.emplace_back(mq);
     }
 
     MQPtr GlobalMQ::Pop() {
         std::lock_guard<Mutex> lock(mutex_);
-        if (list.size() > 0) {
+        if (!list.empty()) {
             auto& head = list.front();
             list.pop_front();
             return head;

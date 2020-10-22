@@ -107,7 +107,7 @@ namespace tink {
                 if (e.error) {
                     // close when error
                     int code = SocketApi::GetSocketError(s->GetSockFd());
-                    const char * err = NULL;
+                    const char * err = nullptr;
                     err = strerror(code);
                     ForceClose_(*s, result);
                     result.data = (char *)err;
@@ -815,8 +815,8 @@ namespace tink {
         result.data = nullptr;
         int status, sock;
         struct addrinfo ai_hints;
-        struct addrinfo *ai_list = NULL;
-        struct addrinfo *ai_ptr = NULL;
+        struct addrinfo *ai_list = nullptr;
+        struct addrinfo *ai_ptr = nullptr;
         char port[16];
         sprintf(port, "%d", request->port);
         memset(&ai_hints, 0, sizeof( ai_hints ) );
@@ -836,7 +836,7 @@ namespace tink {
             return _failed();
         }
         sock = -1;
-        for (ai_ptr = ai_list; ai_ptr != NULL; ai_ptr = ai_ptr->ai_next ) {
+        for (ai_ptr = ai_list; ai_ptr != nullptr; ai_ptr = ai_ptr->ai_next ) {
             sock = SocketApi::Create( ai_ptr->ai_family, true, false );
             if ( sock < 0 ) {
                 continue;
@@ -1194,7 +1194,7 @@ namespace tink {
                 result.opaque = s.GetOpaque();
                 result.id = s.GetId();
                 result.ud = 0;
-                result.data = NULL;
+                result.data = nullptr;
                 return SOCKET_WARNING;
             }
         }

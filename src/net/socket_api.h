@@ -31,7 +31,6 @@ namespace tink::SocketApi {
         struct sockaddr_in6 GetPeerAddr(int fd);
         bool IsSelfConnect(int fd);
         void NonBlocking(int fd);
-
         void SetKeepAlive(int fd, bool active);
 
         inline uint64_t HostToNetwork64(uint64_t host64)

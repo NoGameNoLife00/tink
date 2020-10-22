@@ -35,8 +35,8 @@ namespace tink {
         void UpdateTime();
         int TimeOut(uint32_t handle, int time, int session);
 
-        uint64_t Now() { return current_; }
-        uint64_t StartTime() { return start_time_; }
+        uint64_t Now() const { return current_; }
+        uint64_t StartTime() const { return start_time_; }
     private:
         typedef std::list<TimerNodePtr> TimerNodeList;
         void Add_(int time, const TimerEvent& event);
@@ -45,7 +45,7 @@ namespace tink {
         void Execute_();
         void Shift_();
         void MoveList_(int level, int idx);
-        void DispatchList_(TimerNodeList &curr);
+        static void DispatchList_(TimerNodeList &curr);
         constexpr static int TIME_NEAR_SHIFT = 8;
         constexpr static int TIME_LEVEL_SHIFT = 6;
         constexpr static int TIME_NEAR = 1 << TIME_NEAR_SHIFT;

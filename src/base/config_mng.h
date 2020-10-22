@@ -16,7 +16,7 @@
 //#define ConfigMngInstance (tink::Singleton<tink::ConfigMng>::GetInstance())
 
 namespace tink {
-    // 存储框架的全局参数
+    // 存储配置
     using std::string;
     class Config {
     public:

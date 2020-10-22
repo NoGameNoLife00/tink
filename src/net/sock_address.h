@@ -26,7 +26,6 @@ namespace tink {
         uint16_t PortNetEndian() const { return addr_.sin_port; }
         static bool Resolve(std::string_view hostname, SockAddress* result);
         void SetScopeId(uint32_t scope_id);
-
         int GenUpdAddress(int protocol, uint8_t *udp_address);
     private:
         union {

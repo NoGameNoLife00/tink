@@ -64,11 +64,10 @@ namespace tink {
     static thread_local char t_resolveBuffer[64 * 1024];
 
     bool SockAddress::Resolve(std::string_view hostname, SockAddress *result) {
-        assert(result != NULL);
-        struct hostent hent;
-        struct hostent* he = NULL;
+        assert(result != nullptr);
+        struct hostent hent{};
+        struct hostent* he = nullptr;
         int err_no = 0;
-        memset(&hent, 0, sizeof(hent));
 
         int ret = gethostbyname_r(hostname.data(), &hent, t_resolveBuffer, sizeof t_resolveBuffer, &he, &err_no);
         if (ret == 0 && he != nullptr) {

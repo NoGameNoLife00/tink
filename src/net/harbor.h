@@ -12,8 +12,8 @@ namespace tink {
         void Init(int harbor);
         void Start(ContextPtr ctx);
         void Exit();
-        void Send(RemoteMessagePtr r_msg, uint32_t source, int session);
-        int MessageIsRemote(uint32_t handle);
+        void Send(const RemoteMessagePtr& r_msg, uint32_t source, int session);
+        int MessageIsRemote(uint32_t handle) const;
 
     private:
         uint32_t harbor_;

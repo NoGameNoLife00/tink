@@ -2,11 +2,11 @@
 #include <message.h>
 
 namespace tink {
-    int TinkMessage::Init(uint32_t source, int32_t session, UBytePtr& data, size_t size) {
-        this->source = source;
-        this->session = session;
-        this->data = std::move(data);
-        this->size = size;
+    int TinkMessage::Init(uint32_t _source, int32_t _session, UBytePtr& _data, size_t _size) {
+        source = _source;
+        session = _session;
+        data = std::move(_data);
+        size = _size;
         return E_OK;
     }
 }

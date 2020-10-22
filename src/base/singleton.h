@@ -27,7 +27,7 @@ namespace tink {
         static T& GetInstance()
         {
             pthread_once(&ponce_, &Singleton::New);
-            assert(value_ != NULL);
+            assert(value_ != nullptr);
             return *value_;
         }
 
@@ -47,7 +47,7 @@ namespace tink {
             T_must_be_complete_type dummy; (void) dummy;
 
             delete value_;
-            value_ = NULL;
+            value_ = nullptr;
         }
 
     private:
@@ -59,7 +59,7 @@ namespace tink {
     pthread_once_t Singleton<T>::ponce_ = PTHREAD_ONCE_INIT;
 
     template<typename T>
-    T* Singleton<T>::value_ = NULL;
+    T* Singleton<T>::value_ = nullptr;
 }
 
 #endif //TINK_SINGLETON_H

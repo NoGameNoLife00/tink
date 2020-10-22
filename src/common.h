@@ -13,7 +13,6 @@ namespace tink {
     typedef std::unique_ptr<byte[]> UBytePtr;
     typedef std::shared_ptr<byte[]> BytePtr;
     typedef std::shared_ptr<std::string> StringPtr;
-//    typedef std::shared_ptr<struct sockaddr> RemoteAddrPtr;
     typedef std::mutex Mutex;
 
     constexpr static int HANDLE_REMOTE_SHIFT = 24;
@@ -35,6 +34,17 @@ namespace tink {
     constexpr auto THREAD_SOCKET = 2;
     constexpr auto THREAD_TIMER = 3;
     constexpr auto THREAD_MONITOR = 4;
+
+
+    template< typename T >
+    struct ArrayDeleter
+    {
+        void operator ()( T const * p)
+        {
+            delete[] p;
+        }
+    };
+
 }
 
 #endif //TINK_COMMON_H

@@ -13,7 +13,7 @@ namespace tink {
     }
 
     int EPoller::Add(int sock, void *ud) {
-        struct epoll_event ev;
+        struct epoll_event ev{};
         ev.events = EPOLLIN;
         ev.data.ptr = ud;
         if (epoll_ctl(poll_fd_, EPOLL_CTL_ADD, sock, &ev) == -1) {
@@ -23,11 +23,11 @@ namespace tink {
     }
 
     void EPoller::Del(int sock) {
-        epoll_ctl(poll_fd_, EPOLL_CTL_DEL, sock , NULL);
+        epoll_ctl(poll_fd_, EPOLL_CTL_DEL, sock , nullptr);
     }
 
     void EPoller::Write(int sock, void *ud, bool enable) {
-        struct epoll_event ev;
+        struct epoll_event ev{};
         ev.events = EPOLLIN | (enable ? EPOLLOUT : 0);
         ev.data.ptr = ud;
         epoll_ctl(poll_fd_, EPOLL_CTL_MOD, sock, &ev);

@@ -11,7 +11,7 @@ namespace tink {
     typedef std::shared_ptr<MessageQueue> MQPtr;
     class GlobalMQ {
     public:
-        void Push(MQPtr mq);
+        void Push(const MQPtr& mq);
         MQPtr Pop();
     private:
         std::list<MQPtr> list;

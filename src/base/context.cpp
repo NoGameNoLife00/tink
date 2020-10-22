@@ -162,7 +162,7 @@ namespace tink {
     }
 
     void Context::DropMessage(TinkMessage &msg, void *ud) {
-        struct DropT *d = static_cast<DropT *>(ud);
+        auto *d = static_cast<DropT *>(ud);
         msg.data.reset();
         uint32_t source = d->handle;
         assert(source);
