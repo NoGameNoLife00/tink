@@ -2,21 +2,19 @@
 #include <cassert>
 #include <spdlog/spdlog.h>
 #include <string>
-#include "context_manage.h"
+#include "handle_storage.h"
 #include "module_manage.h"
 
 namespace tink {
 
-    thread_local uint32_t CurrentHandle::t_handle = 0;
-
-    int ContextManage::Init(int harbor) {
+    int HandleStorage::Init(int harbor) {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         handle_index_ = 1;
         harbor_ = (harbor & 0xff) << HANDLE_REMOTE_SHIFT;
         return E_OK;
     }
 
-    uint32_t ContextManage::Register(ContextPtr ctx) {
+    uint32_t HandleStorage::Register(ContextPtr ctx) {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         uint32_t handle = handle_index_;
         assert(handle_map_.size() <= HANDLE_MASK);
@@ -34,7 +32,7 @@ namespace tink {
         return 0;
     }
 
-    int ContextManage::Unregister(int handle) {
+    int HandleStorage::Unregister(int handle) {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         uint32_t hash = handle & HANDLE_MASK;
         auto it = handle_map_.find(hash);
@@ -59,7 +57,7 @@ namespace tink {
         return E_OK;
     }
 
-    void ContextManage::UnregisterAll() {
+    void HandleStorage::UnregisterAll() {
         for (auto& it : handle_map_) {
             it.second->Destroy();
         }
@@ -67,23 +65,23 @@ namespace tink {
         name_map_.clear();
     }
 
-    std::string ContextManage::BindName(uint32_t handle, std::string_view name) {
+    std::string HandleStorage::BindName(uint32_t handle, std::string_view name) {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         if (auto it = name_map_.find(name.data()); it != name_map_.end()) {
             return "";
         }
-        name_map_.emplace(std::make_pair(name, handle));
-        return name.data();
+        auto ret = name_map_.emplace(std::make_pair(name, handle));
+        return ret.first->first;
     }
 
-    uint32_t ContextManage::FindName(std::string_view name) {
+    uint32_t HandleStorage::FindName(std::string_view name) {
         if (auto it = name_map_.find(name.data()); it != name_map_.end()) {
             return it->second;
         }
         return 0;
     }
 
-    ContextPtr ContextManage::HandleGrab(uint32_t handle) {
+    ContextPtr HandleStorage::HandleGrab(uint32_t handle) {
         std::shared_lock<std::shared_mutex> lock(mutex_);
         uint32_t hash = handle & (HANDLE_MASK);
         if (auto it = handle_map_.find(hash); it != handle_map_.end()) {
@@ -92,7 +90,7 @@ namespace tink {
         return nullptr;
     }
 
-    int ContextManage::PushMessage(uint32_t handle, TinkMessage &msg) {
+    int HandleStorage::PushMessage(uint32_t handle, TinkMessage &msg) {
         ContextPtr ctx = HandleGrab(handle);
         if (!ctx) {
             return E_FAILED;
@@ -101,7 +99,7 @@ namespace tink {
         return E_OK;
     }
 
-    void ContextManage::ContextEndless(uint32_t handle) {
+    void HandleStorage::ContextEndless(uint32_t handle) {
         ContextPtr ctx = HandleGrab(handle);
         if (!ctx) {
             return ;
@@ -109,7 +107,7 @@ namespace tink {
         ctx->SetEndless(true);
     }
 
-    uint32_t ContextManage::QueryName(std::string_view name) {
+    uint32_t HandleStorage::QueryName(std::string_view name) {
         switch (name[0]) {
             case ':':
                 return strtoul(name.data() + 1, nullptr, 16);
@@ -120,7 +118,7 @@ namespace tink {
         return 0;
     }
 
-    ContextPtr ContextManage::CreateContext(std::string_view name, std::string_view param) {
+    ContextPtr HandleStorage::CreateContext(std::string_view name, std::string_view param) {
         ContextPtr ctx = std::make_shared<Context>();
         auto mod = MODULE_MNG.Query(name);
         if (!mod) {
@@ -136,7 +134,7 @@ namespace tink {
         ctx->cpu_start_ = 0;
         ctx->profile_ = false;
         ctx->message_count_ = 0;
-        ctx->handle_ = CONTEXT_MNG.Register(ctx);
+        ctx->handle_ = HANDLE_STORAGE.Register(ctx);
         if (ctx->handle_ == 0) {
             return nullptr;
         }
@@ -149,7 +147,7 @@ namespace tink {
             GLOBAL_MQ.Push(ctx->queue_);
         } else {
             spdlog::error("Failed launch {}", name);
-            CONTEXT_MNG.Unregister(ctx->handle_);
+            HANDLE_STORAGE.Unregister(ctx->handle_);
             struct DropT d = {ctx->handle_};
             ctx->queue_->Release(Context::DropMessage, &d);
         }

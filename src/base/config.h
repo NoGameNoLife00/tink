@@ -1,5 +1,5 @@
-#ifndef TINK_GLOBAL_MQ_H
-#define TINK_GLOBAL_MQ_H
+#ifndef TINK_CONFIG_H
+#define TINK_CONFIG_H
 #include <singleton.h>
 #include <common.h>
 #include <list>
@@ -22,4 +22,4 @@ namespace tink {
 
 
 
-#endif //TINK_GLOBAL_MQ_H
+#endif //TINK_CONFIG_H

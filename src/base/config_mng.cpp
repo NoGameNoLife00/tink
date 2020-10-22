@@ -23,8 +23,8 @@ namespace tink {
         log_name_ = "./logs/tink.log";
     }
 
-    void GetJsonValue(const cJSON *json, int& val, StringArg key, int default_val = 0) {
-        cJSON *item = cJSON_GetObjectItem(json, key.c_str());
+    void GetJsonValue(const cJSON *json, int& val, std::string_view key, int default_val = 0) {
+        cJSON *item = cJSON_GetObjectItem(json, key.data());
         if (item != nullptr) {
             val = item->valueint;
         } else {
@@ -32,8 +32,8 @@ namespace tink {
         }
     }
 
-    void GetJsonValue(cJSON *json, string& val, StringArg key, const string& default_val = "") {
-        cJSON *item = cJSON_GetObjectItem(json, key.c_str());
+    void GetJsonValue(cJSON *json, string& val, std::string_view key, const string& default_val = "") {
+        cJSON *item = cJSON_GetObjectItem(json, key.data());
         if (item != nullptr) {
             val = item->valuestring;
         } else {
@@ -41,8 +41,8 @@ namespace tink {
         }
     }
 
-    void GetJsonValue(cJSON *json, bool& val, StringArg key, bool default_val = false) {
-        cJSON *item = cJSON_GetObjectItem(json, key.c_str());
+    void GetJsonValue(cJSON *json, bool& val, std::string_view key, bool default_val = false) {
+        cJSON *item = cJSON_GetObjectItem(json, key.data());
         if (item != nullptr) {
             val = (item->valueint == 1);
         } else {
@@ -61,11 +61,11 @@ namespace tink {
         spdlog::set_default_logger(logger);
     }
 
-    int Config::Init(StringArg path) {
+    int Config::Init(std::string_view path) {
         Default_();
         FILE *fp = nullptr;
         cJSON *json;
-        fp = fopen(path.c_str(), "r");
+        fp = fopen(path.data(), "r");
         ON_SCOPE_EXIT([&] {
             cJSON_Delete(json);
             fclose(fp);

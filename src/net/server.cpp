@@ -6,7 +6,7 @@
 #include <common.h>
 #include <message.h>
 #include <context.h>
-#include <context_manage.h>
+#include <handle_storage.h>
 #include <signal.h>
 #include <daemon.h>
 #include <module_manage.h>
@@ -20,6 +20,14 @@
 #define MAX_BUF_SIZE 2048
 namespace tink {
     static volatile int SIG = 0;
+
+    namespace Global {
+        thread_local uint32_t t_handle = 0;
+        uint32_t monitor_exit = 0;
+        bool profile = false;
+    }
+
+
 
     static void HandleHup(int signal) {
         if (signal == SIGHUP) {
@@ -39,7 +47,7 @@ namespace tink {
 
     int Server::Init(ConfigPtr config) {
         config_ = config;
-        CurrentHandle::InitThread(THREAD_MAIN);
+        Global::InitThread(THREAD_MAIN);
         Sigign();
         srand(static_cast<unsigned>(time(nullptr)));
         // register SIGHUP for log file reopen
@@ -54,7 +62,7 @@ namespace tink {
             }
         }
         HarborInstance.Init(config_->GetHarbor());
-        CONTEXT_MNG.Init(config_->GetHarbor());
+        HANDLE_STORAGE.Init(config_->GetHarbor());
         MODULE_MNG.Init(config_->GetModulePath());
         TIMER.Init();
         SOCKET_SERVER.Init(TIMER.Now());
@@ -76,7 +84,7 @@ namespace tink {
     static void ThreadMonitor(MonitorPtr m) {
         int i;
         int n = m->count;
-        CurrentHandle::InitThread(THREAD_MONITOR);
+        Global::InitThread(THREAD_MONITOR);
         for (;;) {
             CHECK_ABORT
             for (i=0;i<n;i++) {
@@ -98,14 +106,14 @@ namespace tink {
         smsg.data = nullptr;
         smsg.size = static_cast<size_t>(PTYPE_SYSTEM) << MESSAGE_TYPE_SHIFT;
 
-        uint32_t logger = CONTEXT_MNG.FindName("logger");
+        uint32_t logger = HANDLE_STORAGE.FindName("logger");
         if (logger) {
-            CONTEXT_MNG.PushMessage(logger, smsg);
+            HANDLE_STORAGE.PushMessage(logger, smsg);
         }
     }
 
     static void ThreadTimer(MonitorPtr m) {
-        CurrentHandle::InitThread(THREAD_TIMER);
+        Global::InitThread(THREAD_TIMER);
         for (;;) {
             TIMER.UpdateTime();
             // socket_updatetime();
@@ -129,7 +137,7 @@ namespace tink {
 
 
     static void ThreadSocket(MonitorPtr m) {
-        CurrentHandle::InitThread(THREAD_SOCKET);
+        Global::InitThread(THREAD_SOCKET);
         for (;;) {
             int ret = SOCKET_SERVER.Poll();
             if (ret == 0) {
@@ -151,7 +159,7 @@ namespace tink {
             }
         }
         uint32_t handle = q->Handle();
-        ContextPtr ctx = CONTEXT_MNG.HandleGrab(handle);
+        ContextPtr ctx = HANDLE_STORAGE.HandleGrab(handle);
         if (!ctx) {
             struct DropT d = {handle };
             q->Release(Context::DropMessage, &d);
@@ -182,7 +190,7 @@ namespace tink {
 
     static void ThreadWorker(MonitorPtr m, int id, int weight) {
         MonitorNodePtr m_node = m->m[id];
-        CurrentHandle::InitThread(THREAD_WORKER);
+        Global::InitThread(THREAD_WORKER);
         MQPtr q;
         while (!m->quit) {
             q = ContextMessageDispatch(*m_node, q, weight);
@@ -247,7 +255,7 @@ namespace tink {
         std::istringstream is(cmdline);
         string name, args;
         is >> name >> args;
-        ContextPtr ctx = CONTEXT_MNG.CreateContext(name, args);
+        ContextPtr ctx = HANDLE_STORAGE.CreateContext(name, args);
         if (!ctx) {
             spdlog::error("bootstrap error: {}", cmdline);
             exit(1);

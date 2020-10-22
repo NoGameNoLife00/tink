@@ -1,7 +1,7 @@
 
 #include <error_code.h>
 #include <spdlog/spdlog.h>
-#include <context_manage.h>
+#include <handle_storage.h>
 #include <socket_server.h>
 #include <server.h>
 #include <sstream>
@@ -37,7 +37,7 @@ namespace tink::Service {
         if (watchdog[0] = '!') {
             this->watchdog_ = 0;
         } else {
-            this->watchdog_ = CONTEXT_MNG.FindName(watchdog);
+            this->watchdog_ = HANDLE_STORAGE.FindName(watchdog);
             if (this->watchdog_ == 0) {
                 spdlog::error("Invalid watchdog {}", watchdog);
                 return E_FAILED;
@@ -149,7 +149,7 @@ namespace tink::Service {
             return ;
         }
         if (param_list[0] == "broker") {
-            broker_ = CONTEXT_MNG.QueryName(param_list[1]);
+            broker_ = HANDLE_STORAGE.QueryName(param_list[1]);
             return;
         }
         if (param_list[0] == "start") {

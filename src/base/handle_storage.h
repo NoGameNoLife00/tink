@@ -1,5 +1,5 @@
-#ifndef TINK_CONTEXT_MANAGE_H
-#define TINK_CONTEXT_MANAGE_H
+#ifndef TINK_HANDLE_STORAGE_H
+#define TINK_HANDLE_STORAGE_H
 
 
 #include <shared_mutex>
@@ -8,26 +8,11 @@
 #include <singleton.h>
 #include <string>
 
-#define CONTEXT_MNG tink::Singleton<tink::ContextManage>::GetInstance()
+#define HANDLE_STORAGE tink::Singleton<tink::HandleStorage>::GetInstance()
 
 namespace tink {
-    namespace CurrentHandle {
-        extern thread_local uint32_t t_handle;
 
-        inline uint32_t Handle() {
-            return t_handle;
-        }
-
-        inline void InitThread(int m) {
-            t_handle = static_cast<uint32_t>(-m);
-        }
-
-        inline void SetHandle(uint32_t h) {
-            t_handle = h;
-        }
-    }
-
-    class ContextManage {
+    class HandleStorage {
     public:
         int Init(int harbor);
         ContextPtr CreateContext(std::string_view name, std::string_view param);
@@ -51,4 +36,4 @@ namespace tink {
 
 
 
-#endif //TINK_CONTEXT_MANAGE_H
+#endif //TINK_HANDLE_STORAGE_H

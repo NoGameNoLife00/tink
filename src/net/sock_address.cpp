@@ -29,16 +29,15 @@ namespace tink {
     }
 
     SockAddress::SockAddress(std::string_view ip, uint16_t port, bool ipv6) {
-        string str_ip(ip);
         if (ipv6)
         {
             memset(&addr6_, 0, sizeof addr6_);
-            SocketApi::FromIpPort(str_ip.c_str(), port, &addr6_);
+            SocketApi::FromIpPort(ip.data(), port, &addr6_);
         }
         else
         {
             memset(&addr_, 0, sizeof addr_);
-            SocketApi::FromIpPort(str_ip.c_str(), port, &addr_);
+            SocketApi::FromIpPort(ip.data(), port, &addr_);
         }
     }
 
@@ -71,17 +70,13 @@ namespace tink {
         int err_no = 0;
         memset(&hent, 0, sizeof(hent));
 
-        int ret = gethostbyname_r(hostname.c_str(), &hent, t_resolveBuffer, sizeof t_resolveBuffer, &he, &err_no);
-        if (ret == 0 && he != NULL)
-        {
+        int ret = gethostbyname_r(hostname.data(), &hent, t_resolveBuffer, sizeof t_resolveBuffer, &he, &err_no);
+        if (ret == 0 && he != nullptr) {
             assert(he->h_addrtype == AF_INET && he->h_length == sizeof(uint32_t));
             result->addr_.sin_addr = *reinterpret_cast<struct in_addr*>(he->h_addr);
             return true;
-        }
-        else
-        {
-            if (ret)
-            {
+        } else {
+            if (ret) {
                 spdlog::error("SockAddress.resolve");
             }
             return false;

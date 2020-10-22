@@ -1,4 +1,4 @@
-#include "global_mq.h"
+#include "config.h"
 namespace tink {
     void GlobalMQ::Push(MQPtr mq) {
         std::lock_guard<Mutex> lock(mutex_);

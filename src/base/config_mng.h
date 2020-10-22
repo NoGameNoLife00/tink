@@ -21,7 +21,7 @@ namespace tink {
     class Config {
     public:
         // ≈‰÷√≥ı ºªØ
-        int Init(StringArg path);
+        int Init(std::string_view path);
         int Reload();
         const string& GetHost() const;
         const string& GetName() const;

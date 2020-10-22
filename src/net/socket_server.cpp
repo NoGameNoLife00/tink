@@ -5,7 +5,7 @@
 #include <cstring>
 #include <error_code.h>
 #include <spdlog/spdlog.h>
-#include <context_manage.h>
+#include <handle_storage.h>
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <scope_guard.h>
@@ -578,7 +578,7 @@ namespace tink {
         message.session = 0;
         message.data = sm;
         message.size = sz | (static_cast<size_t>(PTYPE_SOCKET) << MESSAGE_TYPE_SHIFT);
-        CONTEXT_MNG.PushMessage(result.opaque, message);
+        HANDLE_STORAGE.PushMessage(result.opaque, message);
     }
     int SocketServer::Poll() {
         SocketMessage result;

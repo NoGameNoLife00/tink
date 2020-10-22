@@ -4,7 +4,7 @@
 #include <base_module.h>
 #include <common.h>
 #include <atomic>
-#include "global_mq.h"
+#include "config.h"
 
 namespace tink {
     class Context;
@@ -38,14 +38,20 @@ namespace tink {
         static void DropMessage(TinkMessage &msg, void *ud);
         void DispatchMessage(TinkMessage &msg);
         ContextCallBack GetCallBack() {return callback_;}
+        uint64_t GetCpuCost() {return cpu_cost_;}
+        bool GetProfile() {return profile_;}
+        uint64_t GetCpuStart() {return cpu_start_;}
+        int GetMessageCount() {return message_count_;}
 
-        const char * Command(std::string_view cmd, std::string_view param);
-        char * Result() { return result; }
-        friend class ContextManage;
+        void Exit(uint32_t handle);
+        uint32_t ToHandle(std::string_view param);
+        ModulePtr GetModule() {return mod_;}
+
+        std::string Command(std::string_view cmd, std::string_view param);
+        std::string result;
+        friend class HandleStorage;
     private:
         static std::atomic_int total;
-        static int handle_key;
-
 
         int FilterArgs_(int type, int &session, DataPtr& data, size_t &sz);
 
@@ -62,7 +68,7 @@ namespace tink {
         bool init_;
         bool profile_;
         void *cb_ud_;
-        char result[32];
+
         ModulePtr mod_;
     };
 }

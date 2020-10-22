@@ -6,7 +6,7 @@
 #include <error_code.h>
 #include "timer.h"
 #include "message.h"
-#include "context_manage.h"
+#include "handle_storage.h"
 
 namespace tink {
     namespace TimeUtil {
@@ -92,7 +92,7 @@ namespace tink {
             msg.session = event.session;
             msg.data = nullptr;
             msg.size = static_cast<size_t>(PTYPE_RESPONSE) << MESSAGE_TYPE_SHIFT;
-            CONTEXT_MNG.PushMessage(event.handle, msg);
+            HANDLE_STORAGE.PushMessage(event.handle, msg);
         }
     }
 
@@ -157,7 +157,7 @@ namespace tink {
             msg.session = session;
             msg.data = nullptr;
             msg.size = static_cast<size_t>(PTYPE_RESPONSE) << MESSAGE_TYPE_SHIFT;
-            if (CONTEXT_MNG.PushMessage(handle, msg)) {
+            if (HANDLE_STORAGE.PushMessage(handle, msg)) {
                 return E_FAILED;
             }
         } else {
