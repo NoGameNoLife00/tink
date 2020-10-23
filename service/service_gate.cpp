@@ -17,7 +17,7 @@ namespace tink::Service {
         if (param.empty()) {
             return E_FAILED;
         }
-        std::istringstream is(param);
+        std::istringstream is(param.data());
         char header;
         string watchdog;
         string binding;

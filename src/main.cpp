@@ -1,5 +1,5 @@
 #include <server.h>
-#include <config_mng.h>
+#include <config.h>
 
 int main(int argc, char** argv) {
     setbuf(stdout, nullptr); // debug

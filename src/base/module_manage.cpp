@@ -53,7 +53,7 @@ namespace tink {
         }
         std::lock_guard<Mutex> guard(mutex_);
         result = Query_(name);
-        if (!result && m_.size() > MAX_MODULE_TYPE) {
+        if (!result && m_.size() < MAX_MODULE_TYPE) {
             void * dl = TryOpen(path_, name);
             if (dl) {
                 auto* create = reinterpret_cast<ModuleCreateCallBack*>(dlsym(dl, "CreateModule"));

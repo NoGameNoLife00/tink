@@ -12,7 +12,7 @@ namespace tink::StringUtil {
         }
     }
 
-    void StringUtil::Split(std::string_view str, std::string_view split, StringList &out) {
+    void Split(std::string_view str, std::string_view split, StringList &out) {
         size_t front = 0;
         size_t back = str.find_first_of(split, front);
         while (back != str.npos) {

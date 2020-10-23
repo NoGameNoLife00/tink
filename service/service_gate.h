@@ -1,12 +1,17 @@
 #ifndef TINK_SERVICE_GATE_H
 #define TINK_SERVICE_GATE_H
 #include <base_module.h>
-#include <data_buffer.h>
 #include <memory>
 #include <common.h>
 #include <string>
+#include <string_view>
+#include <context.h>
+#include <socket.h>
+#include "data_buffer.h"
 
-namespace tink::Service {
+namespace tink {
+    namespace Service {
+
     typedef struct Connection_ {
         int id;	// socket id
         uint32_t agent;
@@ -43,6 +48,8 @@ namespace tink::Service {
         std::shared_ptr<ConnPool> conn_pool_;
         std::shared_ptr<MessagePool> msg_pool_;
     };
+
+    }
 }
 
 

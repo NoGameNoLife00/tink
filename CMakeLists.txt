@@ -15,39 +15,28 @@ MESSAGE( "** INFO ------------------------------------------------")
 MESSAGE( "** STATUS Build tink ${TINK_VERSION}")
 
 
-#INCLUDE(cmake/load_3rdparty.cmake)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 include_directories(src/net)
 include_directories(src/base)
-include_directories(src/service)
 include_directories(3rdparty/cjson)
 include_directories(3rdparty/spdlog/include)
 include_directories(src)
 
 add_subdirectory(3rdparty)
 add_subdirectory(src)
+add_subdirectory(service)
 add_subdirectory(test)
 add_subdirectory(example)
 add_subdirectory(demo_game)
-#include(ExternalProject)
-#ExternalProject_Add(libhello
-#        URL    "sharelib.zip"
-#        DOWNLOAD_DIR ${libhello_download}
-#        SOURCE_DIR        "${libhello_src}"
-#        CONFIGURE_COMMAND ${CMAKE_COMMAND} ${libhello_src}
-#        -DCMAKE_INSTALL_PREFIX=${libhello_install}
-#        BINARY_DIR  ${libhello_binary}
-#        INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install
-#        )
-
-#set(CMAKE_CXX_STANDARD 14)
-#include_directories(D:\\DEV\\cygwin\\usr\\include)
-#link_directories(D:\\DEV\\cygwin\\lib)
 
 
 
 
 
-add_definitions(-std=c++2a)
+#add_definitions(-std=c++2a)
 
 #file(GLOB_RECURSE SOURCES LIST_DIRECTORIES true *.h *.cpp)
 

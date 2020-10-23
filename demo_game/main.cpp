@@ -1,6 +1,6 @@
 #include <iostream>
 #include <server.h>
-#include <config_mng.h>
+#include <config.h>
 #include <cstring>
 #include <message_handler.h>
 #include <connection.h>

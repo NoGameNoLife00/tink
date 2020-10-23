@@ -4,7 +4,7 @@
 #include <base_module.h>
 #include <common.h>
 #include <atomic>
-#include "config.h"
+#include "global_mq.h"
 
 namespace tink {
     class Context;

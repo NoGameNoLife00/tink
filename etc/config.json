@@ -6,6 +6,8 @@
   "worker_pool_size": 8,
   "log_name" : "./logs/game.log",
   "harbor" : 1,
-  "daemon" : "tink.pid",
-  "profile" : false
+  "daemon" : "",
+  "profile" : false,
+  "module_path": "../lib/?.so",
+  "bootstrap" : "libservice_gate t ! 0.0.0.0 111 10000 204800"
 }

@@ -1,7 +1,7 @@
 #include <server.h>
 #include <cstring>
 #include <unistd.h>
-#include <config_mng.h>
+#include <config.h>
 #include <scope_guard.h>
 #include <common.h>
 #include <message.h>

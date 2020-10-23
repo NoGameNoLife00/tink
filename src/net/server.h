@@ -11,7 +11,7 @@
 #include <functional>
 #include <context.h>
 #include <socket_server.h>
-#include <config_mng.h>
+#include <config.h>
 
 #define TINK_SERVER tink::Singleton<tink::Server>::GetInstance()
 

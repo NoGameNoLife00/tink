@@ -2,7 +2,7 @@
 #include <cstring>
 #include <assert.h>
 #include <netdb.h>
-#include <config_mng.h>
+#include <config.h>
 #include "socket.h"
 
 namespace tink {

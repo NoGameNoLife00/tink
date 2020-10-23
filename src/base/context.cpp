@@ -318,6 +318,7 @@ namespace tink {
             sig = strtol(p, nullptr, 0);
         }
         ctx->GetModule()->Signal(sig);
+        return "";
     }
 
     typedef std::function<std::string(Context&, std::string_view&)> CmdFunc;
@@ -339,7 +340,6 @@ namespace tink {
 //            { "LOGON", cmd_logon },
 //            { "LOGOFF", cmd_logoff },
             { "SIGNAL", CMD_Signal },
-            { nullptr, nullptr },
     };
 
 
