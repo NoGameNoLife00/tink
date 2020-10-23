@@ -24,11 +24,11 @@ namespace tink {
         void Destroy();
         void Send(DataPtr &&data, size_t sz, uint32_t source, int type, int session);
         void SetCallBack(const ContextCallBack &cb, void *ud);
-        uint32_t Handle() { return handle_; }
+        uint32_t Handle() const { return handle_; }
         void Reserve() { }
         int NewSession();
         MQPtr Queue() { return queue_; }
-        bool Endless() { return endless_; }
+        bool Endless() const { return endless_; }
         void SetEndless(bool b) { endless_ = b; }
         void DispatchAll();
 
@@ -38,10 +38,10 @@ namespace tink {
         static void DropMessage(TinkMessage &msg, void *ud);
         void DispatchMessage(TinkMessage &msg);
         ContextCallBack GetCallBack() {return callback_;}
-        uint64_t GetCpuCost() {return cpu_cost_;}
-        bool GetProfile() {return profile_;}
-        uint64_t GetCpuStart() {return cpu_start_;}
-        int GetMessageCount() {return message_count_;}
+        uint64_t GetCpuCost() const {return cpu_cost_;}
+        bool GetProfile() const {return profile_;}
+        uint64_t GetCpuStart() const {return cpu_start_;}
+        int GetMessageCount() const {return message_count_;}
 
         void Exit(uint32_t handle);
         uint32_t ToHandle(std::string_view param);

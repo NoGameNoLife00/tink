@@ -15,7 +15,7 @@ namespace tink {
         uint32_t source;
         uint32_t destination;
 
-        void Trigger(uint32_t source, uint32_t destination);
+        void Trigger(uint32_t _source, uint32_t _destination);
         void Check();
 
     };

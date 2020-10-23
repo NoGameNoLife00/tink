@@ -1,5 +1,7 @@
 #include <message_queue.h>
 
+#include <utility>
+
 namespace tink {
     void MessageQueue::Push(TinkMessage &msg){
         std::lock_guard <Mutex> lock(mutex_);
@@ -46,7 +48,7 @@ namespace tink {
         std::unique_lock<Mutex> lock(mutex_);
         if (release_) {
             lock.unlock();
-            DropQueue_(drop_func, ud);
+            DropQueue_(std::move(drop_func), ud);
         } else {
             GLOBAL_MQ.Push(shared_from_this());
         }

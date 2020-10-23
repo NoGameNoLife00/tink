@@ -40,7 +40,7 @@ namespace tink {
 
     int SocketApi::GetSocketError(int fd) {
         int optval;
-        socklen_t optlen = static_cast<socklen_t>(sizeof optval);
+        auto optlen = static_cast<socklen_t>(sizeof optval);
 
         if (::getsockopt(fd, SOL_SOCKET, SO_ERROR, &optval, &optlen) < 0)
         {
@@ -115,9 +115,8 @@ namespace tink {
     }
 
     struct sockaddr_in6 SocketApi::GetLocalAddr(int fd) {
-        struct sockaddr_in6 local_addr;
-        memset(&local_addr, 0, sizeof local_addr);
-        socklen_t addrlen = static_cast<socklen_t>(sizeof local_addr);
+        struct sockaddr_in6 local_addr{};
+        auto addrlen = static_cast<socklen_t>(sizeof local_addr);
         if (::getsockname(fd, SockAddrCast(&local_addr), &addrlen) < 0)
         {
             spdlog::error("SocketApi.getLocalAddr");
@@ -126,8 +125,7 @@ namespace tink {
     }
 
     struct sockaddr_in6 SocketApi::GetPeerAddr(int fd) {
-        struct sockaddr_in6 peer_addr;
-        memset(&peer_addr, 0, sizeof peer_addr);
+        struct sockaddr_in6 peer_addr{};
         socklen_t addrlen = static_cast<socklen_t>(sizeof peer_addr);
         if (::getpeername(fd, SockAddrCast(&peer_addr), &addrlen) < 0)
         {
@@ -174,7 +172,7 @@ namespace tink {
     }
 
     int SocketApi::Accept(int fd, struct sockaddr_in6 *addr) {
-        socklen_t addrlen = static_cast<socklen_t>(sizeof *addr);
+        auto addrlen = static_cast<socklen_t>(sizeof *addr);
         int conn_fd = ::accept4(fd, SockAddrCast(addr),
                                 &addrlen, SOCK_NONBLOCK | SOCK_CLOEXEC);
         if (conn_fd < 0) {

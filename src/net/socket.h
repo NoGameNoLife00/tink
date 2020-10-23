@@ -14,6 +14,7 @@
 #include <shared_mutex>
 #include <buffer.h>
 #include <list>
+#include <utility>
 
 
 #define PROTOCOL_TCP 0
@@ -81,41 +82,29 @@ namespace tink {
         explicit Socket():sock_fd_(0) {}
         int Init(int id, int fd, int protocol, uintptr_t opaque);
         void Destroy();
-        void Close();
+        void Close() const;
         ~Socket();
         int GetSockFd() const { return sock_fd_; }
         int GetTcpInfo(struct tcp_info* info) const ;
         int GetTcpInfoString(char *buf, int len) const ;
-        void BindAddress(const SockAddress& addr);
-        void Listen();
-        int Accept(SockAddress &peer_addr);
-        void ShutDownWrite();
-        void SetTcpNoDelay(bool active);
-        void SetKeepAlive(bool active);
-        void SetReuseAddr(bool active);
-        void SetReusePort(bool active);
+        void BindAddress(const SockAddress& addr) const;
+        void Listen() const;
+        int Accept(SockAddress &peer_addr) const;
+        void ShutDownWrite() const;
 
-        socklen_t UdpAddress(const uint8_t udp_address[UDP_ADDRESS_SIZE], SockAddress& sa);
-
+        socklen_t UdpAddress(const uint8_t udp_address[UDP_ADDRESS_SIZE], SockAddress& sa) const;
         void SetType(int t) { type_ = t; }
         int GetType() const { return type_; }
-
         int GetId() const { return id_; }
         void SetId(int id) { id_ = id; }
 
-        bool SendBufferEmpty() {
-            return high.empty() && low.empty();
-        }
+        bool SendBufferEmpty() { return high.empty() && low.empty(); }
 
-        bool NoMoreSendingData() {
-            return SendBufferEmpty() && dw_buffer_ && (sending_ & 0xffff) == 0;
-        }
+        bool NoMoreSendingData() { return SendBufferEmpty() && dw_buffer_ && (sending_ & 0xffff) == 0; }
 
-        bool CanDirectWrite(int id) {
-            return id_ == id && NoMoreSendingData() && type_ == SOCKET_TYPE_CONNECTED && udp_connecting == 0;
-        }
+        bool CanDirectWrite(int id) { return id_ == id && NoMoreSendingData() && type_ == SOCKET_TYPE_CONNECTED && udp_connecting == 0;}
 
-        uintptr_t GetOpaque() { return opaque_; }
+        uintptr_t GetOpaque() const { return opaque_; }
         void SetOpaque(uintptr_t opaque) { opaque_ = opaque; }
 
         uint8_t GetProtocol() const {return protocol_;}
@@ -126,20 +115,15 @@ namespace tink {
 
         DataBufferPtr& GetDWBuffer() { return dw_buffer_; }
 
-        void SetDwBuffer(DataBufferPtr buf) {
-            dw_buffer_ = buf;
-        }
+        void SetDwBuffer(DataBufferPtr buf) { dw_buffer_ = std::move(buf); }
 
         void IncSendingRef(int id);
 
         void DecSendingRef(int id);
 
-
-        mutable std::recursive_mutex mutex;
-
         const uint8_t * GetUdpAddress() { return p_.udp_address; }
 
-        int GetReadSize() { return p_.size; }
+        int GetReadSize() const { return p_.size; }
 
         void SetReadSize(int sz) { p_.size = sz; }
 
@@ -153,33 +137,39 @@ namespace tink {
             stat_.rtime = time;
         }
 
-        bool Reserve(int id);
 
-        int64_t GetWbSize() { return wb_size_; }
+        int64_t GetWbSize() const { return wb_size_; }
         void SetWbSize(int64_t s) { wb_size_ = s; }
         void AddWbSize(size_t s) { wb_size_ += s; }
 
-        int64_t GetWarnSize() { return warn_size_; }
+        int64_t GetWarnSize() const { return warn_size_; }
         void SetWarnSize(int64_t s) { warn_size_ = s; }
         void RaiseUnComplete();
+        bool Reserve(int id);
+        void SetTcpNoDelay(bool active) const;
+        void SetKeepAlive(bool active) const;
+        void SetReuseAddr(bool active) const;
+        void SetReusePort(bool active) const;
+
         std::atomic_uint16_t udp_connecting;
+        mutable std::recursive_mutex mutex;
     private:
-        int id_;
+        int id_{};
         int sock_fd_;
         std::atomic_uint8_t type_;
-        uintptr_t opaque_;
-        int protocol_;
-        uint64_t wb_size_;
+        uintptr_t opaque_{};
+        int protocol_{};
+        uint64_t wb_size_{};
         WriteBufferList high;
         WriteBufferList low;
         std::atomic_uint32_t sending_;
-        SocketStat stat_;
+        SocketStat stat_{};
 
-        int64_t warn_size_;
+        int64_t warn_size_{};
         union {
             int size;
             uint8_t udp_address[UDP_ADDRESS_SIZE];
-        } p_;
+        } p_{};
         DataBufferPtr dw_buffer_;
 //        int dw_offset_;
 //        DataPtr dw_buffer_;

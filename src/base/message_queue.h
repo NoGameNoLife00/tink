@@ -85,7 +85,7 @@ namespace tink {
             return queue_.size();
         }
 
-        uint32_t Handle() {return handle_;}
+        uint32_t Handle() const {return handle_;}
 
         bool Empty(){
             std::lock_guard<Mutex> lock(mutex_);

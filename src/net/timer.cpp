@@ -20,13 +20,13 @@ namespace tink {
         }
 
         uint64_t GetThreadTime() {
-            struct timespec ti;
+            struct timespec ti{};
             clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ti);
             return (uint64_t)ti.tv_sec * MICRO_SEC + (uint64_t)ti.tv_nsec / (NANO_SEC / MICRO_SEC);
         }
 
         void SysTime(uint32_t &sec, uint32_t &cs) {
-            struct timespec ti;
+            struct timespec ti{};
             clock_gettime(CLOCK_REALTIME, &ti);
             sec = (uint32_t)ti.tv_sec;
             cs = (uint32_t)(ti.tv_nsec / 10000000);
@@ -37,8 +37,8 @@ namespace tink {
         for (auto& list : near_) {
             list.clear();
         }
-        for (int i = 0; i < TIME_LIST_CNT; i++) {
-            for (auto& list : t_[i]) {
+        for (auto & i : t_) {
+            for (auto& list : i) {
                 list.clear();
             }
         }
@@ -54,7 +54,7 @@ namespace tink {
             spdlog::error("time diff error: change from {} to {}", tm, current_point_);
             current_point_ = tm;
         } else if (tm != current_point_) {
-            uint32_t diff = static_cast<uint32_t>(tm - current_point_);
+            auto diff = static_cast<uint32_t>(tm - current_point_);
             current_point_ = tm;
             current_ += diff;
             for (int i = 0; i < diff; i++) {
@@ -98,18 +98,18 @@ namespace tink {
 
     void Timer::AddNode_(TimerNodePtr &node) {
         uint32_t tm = node->expire;
-        if ((tm|TIME_NEAR_MASK) == (time_|TIME_NEAR_MASK)) {
-            near_[tm&TIME_NEAR_MASK].emplace_back(std::move(node));
-        } else {
+        if ((tm | TIME_NEAR_MASK) != (time_ | TIME_NEAR_MASK)) {
             uint32_t mask = TIME_NEAR << TIME_NEAR_SHIFT;
             int i;
             for (i = 0; i < 3; i++) {
-                if ((tm|(mask-1) == (time_|(mask-1)))) {
+                if ((tm | (mask - 1) == (time_ | (mask - 1)))) {
                     break;
                 }
                 mask <<= TIME_NEAR_SHIFT;
             }
-            t_[i][(tm>>(TIME_NEAR_SHIFT + i * TIME_LEVEL_SHIFT)) & TIME_LEVEL_MASK].emplace_back(std::move(node));
+            t_[i][(tm >> (TIME_NEAR_SHIFT + i * TIME_LEVEL_SHIFT)) & TIME_LEVEL_MASK].emplace_back(std::move(node));
+        } else {
+            near_[tm & TIME_NEAR_MASK].emplace_back(std::move(node));
         }
     }
 

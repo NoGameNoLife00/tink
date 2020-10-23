@@ -55,7 +55,7 @@ namespace tink {
         sa.sa_handler = &HandleHup;
         sa.sa_flags = SA_RESTART;
         sigfillset(&sa.sa_mask);
-        sigaction(SIGHUP, &sa, NULL);
+        sigaction(SIGHUP, &sa, nullptr);
         if (!config_->GetDaemon().empty()) {
             if (Daemon::Init(config_->GetDaemon())) {
                 exit(1);
@@ -132,8 +132,7 @@ namespace tink {
         m->quit = 1;
         m->cond.notify_all();
         m->mutex.unlock();
-        return;
-    }
+   }
 
 
     static void ThreadSocket(MonitorPtr m) {

@@ -86,8 +86,8 @@ namespace tink {
     void Thread::Start() {
         assert(!started_);
         started_ = true;
-        ThreadData *data = new ThreadData {func_, name_, &latch_};
-        if (pthread_create(&pid_, NULL, &StartThread, data)) {
+        auto *data = new ThreadData {func_, name_, &latch_};
+        if (pthread_create(&pid_, nullptr, &StartThread, data)) {
             started_ = false;
             delete data;
             spdlog::error("pthread_create failed {}:", errno, strerror(errno));
@@ -97,7 +97,7 @@ namespace tink {
     }
 
     void * Thread::StartThread(void *obj) {
-        ThreadData* data = static_cast<ThreadData*>(obj);
+        auto* data = static_cast<ThreadData*>(obj);
         data->RunThread();
         delete data;
         return nullptr;
@@ -107,7 +107,7 @@ namespace tink {
         assert(started_);
         assert(!joined_);
         joined_ = true;
-        return pthread_join(pid_, NULL);
+        return pthread_join(pid_, nullptr);
     }
 
     Thread::~Thread() {

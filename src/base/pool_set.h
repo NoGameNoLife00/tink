@@ -92,7 +92,7 @@ namespace tink {
             }
         }
 
-        unsigned int GetPoolSize(void) const
+        unsigned int GetPoolSize() const
         {
             return pool_size_;
         }

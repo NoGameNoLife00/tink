@@ -39,17 +39,16 @@ namespace tink {
         return ret;
     }
 
-    void Socket::BindAddress(const SockAddress &addr) {
+    void Socket::BindAddress(const SockAddress &addr) const {
         SocketApi::Bind(sock_fd_, addr.GetSockAddr());
     }
 
-    void Socket::Listen() {
+    void Socket::Listen() const {
         SocketApi::Listen(sock_fd_);
     }
 
-    int Socket::Accept(SockAddress &peer_addr) {
-        struct sockaddr_in6 addr;
-        memset(&addr, 0, sizeof addr);
+    int Socket::Accept(SockAddress &peer_addr) const {
+        struct sockaddr_in6 addr{};
         int conn_fd = SocketApi::Accept(sock_fd_, &addr);
         if (conn_fd >= 0) {
             peer_addr.SetSockAddrInet6(addr);
@@ -57,17 +56,17 @@ namespace tink {
         return conn_fd;
     }
 
-    void Socket::ShutDownWrite() {
+    void Socket::ShutDownWrite() const {
         SocketApi::ShutdownWrite(sock_fd_);
     }
 
-    void Socket::SetTcpNoDelay(bool active) {
+    void Socket::SetTcpNoDelay(bool active) const {
         int optval = active ? 1 : 0;
         ::setsockopt(sock_fd_, IPPROTO_TCP, TCP_NODELAY,
                      &optval, static_cast<socklen_t>(sizeof optval));
     }
 
-    void Socket::SetKeepAlive(bool active) {
+    void Socket::SetKeepAlive(bool active) const {
         SocketApi::SetKeepAlive(sock_fd_, active);
     }
 
@@ -90,7 +89,7 @@ namespace tink {
     void Socket::Destroy() {
     }
 
-    socklen_t Socket::UdpAddress(const uint8_t udp_address[UDP_ADDRESS_SIZE], SockAddress &sa) {
+    socklen_t Socket::UdpAddress(const uint8_t udp_address[UDP_ADDRESS_SIZE], SockAddress &sa) const {
         int type = (uint8_t)udp_address[0];
         if (type != protocol_)
             return 0;
@@ -134,13 +133,13 @@ namespace tink {
         }
     }
 
-    void Socket::SetReuseAddr(bool active) {
+    void Socket::SetReuseAddr(bool active) const {
         int optval = active ? 1 : 0;
         ::setsockopt(sock_fd_, SOL_SOCKET, SO_REUSEADDR,
                      &optval, static_cast<socklen_t>(sizeof optval));
     }
 
-    void Socket::SetReusePort(bool active) {
+    void Socket::SetReusePort(bool active) const {
         int optval = active ? 1 : 0;
         int ret = ::setsockopt(sock_fd_, SOL_SOCKET, SO_REUSEPORT,
                                &optval, static_cast<socklen_t>(sizeof optval));
@@ -150,7 +149,7 @@ namespace tink {
         }
     }
 
-    void Socket::Close() {
+    void Socket::Close() const {
         SocketApi::Close(sock_fd_);
     }
 

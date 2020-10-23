@@ -14,7 +14,7 @@ namespace tink {
         int32_t session;
         DataPtr data;
         size_t size;
-        int Init(uint32_t source, int32_t session, UBytePtr& data, size_t size);
+        int Init(uint32_t _source, int32_t _session, UBytePtr& _data, size_t _size);
     } TinkMessage ;
 
     typedef struct RemoteName_ {

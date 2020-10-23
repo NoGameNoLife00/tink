@@ -87,9 +87,9 @@ namespace tink {
     }RequestUdp;
 
     typedef struct RequestPackage_ {
-        RequestPackage_() {}
+        RequestPackage_() = default;
 
-        uint8_t header[8];	// 6 bytes dummy
+        uint8_t header[8]{};	// 6 bytes dummy
         union {
             char buffer[256];
             RequestOpen open;
@@ -102,8 +102,8 @@ namespace tink {
             RequestSetOpt setopt;
             RequestUdp udp;
             RequestSetUdp set_udp;
-        } u;
-        uint8_t dummy[256];
+        } u{};
+        uint8_t dummy[256]{};
     }RequestPackage;
 
     typedef struct SendObject_ {
@@ -132,22 +132,17 @@ namespace tink {
         int Poll();
         void Destroy();
         void FreeWbList(WriteBufferList &list);
-
         SocketPtr GetSocket(int id);
-
         void Exit();
         void Close(uintptr_t opaque, int id);
         void Shutdown(uintptr_t opaque, int id);
         void Start(uintptr_t opaque, int id);
-
         int Send(SocketSendBuffer &buffer);
         int Send(int id, DataPtr buffer, int sz);
         int SendLowPriority(SocketSendBuffer &buffer);
-
         int Listen(uintptr_t opaque, std::string_view addr, int port, int backlog);
         int Connect(uintptr_t opaque, const string &addr, int port);
         int Bind(uintptr_t opaque, int fd);
-
         int NoDelay(int id);
 
     private:

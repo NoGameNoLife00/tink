@@ -3,9 +3,9 @@
 #include "monitor.h"
 
 namespace tink {
-    void MonitorNode::Trigger(uint32_t source, uint32_t destination) {
-        this->source = source;
-        this->destination = destination;
+    void MonitorNode::Trigger(uint32_t _source, uint32_t _destination) {
+        source = _source;
+        destination = _destination;
         ++version;
     }
 
