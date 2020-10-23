@@ -22,7 +22,6 @@ namespace tink {
     public:
         // ≈‰÷√≥ı ºªØ
         int Init(std::string_view path);
-        int Reload();
         const string& GetHost() const;
         const string& GetName() const;
         int GetPort() const;

@@ -504,7 +504,10 @@ namespace tink {
             }
             SocketPtr s = GetSocket(id);
             if (s->GetType() == SOCKET_TYPE_INVALID) {
-                if (!s->Reserve(id)) {
+                if (s->Reserve(id)) {
+                    return id;
+                } else {
+                    // ÖØÊÔ
                     --i;
                 }
             }

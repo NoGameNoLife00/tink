@@ -23,10 +23,7 @@ namespace tink::Service {
         string binding;
         int client_tag = 0, max = -1;
         is >> header >> watchdog >> binding >> client_tag >> max;
-        if (max < 0){
-            spdlog::error("invalid gate param {}", param);
-            return E_FAILED;
-        }
+
         if (max <= 0) {
             spdlog::error("need max connection");
             return E_FAILED;
@@ -34,7 +31,7 @@ namespace tink::Service {
         if (client_tag == 0) {
             client_tag = PTYPE_CLIENT;
         }
-        if (watchdog[0] = '!') {
+        if (watchdog[0] == '!') {
             this->watchdog_ = 0;
         } else {
             this->watchdog_ = HANDLE_STORAGE.FindName(watchdog);
@@ -75,14 +72,14 @@ namespace tink::Service {
                 return E_FAILED;
             }
         } else {
-            port = strtol(listen_addr.substr(port_idx+1).data(), nullptr, 10);
+            port = strtol(listen_addr.data() + port_idx + 1, nullptr, 10);
             if (port <= 0) {
                 spdlog::error("invalid gate address {}", listen_addr);
                 return E_FAILED;
             }
 
         }
-        auto host = listen_addr.substr(0, port_idx);
+        string host(listen_addr.substr(0, port_idx));
         listen_id_ = SOCKET_SERVER.Listen(ctx_->Handle(), host, port, BACKLOG);
         if (listen_id_ < 0) {
             return E_FAILED;
@@ -290,4 +287,8 @@ namespace tink::Service {
         va_end(ap);
         ctx_->Send(0, watchdog_, PTYPE_TEXT, 0, tmp, n);
     }
+}
+
+tink::BaseModule *CreateModule() {
+    return new tink::Service::ServiceGate();
 }

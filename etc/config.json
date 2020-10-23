@@ -1,7 +1,6 @@
 {
   "name" : "tink server",
   "host" : "0.0.0.0",
-  "port": 8999,
   "max_connection": 1000,
   "worker_pool_size": 8,
   "log_name" : "./logs/game.log",
@@ -9,5 +8,5 @@
   "daemon" : "",
   "profile" : false,
   "module_path": "../lib/?.so",
-  "bootstrap" : "libservice_gate t ! 0.0.0.0 111 10000 204800"
+  "bootstrap" : "service_gate t ! 0.0.0.0:8999 111 10000 204800"
 }

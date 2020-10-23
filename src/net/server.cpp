@@ -251,9 +251,9 @@ namespace tink {
     }
 
     void Server::Bootstrap(const string &cmdline) {
-        std::istringstream is(cmdline);
-        string name, args;
-        is >> name >> args;
+        int pos = cmdline.find_first_of(' ');
+        std::string name = cmdline.substr(0, pos);
+        std::string args = cmdline.substr(pos+1);
         ContextPtr ctx = HANDLE_STORAGE.CreateContext(name, args);
         if (!ctx) {
             spdlog::error("bootstrap error: {}", cmdline);

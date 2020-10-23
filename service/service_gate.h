@@ -9,6 +9,10 @@
 #include <socket.h>
 #include "data_buffer.h"
 
+extern "C" {
+     tink::BaseModule* CreateModule();
+};
+
 namespace tink {
     namespace Service {
 
@@ -18,7 +22,7 @@ namespace tink {
         uint32_t client;
         char remote_name[32];
         DataBuffer buffer;
-    }Connection;
+    } Connection;
 //    typedef std::shared_ptr<Connection> ConnectionPtr;
 
     class ServiceGate : public BaseModule {
@@ -51,6 +55,7 @@ namespace tink {
 
     }
 }
+
 
 
 
