@@ -167,7 +167,7 @@ namespace tink {
         int n = 1;
         TinkMessage msg;
         for (int i = 0; i < n; i++) {
-            if (q->Pop(msg)) {
+            if (!q->Pop(msg)) {
                 return GLOBAL_MQ.Pop();
             } else if (i == 0 && weight >= 0) {
                 n = q->Size();
