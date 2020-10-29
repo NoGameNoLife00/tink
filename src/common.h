@@ -12,9 +12,7 @@ namespace tink {
     typedef std::shared_ptr<void> DataPtr;
     typedef std::unique_ptr<byte[]> UBytePtr;
     typedef std::shared_ptr<byte[]> BytePtr;
-    typedef std::shared_ptr<std::string> StringPtr;
     typedef std::mutex Mutex;
-
     constexpr static int HANDLE_REMOTE_SHIFT = 24;
     constexpr static int HANDLE_MASK = 0xffffff;
 

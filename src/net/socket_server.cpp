@@ -28,6 +28,13 @@ namespace tink {
         time_ = time;
     }
 
+    BytePtr StringMessage(std::string_view str) {
+        BytePtr ptr = std::make_shared<byte[]>(str.length()+1);
+        memcpy(ptr.get(), str.data(), str.length());
+        ptr[str.length()] = 0;
+        return ptr;
+    }
+
     int SocketServer::Poll_(SocketMessage &result, int &more) {
         for (;;) {
             if (check_ctrl_) {
@@ -110,7 +117,7 @@ namespace tink {
                     const char * err = nullptr;
                     err = strerror(code);
                     ForceClose_(*s, result);
-                    result.data = (char *)err;
+                    result.data = StringMessage(err);
                     return SOCKET_ERR;
                 }
                 if(e.eof) {
@@ -566,15 +573,16 @@ namespace tink {
     static void ForwardMessage(int type, bool padding, SocketMessage &result) {
         TinkSocketMsgPtr sm = std::make_shared<TinkSocketMessage>();
 
-        // todo 这里逻辑不对
+
         size_t sz = sizeof(*sm);
-        if (result.data) {
-            sz += strlen(result.data);
-        }
+        // todo 这里逻辑不对
+//        if (result.data) {
+//            sz += strlen(static_cast<byte*>(result.data.get()));
+//        }
         sm->type = type;
         sm->id = result.id;
         sm->ud = result.ud;
-        sm->buffer.reset(result.data);
+        sm->buffer = result.data;
 
         TinkMessage message;
         message.source = 0;
@@ -629,22 +637,22 @@ namespace tink {
         result.data = nullptr;
         SocketPtr s = GetSocket(id);
         if (s->GetType() == SOCKET_TYPE_INVALID || s->GetId() !=id) {
-            result.data = "invalid socket";
+            result.data = StringMessage("invalid socket");
             return SOCKET_ERR;
         }
         if (s->GetType() == SOCKET_TYPE_PACCEPT || s->GetType() == SOCKET_TYPE_PLISTEN) {
             if (poll_->Add(s->GetSockFd(), s.get())) {
                 ForceClose_(*s, result);
-                result.data = strerror(errno);
+                result.data = StringMessage(strerror(errno));
                 return SOCKET_ERR;
             }
             s->SetType((s->GetType() == SOCKET_TYPE_PACCEPT) ? SOCKET_TYPE_CONNECTED : SOCKET_TYPE_LISTEN);
             s->SetOpaque(request->opaque);
-            result.data = "start";
+            result.data = StringMessage("start");
             return SOCKET_OPEN;
         } else if (s->GetType() == SOCKET_TYPE_CONNECTED) {
             s->SetOpaque(request->opaque);
-            result.data = "transfer";
+            result.data = StringMessage("transfer");
             return SOCKET_OPEN;
         }
         return SOCKET_NONE;
@@ -657,12 +665,12 @@ namespace tink {
         result.ud = 0;
         SocketPtr s = NewSocket_(id, request->fd, PROTOCOL_TCP, request->opaque, true);
         if (!s) {
-            result.data = "reach socket number limit";
+            result.data = StringMessage("reach socket number limit");
             return SOCKET_ERR;
         }
         SocketApi::NonBlocking(request->fd);
         s->SetType(SOCKET_TYPE_BIND);
-        result.data = "binding";
+        result.data = StringMessage("binding");
         return SOCKET_OPEN;
     }
 
@@ -675,7 +683,7 @@ namespace tink {
             result.opaque = request->opaque;
             result.id = id;
             result.ud = 0;
-            result.data = "reach socket number limit";
+            result.data = StringMessage("reach socket number limit");
             slot_[HASH_ID(id)]->SetType(SOCKET_TYPE_INVALID);
             return SOCKET_ERR;
         }
@@ -835,7 +843,7 @@ namespace tink {
             return SOCKET_ERR;
         };
         if ( status != 0 ) {
-            result.data = const_cast<char *>(gai_strerror(status));
+            result.data = StringMessage(gai_strerror(status));
             return _failed();
         }
         sock = -1;
@@ -854,20 +862,20 @@ namespace tink {
             break;
         }
         if (sock < 0) {
-            result.data = strerror(errno);
+            result.data = StringMessage(strerror(errno));
             return _failed();
         }
         ns = NewSocket_(id, sock, PROTOCOL_TCP, request->opaque, true);
         if (!ns) {
             SocketApi::Close(sock);
-            result.data = "reach socket number limit";
+            result.data = StringMessage("reach socket number limit");
             return _failed();
         }
 
         if (status == 0) {
             ns->SetType(SOCKET_TYPE_CONNECTED);
             struct ::sockaddr * addr = ai_ptr->ai_addr;
-            SocketApi::ToIp(buffer_, sizeof(buffer_), ai_ptr->ai_addr);
+            SocketApi::ToIp(buffer_.get(), MAX_INFO, ai_ptr->ai_addr);
             result.data = buffer_;
 
         } else {
@@ -959,7 +967,7 @@ namespace tink {
             result.opaque = s->GetOpaque();
             result.id = s->GetId();
             result.ud = 0;
-            result.data = "protocol mismatch";
+            result.data = StringMessage("protocol mismatch");
             return SOCKET_ERR;
         }
         if (type == PROTOCOL_UDP) {
@@ -1023,9 +1031,9 @@ namespace tink {
         if (code < 0 || error) {
             ForceClose_(s, result);
             if (code >= 0)
-                result.data = strerror(error);
+                result.data = StringMessage(strerror(errno));
             else
-                result.data = strerror(errno);
+                result.data = StringMessage(strerror(errno));
             return SOCKET_ERR;
         } else {
             s.SetType(SOCKET_TYPE_CONNECTED);
@@ -1037,7 +1045,7 @@ namespace tink {
             }
 
             sockaddr_in6 u = SocketApi::GetPeerAddr(s.GetSockFd());
-            SocketApi::ToIp(buffer_, sizeof(buffer_), static_cast<sockaddr*>((void *)&u.sin6_addr));
+            SocketApi::ToIp(buffer_.get(), MAX_INFO, static_cast<sockaddr*>((void *)&u.sin6_addr));
             result.data = buffer_;
             return SOCKET_OPEN;
         }
@@ -1045,7 +1053,7 @@ namespace tink {
 
     static int GetName(SockAddress &sa, char *buffer, size_t sz) {
         string name = sa.ToIpPort();
-        strcpy(buffer, name.c_str());
+        strncpy(buffer, name.c_str(), sz);
         return 1;
     }
 
@@ -1058,7 +1066,7 @@ namespace tink {
                 result.opaque = s.GetOpaque();
                 result.id = s.GetId();
                 result.ud = 0;
-                result.data = strerror(errno);
+                result.data = StringMessage(strerror(errno));
                 return SOCKET_NONE;
             } else {
                 return 0;
@@ -1083,14 +1091,14 @@ namespace tink {
         result.ud = id;
         result.data = nullptr;
 
-        GetName(u, buffer_, sizeof(buffer_));
+        GetName(u, buffer_.get(), MAX_INFO);
         result.data = buffer_;
         return 1;
     }
 
     int SocketServer::ForwardMessageTcp_(Socket &s, SocketMessage &result) {
         int sz = s.GetReadSize();
-        UBytePtr buffer = std::make_unique<byte[]>(sz);
+        DataPtr buffer = std::make_shared<byte[]>(sz);
         int n = SocketApi::Read(s.GetSockFd(), buffer.get(), sz);
         if (n < 0) {
             switch(errno) {
@@ -1102,7 +1110,7 @@ namespace tink {
                 default:
                     // close when error
                     ForceClose_(s, result);
-                    result.data = strerror(errno);
+                    result.data = StringMessage(strerror(errno));
                     return SOCKET_ERR;
             }
             return SOCKET_NONE;
@@ -1124,7 +1132,7 @@ namespace tink {
         result.opaque = s.GetOpaque();
         result.id = s.GetId();
         result.ud = n;
-        result.data = buffer.release();
+        result.data = buffer;
         return SOCKET_DATA;
     }
 
@@ -1140,7 +1148,7 @@ namespace tink {
                 default:
                     // close when error
                     ForceClose_(s, result);
-                    result.data = strerror(errno);
+                    result.data = StringMessage(strerror(errno));
                     return SOCKET_ERR;
             }
             return SOCKET_NONE;
@@ -1162,7 +1170,7 @@ namespace tink {
         result.opaque = s.GetOpaque();
         result.id = s.GetId();
         result.ud = n;
-        result.data = (char *)data;
+        result.data = DataPtr(data, ArrayDeleter<uint8_t>());
 
         return 0;
     }
@@ -1212,7 +1220,7 @@ namespace tink {
     }
 
     SocketServer::SocketServer() : ev_(MAX_EVENT) {
-
+        buffer_ = std::make_shared<byte[]>(MAX_INFO);
     }
 
 }

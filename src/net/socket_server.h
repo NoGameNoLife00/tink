@@ -32,7 +32,7 @@ namespace tink {
         int id;
         uintptr_t opaque;
         int ud;
-        char * data;
+        DataPtr data;
     }SocketMessage;
 
     typedef struct RequestStart_ {
@@ -184,7 +184,7 @@ namespace tink {
         int event_n_;
         int event_index_;
         fd_set rfds_;
-        char buffer_[MAX_INFO];
+        BytePtr buffer_;
         uint8_t udp_buffer_[MAX_UDP_PACKAGE];
         EventList ev_;
         std::array<SocketPtr, MAX_SOCKET> slot_;

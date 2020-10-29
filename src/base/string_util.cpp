@@ -35,4 +35,5 @@ namespace tink::StringUtil {
         }
         str[9] = '\0';
     }
+
 }

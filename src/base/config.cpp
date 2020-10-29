@@ -51,7 +51,7 @@ namespace tink {
     }
 
     // init log
-    void Config::InitLog_() {
+    void Config::InitDefaultLog_() {
         spdlog::init_thread_pool(8192, 1);
         auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
         auto file_sink = std::make_shared<spdlog::sinks::daily_file_sink_mt>(log_name_, 0, 0);
@@ -88,7 +88,7 @@ namespace tink {
             GetJsonValue(json, profile_, "profile", false);
             GetJsonValue(json, module_path_, "module_path", "./lib/?.so");
             GetJsonValue(json, bootstrap_, "bootstrap", "lua bootstrap");
-            InitLog_();
+            InitDefaultLog_();
         } else {
             fprintf(stderr,"tink open file etc/config.json failed");
             exit(0);

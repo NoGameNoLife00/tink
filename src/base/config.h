@@ -36,7 +36,7 @@ namespace tink {
         const string& GetBootstrap() { return bootstrap_; }
     private:
         void Default_();
-        void InitLog_();
+        void InitDefaultLog_();
         int max_conn_;
         uint32_t max_package_size_;
         string version_;
