@@ -9,6 +9,7 @@ namespace tink {
     }
 
     EPoller::~EPoller() {
+        printf("~epoller()");
         close(poll_fd_);
     }
 
