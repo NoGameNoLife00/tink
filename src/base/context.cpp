@@ -16,6 +16,7 @@ namespace tink {
     void Context::Destroy() {
         mod_->Release();
         queue_->MarkRelease();
+        --total;
     }
 
     void Context::Send(DataPtr &&data, size_t sz, uint32_t source, int type, int session) {
@@ -86,13 +87,13 @@ namespace tink {
             }
             return session;
         }
-        if (HarborInstance.MessageIsRemote(destination)) {
+        if (HARBOR.MessageIsRemote(destination)) {
             RemoteMessagePtr r_msg = std::make_shared<RemoteMessage>();
             r_msg->destination.handle = destination;
             r_msg->message = data;
             r_msg->size = sz & MESSAGE_TYPE_MASK;
             r_msg->type = sz >> MESSAGE_TYPE_SHIFT;
-            HarborInstance.Send(r_msg, source, session);
+            HARBOR.Send(r_msg, source, session);
         } else {
             TinkMessage s_msg;
             s_msg.source = source;
@@ -155,7 +156,7 @@ namespace tink {
             r_msg->message = data;
             r_msg->size = sz & MESSAGE_TYPE_MASK;
             r_msg->type = sz >> MESSAGE_TYPE_SHIFT;
-            HarborInstance.Send(r_msg, source, session);
+            HARBOR.Send(r_msg, source, session);
             return session;
         }
         return Send(source, des, type, session, data, sz);

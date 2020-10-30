@@ -1,8 +1,8 @@
 #include <cstring>
 #include <dlfcn.h>
 #include <error_code.h>
-#include "module_manage.h"
-#include "string_util.h"
+#include <module_manage.h>
+#include <string_util.h>
 
 namespace tink {
     static void *TryOpen(std::string_view path_str, std::string_view name_str) {

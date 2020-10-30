@@ -1,5 +1,4 @@
-#include "socket_server.h"
-#include "socket.h"
+#include <socket_server.h>
 #include <unistd.h>
 #include <cassert>
 #include <cstring>
@@ -7,7 +6,6 @@
 #include <spdlog/spdlog.h>
 #include <handle_storage.h>
 #include <netdb.h>
-#include <arpa/inet.h>
 #include <scope_guard.h>
 
 // EAGAIN and EWOULDBLOCK may be not the same value.
@@ -29,7 +27,7 @@ namespace tink {
     }
 
     BytePtr StringMessage(std::string_view str) {
-        BytePtr ptr = std::make_shared<byte[]>(str.length()+1);
+        BytePtr ptr(new byte[str.length()+1], std::default_delete<byte[]>());
         memcpy(ptr.get(), str.data(), str.length());
         ptr[str.length()] = 0;
         return ptr;
@@ -276,6 +274,7 @@ namespace tink {
         }
         close(send_ctrl_fd);
         close(recv_ctrl_fd);
+        printf("error pool reset!!!!!!!!!!!!!!!!!!!!");
         poll_.reset();
     }
 
@@ -1098,7 +1097,7 @@ namespace tink {
 
     int SocketServer::ForwardMessageTcp_(Socket &s, SocketMessage &result) {
         int sz = s.GetReadSize();
-        DataPtr buffer = std::make_shared<byte[]>(sz);
+        DataPtr buffer(new byte[sz], std::default_delete<byte[]>());
         int n = SocketApi::Read(s.GetSockFd(), buffer.get(), sz);
         if (n < 0) {
             switch(errno) {
@@ -1170,7 +1169,7 @@ namespace tink {
         result.opaque = s.GetOpaque();
         result.id = s.GetId();
         result.ud = n;
-        result.data = DataPtr(data, ArrayDeleter<uint8_t>());
+        result.data = DataPtr(data, std::default_delete<uint8_t[]>());
 
         return 0;
     }
@@ -1219,8 +1218,8 @@ namespace tink {
         return 0;
     }
 
-    SocketServer::SocketServer() : ev_(MAX_EVENT) {
-        buffer_ = std::make_shared<byte[]>(MAX_INFO);
+    SocketServer::SocketServer() : ev_(MAX_EVENT)
+    ,buffer_(new byte[MAX_INFO], std::default_delete<byte[]>()) {
     }
 
 }

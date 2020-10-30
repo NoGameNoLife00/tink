@@ -13,9 +13,7 @@ extern "C" {
      tink::BaseModule* CreateModule();
 };
 
-namespace tink {
-    namespace Service {
-
+namespace tink::Service {
     typedef struct Connection_ {
         int id;	// socket id
         uint32_t agent;
@@ -54,7 +52,6 @@ namespace tink {
     };
 
     }
-}
 
 
 

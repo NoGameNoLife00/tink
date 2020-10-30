@@ -1,7 +1,7 @@
 #ifndef TINK_EPOLLER_H
 #define TINK_EPOLLER_H
 
-#include "poller.h"
+#include <poller.h>
 
 namespace tink {
     class EPoller : public Poller {
@@ -10,7 +10,7 @@ namespace tink {
 
         bool Invalid() override;
 
-        ~EPoller();
+        ~EPoller() override;
 
         int Add(int sock, void *ud) override;
 

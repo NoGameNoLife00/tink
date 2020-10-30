@@ -4,7 +4,7 @@
 #include <common.h>
 #include <context.h>
 
-#define HarborInstance tink::Singleton<tink::Harbor>::GetInstance()
+#define HARBOR tink::Singleton<tink::Harbor>::GetInstance()
 
 namespace tink {
     class Harbor {

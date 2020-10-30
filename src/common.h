@@ -5,8 +5,6 @@
 #include <mutex>
 #include <vector>
 
-
-
 namespace tink {
     typedef char byte;
     typedef std::shared_ptr<void> DataPtr;
@@ -32,17 +30,6 @@ namespace tink {
     constexpr auto THREAD_SOCKET = 2;
     constexpr auto THREAD_TIMER = 3;
     constexpr auto THREAD_MONITOR = 4;
-
-
-    template< typename T >
-    struct ArrayDeleter
-    {
-        void operator ()( T const * p)
-        {
-            delete[] p;
-        }
-    };
-
 }
 
 #endif //TINK_COMMON_H

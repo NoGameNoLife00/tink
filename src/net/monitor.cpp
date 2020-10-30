@@ -1,6 +1,6 @@
 #include <handle_storage.h>
 #include <spdlog/spdlog.h>
-#include "monitor.h"
+#include <monitor.h>
 
 namespace tink {
     void MonitorNode::Trigger(uint32_t _source, uint32_t _destination) {

@@ -1,7 +1,5 @@
 #include <message_queue.h>
 
-#include <utility>
-
 namespace tink {
     void MessageQueue::Push(TinkMessage &msg){
         std::lock_guard <Mutex> lock(mutex_);
