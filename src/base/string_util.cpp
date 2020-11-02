@@ -1,6 +1,5 @@
 #include <string_util.h>
 #include <sstream>
-#include <vector>
 
 namespace tink::StringUtil {
     void Split(const string &str, char split, StringList &out) {
@@ -35,4 +34,5 @@ namespace tink::StringUtil {
         }
         str[9] = '\0';
     }
+
 }

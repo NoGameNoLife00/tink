@@ -2,8 +2,8 @@
 #include <cassert>
 #include <spdlog/spdlog.h>
 #include <string>
-#include "handle_storage.h"
-#include "module_manage.h"
+#include <handle_storage.h>
+#include <module_manage.h>
 
 namespace tink {
 

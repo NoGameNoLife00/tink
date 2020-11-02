@@ -1,7 +1,3 @@
-//
-// Created by Ёблн on 2020/9/15.
-//
-
 #include <spdlog/spdlog.h>
 #include <error_code.h>
 #include "timer.h"

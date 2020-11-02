@@ -7,14 +7,13 @@
 #include <message.h>
 #include <context.h>
 #include <handle_storage.h>
-#include <signal.h>
+#include <csignal>
 #include <daemon.h>
 #include <module_manage.h>
 #include <thread.h>
-#include <sstream>
-#include "harbor.h"
-#include "timer.h"
-#include "monitor.h"
+#include <harbor.h>
+#include <timer.h>
+#include <monitor.h>
 
 
 #define MAX_BUF_SIZE 2048
@@ -61,7 +60,7 @@ namespace tink {
                 exit(1);
             }
         }
-        HarborInstance.Init(config_->GetHarbor());
+        HARBOR.Init(config_->GetHarbor());
         HANDLE_STORAGE.Init(config_->GetHarbor());
         MODULE_MNG.Init(config_->GetModulePath());
         TIMER.Init();
@@ -216,7 +215,7 @@ namespace tink {
 
         thread_list.emplace_back(std::make_shared<Thread>([m] { return ThreadMonitor(m); }, "monitor"));
         thread_list.emplace_back(std::make_shared<Thread>([m] { return ThreadTimer(m); }, "timer"));
-        thread_list.emplace_back(std::make_shared<Thread>( [m] { return ThreadSocket(m); }, "timer"));
+        thread_list.emplace_back(std::make_shared<Thread>( [m] { return ThreadSocket(m); }, "socket"));
 
 
         static int weight[] = {

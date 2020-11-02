@@ -4,10 +4,12 @@
 #include <base_module.h>
 #include <common.h>
 #include <atomic>
-#include "global_mq.h"
+#include <global_mq.h>
 
 namespace tink {
     class Context;
+    class BaseModule;
+    typedef std::shared_ptr<BaseModule> ModulePtr;
     typedef std::shared_ptr<Context> ContextPtr;
     typedef std::function<int (Context& ctx, void* ud, int type, int session, uint32_t source, DataPtr& msg, size_t sz)> ContextCallBack;
 
@@ -19,13 +21,13 @@ namespace tink {
     class Context : public std::enable_shared_from_this<Context> {
     public:
         Context() { ++total; }
-        ~Context() { --total; }
+        ~Context() {  }
         static int Total() { return total.load(); }
         void Destroy();
         void Send(DataPtr &&data, size_t sz, uint32_t source, int type, int session);
         void SetCallBack(const ContextCallBack &cb, void *ud);
         uint32_t Handle() const { return handle_; }
-        void Reserve() { }
+        void Reserve() { --total; }
         int NewSession();
         MQPtr Queue() { return queue_; }
         bool Endless() const { return endless_; }

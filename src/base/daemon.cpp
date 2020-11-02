@@ -1,9 +1,9 @@
-#include <signal.h>
+#include <csignal>
 #include <unistd.h>
 #include <error_code.h>
 #include <fcntl.h>
 #include <sys/file.h>
-#include "daemon.h"
+#include <daemon.h>
 
 namespace tink {
     static int CheckPid(std::string_view pid_file) {

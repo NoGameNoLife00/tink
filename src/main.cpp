@@ -12,6 +12,7 @@ int main(int argc, char** argv) {
     }
     std::shared_ptr<tink::Config> conf = std::make_shared<tink::Config>();
     conf->Init(config_file);
+    printf("tink start");
     TINK_SERVER.Init(conf);
     TINK_SERVER.Start();
     return 0;

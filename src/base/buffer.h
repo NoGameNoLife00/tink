@@ -1,7 +1,3 @@
-//
-// Created by Ёблн on 2020/8/24.
-//
-
 #ifndef TINK_BUFFER_H
 #define TINK_BUFFER_H
 

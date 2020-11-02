@@ -3,20 +3,20 @@
 #include <spdlog/spdlog.h>
 #include <handle_storage.h>
 #include <socket_server.h>
-#include <server.h>
 #include <sstream>
 #include "service_gate.h"
 
 #define BACKLOG 128
 namespace tink::Service {
     ServiceGate::ServiceGate() : listen_id_(-1) {
-
+        name_ = "service_gate";
     }
 
     int ServiceGate::Init(ContextPtr ctx, std::string_view param) {
         if (param.empty()) {
             return E_FAILED;
         }
+        InitLog();
         std::istringstream is(param.data());
         char header;
         string watchdog;
@@ -25,7 +25,7 @@ namespace tink::Service {
         is >> header >> watchdog >> binding >> client_tag >> max;
 
         if (max <= 0) {
-            spdlog::error("need max connection");
+            logger->error("need max connection");
             return E_FAILED;
         }
         if (client_tag == 0) {
@@ -36,7 +36,7 @@ namespace tink::Service {
         } else {
             this->watchdog_ = HANDLE_STORAGE.FindName(watchdog);
             if (this->watchdog_ == 0) {
-                spdlog::error("Invalid watchdog {}", watchdog);
+                logger->error("Invalid watchdog {}", watchdog);
                 return E_FAILED;
             }
         }
@@ -65,16 +65,16 @@ namespace tink::Service {
     int ServiceGate::StartListen(std::string_view listen_addr) {
         int port_idx = listen_addr.find_last_of(':');
         int port;
-        if (port_idx == listen_addr.npos) {
+        if (port_idx == std::string_view::npos) {
             port = strtol(listen_addr.data(), nullptr, 10);
             if (port <= 0) {
-                spdlog::error("invalid gate address {}", listen_addr);
+                logger->error("invalid gate address {}", listen_addr);
                 return E_FAILED;
             }
         } else {
             port = strtol(listen_addr.data() + port_idx + 1, nullptr, 10);
             if (port <= 0) {
-                spdlog::error("invalid gate address {}", listen_addr);
+                logger->error("invalid gate address {}", listen_addr);
                 return E_FAILED;
             }
 
@@ -90,14 +90,14 @@ namespace tink::Service {
 
     int
     ServiceGate::CallBack_(Context &ctx, void *ud, int type, int session, uint32_t source, DataPtr &msg, size_t sz) {
-        ServiceGate *g = static_cast<ServiceGate *>(ud);
+        auto *g = static_cast<ServiceGate *>(ud);
         switch (type) {
             case PTYPE_TEXT:
                 g->Ctrl(msg, sz);
                 break;
             case PTYPE_CLIENT: {
                 if (sz <= 4) {
-                    spdlog::error("Invalid client message from {}", source);
+                    g->logger->error("Invalid client message from {}", source);
                     break;
                 }
                 const uint8_t *id_buf = static_cast<uint8_t *>(msg.get()) + sz - 4;
@@ -106,13 +106,15 @@ namespace tink::Service {
                     SOCKET_SERVER.Send(uid, msg, sz-4);
                     return E_OK;
                 } else {
-                    spdlog::error("Invalid client id {} from {}", uid, source);
+                    g->logger->error("Invalid client id {} from {}", uid, source);
                     break;
                 }
             }
 
             case PTYPE_SOCKET:
                 g->DispatchSocketMessage(std::reinterpret_pointer_cast<TinkSocketMessage>(msg), int(sz-sizeof(TinkSocketMessage)));
+                break;
+            default:
                 break;
         }
         return E_OK;
@@ -163,7 +165,7 @@ namespace tink::Service {
             }
             return;
         }
-        spdlog::error("[gate] unknown command : {}", command);
+        logger->error("[gate] unknown command : {}", command);
     }
 
     void ServiceGate::ForwardAgent_(int fd, uint32_t agent_addr, uint32_t client_addr) {
@@ -182,7 +184,7 @@ namespace tink::Service {
                     Connection * c = it->second;
                     DispatchMessage(*c, msg->id, msg->buffer, msg->ud);
                 } else {
-                    spdlog::error("drop unknown connection {} message", msg->id);
+                    logger->error("drop unknown connection {} message", msg->id);
                     SOCKET_SERVER.Close(ctx_->Handle(), msg->id);
                     msg->buffer.reset();
                 }
@@ -193,7 +195,7 @@ namespace tink::Service {
                     break;
                 }
                 if (conn_.find(msg->id) == conn_.end()) {
-                    spdlog::error("close unknown connection {}", msg->id);
+                    logger->error("close unknown connection {}", msg->id);
                     SOCKET_SERVER.Close(ctx_->Handle(), msg->id);
                 }
                 break;
@@ -222,12 +224,12 @@ namespace tink::Service {
                     c->remote_name[sz] = '\0';
                     Report_("%d open %d %s:0", c->id, c->id, c->remote_name);
                     conn_.emplace(std::make_pair(msg->ud, c));
-                    spdlog::info("socket open:{0:x}", c->id);
+                    logger->info("socket open:{0:x}", c->id);
                 }
                 break;
             }
             case TINK_SOCKET_TYPE_WARNING:
-                spdlog::error("fd (%d) send buffer (%d)K", msg->id, msg->ud);
+                logger->error("fd (%d) send buffer (%d)K", msg->id, msg->ud);
                 break;
         }
     }
@@ -242,7 +244,7 @@ namespace tink::Service {
                 if (size >= 0x1000000) {
                     c.buffer.Clear(*msg_pool_);
                     SOCKET_SERVER.Close(ctx_->Handle(), id);
-                    spdlog::error("Recv socket message > 16M");
+                    logger->error("Recv socket message > 16M");
                     return ;
                 } else {
                     c.buffer.Reset();
@@ -281,7 +283,6 @@ namespace tink::Service {
         }
         va_list ap;
         va_start(ap, data);
-//        char tmp[1024];
         DataPtr tmp = std::make_shared<byte[]>(1024);
         int n = vsnprintf(static_cast<byte*>(tmp.get()), 1024, data, ap);
         va_end(ap);

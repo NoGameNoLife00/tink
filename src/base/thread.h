@@ -1,7 +1,3 @@
-//
-// Created by Ёблн on 2020/8/20.
-//
-
 #ifndef TINK_THREAD_H
 #define TINK_THREAD_H
 

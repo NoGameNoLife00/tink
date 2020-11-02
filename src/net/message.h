@@ -15,7 +15,7 @@ namespace tink {
         int32_t session;
         DataPtr data;
         size_t size;
-        int Init(uint32_t _source, int32_t _session, UBytePtr& _data, size_t _size);
+        int Init(uint32_t _source, int32_t _session, BytePtr &_data, size_t _size);
         ~TinkMessage_() {
             printf("~tink_message() data->%d:%d", data.use_count(), data.get());
         }
