@@ -69,7 +69,7 @@ namespace tink {
         }
     }
 
-    int Context::Send(uint32_t source, uint32_t destination, int type, int session, DataPtr &data,
+    int Context::Send(uint32_t source, uint32_t destination, int type, int session, DataPtr &&data,
                       size_t sz) {
         if ((sz & MESSAGE_TYPE_MASK) != sz) {
             spdlog::error("The message to {} is too large", destination);

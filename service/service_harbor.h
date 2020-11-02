@@ -43,10 +43,13 @@ namespace tink::Service {
 
         ServiceHarbor();
         int Init(ContextPtr ctx, std::string_view param) override;
-
+        void PushSocketData(TinkSocketMsgPtr message);
+        int GetHarborId(int fd);
+        void ReportHarborDown(int id);
+        void HarborCommand(const char *msg, size_t sz, int session, uint32_t source);
     private:
         static int MainLoop_(Context& ctx, void* ud, int type, int session, uint32_t source, DataPtr& msg, size_t sz);
-        void PushSocketData_(TinkSocketMsgPtr message);
+
         void CloseSlave_(int id);
         void DispatchQueue_(int id);
         void SendRemote_(int fd, BytePtr buffer, size_t sz, RemoteMsgHeader& cookie);
