@@ -17,7 +17,7 @@ namespace tink {
         size_t size;
         int Init(uint32_t _source, int32_t _session, UBytePtr& _data, size_t _size);
         ~TinkMessage_() {
-            spdlog::debug("~tink_message() data:{}", data.get());
+            printf("~tink_message() data->%d:%d", data.use_count(), data.get());
         }
     } TinkMessage ;
 

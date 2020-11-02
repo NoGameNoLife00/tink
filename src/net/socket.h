@@ -15,7 +15,7 @@
 #include <buffer.h>
 #include <list>
 #include <utility>
-
+#include <spdlog/spdlog.h>
 
 #define PROTOCOL_TCP 0
 #define PROTOCOL_UDP 1
@@ -71,6 +71,9 @@ namespace tink {
         int id;
         int ud;
         DataPtr buffer;
+        ~TinkSocketMessage_() {
+            printf("~TinkSocketMessage_() buff:%d", buffer.get());
+        }
     }TinkSocketMessage;
 
     typedef std::shared_ptr<TinkSocketMessage> TinkSocketMsgPtr;

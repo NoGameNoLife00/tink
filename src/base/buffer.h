@@ -9,13 +9,14 @@
 #include <cstdint>
 #include <common.h>
 #include <cstring>
+#include <utility>
 #include <error_code.h>
 #include <noncopyable.h>
 
 namespace tink {
     class FixBuffer : noncopyable {
     public:
-        FixBuffer(size_t s) : size(s), len_(0) {
+        explicit FixBuffer(size_t s) : size(s), len_(0) {
             data_ = new byte[size];
         }
 
@@ -78,11 +79,11 @@ namespace tink {
         int type;
         DataPtr buffer;
         size_t sz;
-        void Init(int id, DataPtr buffer, int sz) {
-            this->id = id;
-            this->buffer = buffer;
-            this->type = sz < 0 ? SOCKET_BUFFER_OBJECT : SOCKET_BUFFER_MEMORY;
-            this->sz = sz;
+        void Init(int _id, DataPtr _buffer, int _sz) {
+            id = _id;
+            buffer = std::move(_buffer);
+            type = _sz < 0 ? SOCKET_BUFFER_OBJECT : SOCKET_BUFFER_MEMORY;
+            sz = _sz;
         }
         void FreeBuffer() {
             buffer.reset();
