@@ -1,6 +1,7 @@
 #include <string_view>
 #include <error_code.h>
 #include <sstream>
+#include <utility>
 #include <harbor.h>
 #include <socket_server.h>
 #include "service_harbor.h"
@@ -58,7 +59,7 @@ namespace tink::Service {
         return 0;
     }
 
-    int ServiceHarbor::MainLoop_(Context &ctx, void *ud, int type, int session, uint32_t source, DataPtr &msg, size_t sz) {
+    int ServiceHarbor::MainLoop_(Context &ctx, void *ud, int type, int session, uint32_t source, DataPtr msg, size_t sz) {
         auto* h = static_cast<ServiceHarbor*>(ud);
         switch (type) {
         case PTYPE_SOCKET: {
@@ -94,7 +95,14 @@ namespace tink::Service {
             return  0;
         }
         case PTYPE_HARBOR: {
-
+            h->HarborCommand(static_cast<const char *>(msg.get()), sz, session, source);
+            return 0;
+        }
+        case PTYPE_SYSTEM: {
+            RemoteMessagePtr r_msg = std::dynamic_pointer_cast<RemoteMessage>(msg);
+            if (r_msg->destination.handle == 0) {
+                if (RemoteSendName_())
+            }
         }
         }
         return 0;
@@ -171,14 +179,24 @@ namespace tink::Service {
 
 
 
-    void ServiceHarbor::SendRemote_(int fd, BytePtr buffer, size_t sz, ServiceHarbor::RemoteMsgHeader &cookie) {
+    void ServiceHarbor::SendRemote_(int fd, const BytePtr& buffer, size_t sz, ServiceHarbor::RemoteMsgHeader &cookie) {
         size_t sz_header = sz + sizeof(cookie);
         if (sz_header > UINT32_MAX) {
             logger->error("remote message from {0:08x} to :{0:08x} is too large.", cookie.source, cookie.destination);
             return;
         }
-        std::shared_ptr<uint8_t[]> send_buf(new uint8_t[sz_header+4], std::default_delete<uint8_t[]>());
+        auto *send_buf = new uint8_t[sz_header + 4];
+        ToBigEndian(send_buf, sz_header);
+        memcpy(send_buf + 4, buffer.get(), sz);
+        HeaderToMessage(cookie, send_buf);
 
+        SocketSendBuffer tmp;
+        tmp.id = fd;
+        tmp.type = SOCKET_BUFFER_RAWPOINTER;
+        tmp.buffer = std::shared_ptr<uint8_t>(send_buf, std::default_delete<uint8_t[]>());
+        tmp.sz = sz_header + 4;
+        // 这里忽略发送错误,一旦连接断开,主循环中会收到消息
+        SOCKET_SERVER.Send(tmp);
     }
 
     int ServiceHarbor::GetHarborId(int fd) {
@@ -193,7 +211,7 @@ namespace tink::Service {
     void ServiceHarbor::ReportHarborDown(int id) {
         BytePtr down(new byte[64], std::default_delete<byte[]>());
         int n = sprintf(down.get(), "D %d", id);
-        ctx_->Send(0, slave_, PTYPE_TEXT, 0, std::dynamic_pointer_cast<void>(down), n);
+        ctx_->Send(0, slave_, PTYPE_TEXT, 0, down, n);
     }
 
     void ServiceHarbor::HarborCommand(const char *msg, size_t sz, int session, uint32_t source) {
@@ -208,9 +226,139 @@ namespace tink::Service {
             RemoteName rn {};
             memcpy(rn.name, name, s);
             rn.handle = source;
+            break;
+        }
+        case 'S':
+        case 'A': {
+            int fd = 0, id = 0;
+            string buffer(name, s);
+            std::istringstream ss(buffer);
+            ss >> fd >> id;
+            if (fd == 0 || id <= 0 || id >= REMOTE_MAX) {
+                logger->error("invalid command {} {}", msg[0], buffer);
+                return;
+            }
+            Slave& slave = GetSlave(id);
+            if (slave.fd != 0) {
+                logger->error("harbor {} already exist", id);
+                return;
+            }
+            slave.fd = fd;
+            SOCKET_SERVER.Start(ctx_->Handle(), fd);
+            Handshake_(id);
+            if (msg[0] == 'S') {
+                slave.status = STATUS_HANDSHAKE;
+            } else {
+                slave.status = STATUS_HEADER;
+                DispatchQueue_(id);
+            }
+            break;
+        }
+        default:
+            logger->error("unknown command %s, msg");
+            return;
+        }
+    }
 
+    void ServiceHarbor::UpdateName_(const std::string& name, uint32_t handle) {
+        auto it = map_.find(name);
+        if (it == map_.end()) {
+            bool ret;
+            std::tie(it, ret) = map_.emplace(name, std::pair(handle, nullptr));
         }
+        std::pair<int, HarborMsgQueuePtr>& val = it->second;
+        val.first = handle;
+        if (val.second) {
+            DispatchNameQueue_(it);
+            val.second.reset();
         }
+    }
+
+    void ServiceHarbor::DispatchNameQueue_(HarborMap::iterator &node) {
+        HarborValue& val = node->second;
+        HarborMsgQueuePtr queue = val.second;
+        uint32_t handle = val.first;
+        auto & name = node->first;
+        int harbor_id = handle >> HANDLE_REMOTE_SHIFT;
+        Slave& s = GetSlave(harbor_id);
+        int fd = s.fd;
+        if (fd == 0) {
+            if (s.status == STATUS_DOWN) {
+                logger->error("drop message to {} (in harbor {})", name, harbor_id);
+            } else {
+                if (!s.queue) {
+                    s.queue = queue;
+                    val.second.reset();
+                } else {
+                    HarborMsgPtr msg;
+                    s.queue->splice(s.queue->end(), *queue);
+                }
+                if (harbor_id == (slave_ >> HANDLE_REMOTE_SHIFT)) {
+                    // 本地id
+                    for (auto& msg : *s.queue) {
+                        int type = msg->header.destination >> HANDLE_REMOTE_SHIFT;
+                        ctx_->Send(msg->header.source, handle, type, msg->header.session, msg->buffer, msg->size);
+                    }
+                    s.queue->clear();
+                    s.queue.reset();
+                }
+            }
+            return;
+        }
+
+        for (auto& msg : *queue) {
+            msg->header.destination |= (handle & HANDLE_MASK);
+            SendRemote_(fd, std::dynamic_pointer_cast<byte[]>(msg->buffer), msg->size, msg->header);
+            msg->buffer.reset();
+        }
+        queue->clear();
+    }
+
+    void ServiceHarbor::Handshake_(int id) {
+        Slave& s = GetSlave(id);
+        uint8_t* handshake = new uint8_t[1] {static_cast<uint8_t>(id_)};
+        SocketSendBuffer tmp;
+        tmp.id = s.fd;
+        tmp.type = SOCKET_BUFFER_RAWPOINTER;
+        tmp.buffer = DataPtr(handshake, std::default_delete<uint8_t[]>());
+        tmp.sz = 1;
+        SOCKET_SERVER.Send(tmp);
+    }
+
+    void ServiceHarbor::PushQueue_(HarborMsgQueue& queue, DataPtr buffer, size_t sz, RemoteMsgHeader& header) {
+        HarborMsg m;
+        m.header = header;
+        m.buffer = std::move(buffer);
+        m.size = sz;
+        queue.emplace_back(m);
+    }
+
+    int ServiceHarbor::RemoteSendName_(uint32_t source, const string &name, int type, int session, DataPtr msg, size_t sz) {
+        auto it = map_.find(name);
+        if (it == map_.end()) {
+            bool ret;
+            std::tie(it, ret) = map_.emplace(name, std::pair(0, nullptr));
+        }
+        HarborValue& val = it->second;
+        if (val.first == 0) {
+            if (!val.second) {
+                val.second.reset(new HarborMsgQueue);
+            }
+            RemoteMsgHeader header;
+            header.source = source;
+            header.destination = type << HANDLE_REMOTE_SHIFT;
+            header.session = session;
+            PushQueue_(*val.second, msg, sz, header);
+            std::string query = "Q " + name;
+            int len = query.length()+1;
+            BytePtr tmp(new byte[len], std::default_delete<byte[]>());
+            query.copy(tmp.get(), query.length(), 0);
+            ctx_->Send(0, slave_, PTYPE_TEXT, 0, tmp, len);
+            return 1;
+        } else {
+            return RemoteSendHandle()
+        }
+        return 0;
     }
 
 }

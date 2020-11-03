@@ -26,8 +26,8 @@ namespace tink {
         static void DropMessage(TinkMessage &msg, void *ud);
 
         void Destroy();
-        void Send(DataPtr &&data, size_t sz, uint32_t source, int type, int session);
-        int Send(uint32_t source, uint32_t destination, int type, int session, DataPtr &&data, size_t sz);
+        void Send(DataPtr data, size_t sz, uint32_t source, int type, int session);
+        int Send(uint32_t source, uint32_t destination, int type, int session, DataPtr data, size_t sz);
         void SetCallBack(const ContextCallBack &cb, void *ud);
         uint32_t Handle() const { return handle_; }
         void Reserve() { --total; }
@@ -36,7 +36,7 @@ namespace tink {
         bool Endless() const { return endless_; }
         void SetEndless(bool b) { endless_ = b; }
         void DispatchAll();
-        int SendName(uint32_t source, std::string_view addr, int type, int session, DataPtr &data, size_t sz);
+        int SendName(uint32_t source, std::string_view addr, int type, int session, DataPtr data, size_t sz);
         void DispatchMessage(TinkMessage &msg);
         ContextCallBack GetCallBack() {return callback_;}
         uint64_t GetCpuCost() const {return cpu_cost_;}
@@ -54,7 +54,7 @@ namespace tink {
     private:
         static std::atomic_int total;
 
-        int FilterArgs_(int type, int &session, DataPtr& data, size_t &sz);
+        int FilterArgs_(int type, int &session, DataPtr data, size_t &sz);
 
         mutable std::mutex mutex_;
         MQPtr queue_;

@@ -4,6 +4,7 @@
 #include <base_module.h>
 #include <string_view>
 #include <harbor.h>
+#include <string>
 
 namespace tink::Service {
 
@@ -22,16 +23,16 @@ namespace tink::Service {
             uint32_t destination;
             uint32_t session;
         } RemoteMsgHeader;
-
+        typedef std::shared_ptr<RemoteMsgHeader> RemoteMsgHeaderPtr;
         typedef struct HarborMsg_ {
             RemoteMsgHeader header;
             DataPtr buffer;
             size_t size;
         } HarborMsg;
         typedef std::shared_ptr<HarborMsg> HarborMsgPtr;
-        typedef std::list<HarborMsgPtr> HarborMsgQueue;
-
-        typedef struct Slave_ {
+        typedef std::list<HarborMsg> HarborMsgQueue;
+        typedef std::shared_ptr<HarborMsgQueue> HarborMsgQueuePtr;
+        typedef struct Slave_ : public noncopyable {
             int fd;
             std::shared_ptr<HarborMsgQueue> queue;
             int status;
@@ -47,17 +48,23 @@ namespace tink::Service {
         int GetHarborId(int fd);
         void ReportHarborDown(int id);
         void HarborCommand(const char *msg, size_t sz, int session, uint32_t source);
+        Slave & GetSlave(int id);
     private:
-        static int MainLoop_(Context& ctx, void* ud, int type, int session, uint32_t source, DataPtr& msg, size_t sz);
-
+        typedef std::pair<int32_t, HarborMsgQueuePtr> HarborValue;
+        typedef std::unordered_map<std::string, HarborValue> HarborMap;
+        static int MainLoop_(Context& ctx, void* ud, int type, int session, uint32_t source, DataPtr msg, size_t sz);
         void CloseSlave_(int id);
         void DispatchQueue_(int id);
-        void SendRemote_(int fd, BytePtr buffer, size_t sz, RemoteMsgHeader& cookie);
-        Slave & GetSlave(int id);
+        void SendRemote_(int fd, const BytePtr& buffer, size_t sz, RemoteMsgHeader& cookie);
+        void UpdateName_(const std::string& name, uint32_t handle);
+        void DispatchNameQueue_(HarborMap::iterator &node);
+        void Handshake_(int id);
+        int RemoteSendName_(uint32_t source, const std::string& name, int type, int session, DataPtr msg, size_t sz);
+        void PushQueue_(HarborMsgQueue& queue, DataPtr buffer, size_t sz, RemoteMsgHeader& header);
         ContextPtr ctx_;
         int id_;
         uint32_t slave_;
-        std::unordered_map<uint32_t, uint32_t> map;
+        HarborMap map_;
         std::array<Slave, REMOTE_MAX> s_;
     };
 }

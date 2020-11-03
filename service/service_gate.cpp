@@ -283,7 +283,7 @@ namespace tink::Service {
         }
         va_list ap;
         va_start(ap, data);
-        DataPtr tmp = std::make_shared<byte[]>(1024);
+        DataPtr tmp(new byte[1024], std::default_delete<byte[]>());
         int n = vsnprintf(static_cast<byte*>(tmp.get()), 1024, data, ap);
         va_end(ap);
         ctx_->Send(0, watchdog_, PTYPE_TEXT, 0, tmp, n);

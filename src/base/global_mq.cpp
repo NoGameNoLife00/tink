@@ -8,7 +8,7 @@ namespace tink {
     MQPtr GlobalMQ::Pop() {
         std::lock_guard<Mutex> lock(mutex_);
         if (list.size() > 0) {
-            auto& head = list.front();
+            auto&& head = list.front();
             list.pop_front();
             return head;
         }

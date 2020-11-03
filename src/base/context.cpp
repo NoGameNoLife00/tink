@@ -19,7 +19,7 @@ namespace tink {
         --total;
     }
 
-    void Context::Send(DataPtr &&data, size_t sz, uint32_t source, int type, int session) {
+    void Context::Send(DataPtr data, size_t sz, uint32_t source, int type, int session) {
         TinkMessage msg;
         msg.source = source;
         msg.session = session;
@@ -69,7 +69,7 @@ namespace tink {
         }
     }
 
-    int Context::Send(uint32_t source, uint32_t destination, int type, int session, DataPtr &&data,
+    int Context::Send(uint32_t source, uint32_t destination, int type, int session, DataPtr data,
                       size_t sz) {
         if ((sz & MESSAGE_TYPE_MASK) != sz) {
             spdlog::error("The message to {} is too large", destination);
@@ -107,7 +107,7 @@ namespace tink {
         return session;
     }
 
-    int Context::FilterArgs_(int type, int &session, DataPtr &data, size_t &sz) {
+    int Context::FilterArgs_(int type, int &session, DataPtr data, size_t &sz) {
 //        int needcopy = !(type & PTYPE_TAG_DONTCOPY);
         int allocsession = type & PTYPE_TAG_ALLOCSESSION;
         type &= 0xff;
@@ -131,7 +131,7 @@ namespace tink {
         }
     }
 
-    int Context::SendName(uint32_t source, std::string_view addr, int type, int session, DataPtr &data, size_t sz) {
+    int Context::SendName(uint32_t source, std::string_view addr, int type, int session, DataPtr data, size_t sz) {
         if (source == 0) {
             source = handle_;
         }
@@ -359,11 +359,10 @@ namespace tink {
             handle = handle_;
             spdlog::warn("kill self");
         } else {
-            spdlog::warn( "kill :{0:x}", handle);
+            spdlog::warn( "kill :{:x}", handle);
         }
         if (Global::MonitorExit()) {
-            DataPtr nul;
-            Send(handle, Global::MonitorExit(), PTYPE_CLIENT, 0, nul, 0);
+            Send(handle, Global::MonitorExit(), PTYPE_CLIENT, 0, nullptr, 0);
         }
         HANDLE_STORAGE.Unregister(handle);
     }

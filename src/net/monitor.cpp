@@ -13,7 +13,7 @@ namespace tink {
         if (version == check_version) {
             if (destination) {
                 HANDLE_STORAGE.ContextEndless(destination);
-                spdlog::error("A message from [ {0:%08x} ] to [ {:%08x} ] maybe in an endless loop (version = {})",
+                spdlog::error("A message from [ {:%08x} ] to [ {:08x} ] maybe in an endless loop (version = {})",
                               source, destination, version);
             }
         } else {
