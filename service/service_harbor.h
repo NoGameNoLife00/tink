@@ -60,6 +60,7 @@ namespace tink::Service {
         void DispatchNameQueue_(HarborMap::iterator &node);
         void Handshake_(int id);
         int RemoteSendName_(uint32_t source, const std::string& name, int type, int session, DataPtr msg, size_t sz);
+        int RemoteSendHandle_(uint32_t source, uint32_t destination, int type, int session, DataPtr msg, size_t sz);
         void PushQueue_(HarborMsgQueue& queue, DataPtr buffer, size_t sz, RemoteMsgHeader& header);
         ContextPtr ctx_;
         int id_;

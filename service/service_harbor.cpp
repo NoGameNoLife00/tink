@@ -361,4 +361,17 @@ namespace tink::Service {
         return 0;
     }
 
+    int ServiceHarbor::RemoteSendHandle_(uint32_t source,
+         uint32_t destination, int type, int session, DataPtr msg, size_t sz) {
+        int harbor_id = destination >> HANDLE_REMOTE_SHIFT;
+        if (harbor_id == id_) {
+            // 本地消息
+            ctx_->Send(source, destination, type, session, msg, sz);
+            return 1;
+        }
+        
+
+        return 0;
+    }
+
 }
