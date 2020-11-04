@@ -92,18 +92,33 @@ namespace tink::Service {
                     h->logger->error("recv invalid socket message type {}", type);
                     break;
                 }
-            return  0;
+            return  E_OK;
         }
         case PTYPE_HARBOR: {
             h->HarborCommand(static_cast<const char *>(msg.get()), sz, session, source);
-            return 0;
+            return E_OK;
         }
         case PTYPE_SYSTEM: {
             RemoteMessagePtr r_msg = std::dynamic_pointer_cast<RemoteMessage>(msg);
             if (r_msg->destination.handle == 0) {
-                if (RemoteSendName_())
+                if (h->RemoteSendName(source, r_msg->destination.name, r_msg->type, session, r_msg->message,
+                                      r_msg->size)) {
+                    return E_OK;
+                }
+            } else {
+                if (h->RemoteSendHandle(source, r_msg->destination.handle, r_msg->type, session, r_msg->message,
+                                        r_msg->size)) {
+                    return E_OK;
+                }
             }
+            return 0;
         }
+        default:
+            h->logger->error("recv invalid message from {:x},  type = {}", source, type);
+            if (session != 0 && type != PTYPE_ERROR) {
+                h->ctx_->Send(0, source, PTYPE_ERROR, session, nullptr, 0);
+            }
+            return  0;
         }
         return 0;
     }
@@ -140,9 +155,59 @@ namespace tink::Service {
                     ++buffer;
                     --size;
                     s->status = STATUS_HEADER;
+                    DispatchQueue_(id);
+                    if (size == 0) {
+                        break;
+                    }
 
                 }
+                case STATUS_HEADER: {
+                    // 大端4byte, 第一字节必须为0
+                    int need = 4 - s->read;
+                    if (size < need) {
+                        memcpy( s->size + s->read, buffer, size);
+                        s->read += size;
+                    } else {
+                        memcpy(s->size + s->read, buffer, size);
+                        buffer += need;
+                        size -= need;
 
+                        if (s->size[0] != 0) {
+                            logger->error("message is too long from harbor %d", id);
+                            CloseSlave_(id);
+                            return;
+                        }
+                        s->length = s->size[1] << 16 | s->size[2] << 8 | s->size[3];
+                        s->read = 0;
+                        s->recv_buffer = BytePtr(new byte[s->length], std::default_delete<byte[]>());
+                        s->status = STATUS_CONTENT;
+                        if (size == 0) {
+                            return;
+                        }
+                    }
+                }
+                case STATUS_CONTENT: {
+                    int need = s->length - s->read;
+                    if (size < need) {
+                        memcpy(s->recv_buffer.get() + s->read, buffer, size);
+                        s->read += size;
+                        return;
+                    }
+                    memcpy(s->recv_buffer.get() + s->read, buffer, need);
+                    ForwardLocalMessage(s->recv_buffer, s->length);
+                    s->length = 0;
+                    s->read = 0;
+                    s->recv_buffer = nullptr;
+                    size -= need;
+                    buffer += need;
+                    s->status = STATUS_HEADER;
+                    if (size == 0) {
+                        return;
+                    }
+                    break;
+                }
+                default:
+                    return;
             }
         }
     }
@@ -171,10 +236,11 @@ namespace tink::Service {
         if (!queue) {
             return;
         }
-        HarborMsgPtr m;
-        while ((m = queue->front()) != nullptr) {
-
+        HarborMsg m;
+        while (!queue->empty()) {
+            SendRemote_(fd, std::dynamic_pointer_cast<byte[]>(m.buffer), m.size, m.header);
         }
+        s.queue = nullptr;
     }
 
 
@@ -296,8 +362,8 @@ namespace tink::Service {
                 if (harbor_id == (slave_ >> HANDLE_REMOTE_SHIFT)) {
                     // 本地id
                     for (auto& msg : *s.queue) {
-                        int type = msg->header.destination >> HANDLE_REMOTE_SHIFT;
-                        ctx_->Send(msg->header.source, handle, type, msg->header.session, msg->buffer, msg->size);
+                        int type = msg.header.destination >> HANDLE_REMOTE_SHIFT;
+                        ctx_->Send(msg.header.source, handle, type, msg.header.session, msg.buffer, msg.size);
                     }
                     s.queue->clear();
                     s.queue.reset();
@@ -307,9 +373,9 @@ namespace tink::Service {
         }
 
         for (auto& msg : *queue) {
-            msg->header.destination |= (handle & HANDLE_MASK);
-            SendRemote_(fd, std::dynamic_pointer_cast<byte[]>(msg->buffer), msg->size, msg->header);
-            msg->buffer.reset();
+            msg.header.destination |= (handle & HANDLE_MASK);
+            SendRemote_(fd, std::dynamic_pointer_cast<byte[]>(msg.buffer), msg.size, msg.header);
+            msg.buffer.reset();
         }
         queue->clear();
     }
@@ -333,7 +399,7 @@ namespace tink::Service {
         queue.emplace_back(m);
     }
 
-    int ServiceHarbor::RemoteSendName_(uint32_t source, const string &name, int type, int session, DataPtr msg, size_t sz) {
+    int ServiceHarbor::RemoteSendName(uint32_t source, const string &name, int type, int session, DataPtr msg, size_t sz) {
         auto it = map_.find(name);
         if (it == map_.end()) {
             bool ret;
@@ -356,22 +422,64 @@ namespace tink::Service {
             ctx_->Send(0, slave_, PTYPE_TEXT, 0, tmp, len);
             return 1;
         } else {
-            return RemoteSendHandle()
+            return RemoteSendHandle(source, val.first, type, session, msg, sz);
         }
         return 0;
     }
 
-    int ServiceHarbor::RemoteSendHandle_(uint32_t source,
-         uint32_t destination, int type, int session, DataPtr msg, size_t sz) {
+    int ServiceHarbor::RemoteSendHandle(uint32_t source,
+                                        uint32_t destination, int type, int session, DataPtr msg, size_t sz) {
         int harbor_id = destination >> HANDLE_REMOTE_SHIFT;
         if (harbor_id == id_) {
             // 本地消息
             ctx_->Send(source, destination, type, session, msg, sz);
             return 1;
         }
-        
-
+        Slave& s = GetSlave(harbor_id);
+        if (s.fd == 0 || s.status == STATUS_HANDSHAKE) {
+            if (s.status == STATUS_DOWN) {
+                // 向发送源抛出错误,告诉目标地址已经关闭
+                ctx_->Send(destination, source, PTYPE_TEXT, 0, nullptr, 0);
+                logger->error("drop message to harbor {} from {:x} to {:x} (session = {}, msgsz = {})",
+                              harbor_id, source, destination, session, sz);
+            } else {
+                if (!s.queue) {
+                    s.queue = std::make_shared<HarborMsgQueue>();
+                }
+                RemoteMsgHeader header;
+                header.source = source;
+                header.destination = (type << HANDLE_REMOTE_SHIFT) | (destination & HANDLE_MASK);
+                header.session = session;
+                PushQueue_(*s.queue, msg, sz, header);
+                return 1;
+            }
+        } else {
+            RemoteMsgHeader cookie;
+            cookie.source = source;
+            cookie.destination = (destination & HANDLE_MASK) | (static_cast<uint32_t>(type) << HANDLE_REMOTE_SHIFT) ;
+            cookie.session = session;
+            SendRemote_(s.fd, std::dynamic_pointer_cast<byte[]>(msg), sz, cookie);
+        }
         return 0;
+    }
+
+
+    void ServiceHarbor::ForwardLocalMessage(DataPtr msg, int sz) {
+        const char * cookie = static_cast<const char *>(msg.get());
+        cookie += sz - HEADER_COOKIE_LENGTH;
+        RemoteMsgHeader header;
+        MessageToHeader(reinterpret_cast<const uint32_t *>(cookie), header);
+
+        uint32_t destination = header.destination;
+        int type = destination >> HANDLE_REMOTE_SHIFT;
+        destination = (destination & HANDLE_MASK) | (id_ << HANDLE_REMOTE_SHIFT);
+        if (ctx_->Send(header.source, destination, type, header.session, msg, sz - HEADER_COOKIE_LENGTH) < 0) {
+            if (type != PTYPE_ERROR) {
+                // 错误类型的信息发生错误不需要回复
+                ctx_->Send(destination, header.source, PTYPE_ERROR, header.session, nullptr, 0);
+            }
+            logger->error("unknown destination :{:x} from :{:x} type({})", destination, header.source, type);
+        }
     }
 
 }

@@ -17,12 +17,14 @@ namespace tink::Service {
         static constexpr int STATUS_DOWN = 4;
 
         static constexpr int REMOTE_MAX = 256;
+        static constexpr int HEADER_COOKIE_LENGTH = 12;
 
         typedef struct RemoteMsgHeader_ {
             uint32_t source;
             uint32_t destination;
             uint32_t session;
         } RemoteMsgHeader;
+
         typedef std::shared_ptr<RemoteMsgHeader> RemoteMsgHeaderPtr;
         typedef struct HarborMsg_ {
             RemoteMsgHeader header;
@@ -39,7 +41,7 @@ namespace tink::Service {
             int length;
             int read;
             uint8_t size[4];
-            DataPtr RecvBuff;
+            BytePtr recv_buffer;
         } Slave;
 
         ServiceHarbor();
@@ -49,6 +51,8 @@ namespace tink::Service {
         void ReportHarborDown(int id);
         void HarborCommand(const char *msg, size_t sz, int session, uint32_t source);
         Slave & GetSlave(int id);
+        int RemoteSendName(uint32_t source, const std::string& name, int type, int session, DataPtr msg, size_t sz);
+        int RemoteSendHandle(uint32_t source, uint32_t destination, int type, int session, DataPtr msg, size_t sz);
     private:
         typedef std::pair<int32_t, HarborMsgQueuePtr> HarborValue;
         typedef std::unordered_map<std::string, HarborValue> HarborMap;
@@ -59,8 +63,7 @@ namespace tink::Service {
         void UpdateName_(const std::string& name, uint32_t handle);
         void DispatchNameQueue_(HarborMap::iterator &node);
         void Handshake_(int id);
-        int RemoteSendName_(uint32_t source, const std::string& name, int type, int session, DataPtr msg, size_t sz);
-        int RemoteSendHandle_(uint32_t source, uint32_t destination, int type, int session, DataPtr msg, size_t sz);
+        void ForwardLocalMessage(DataPtr msg, int sz);
         void PushQueue_(HarborMsgQueue& queue, DataPtr buffer, size_t sz, RemoteMsgHeader& header);
         ContextPtr ctx_;
         int id_;
