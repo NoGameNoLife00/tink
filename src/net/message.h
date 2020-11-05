@@ -10,23 +10,23 @@ namespace tink {
     constexpr int MESSAGE_TYPE_SHIFT = ((sizeof(size_t)-1) * 8);
     constexpr int GLOBALNAME_LENGTH = 32;
 
-    typedef struct TinkMessage_ {
+    typedef struct _tinkMessage {
         uint32_t source;
         int32_t session;
         DataPtr data;
         size_t size;
         int Init(uint32_t _source, int32_t _session, BytePtr &_data, size_t _size);
-        ~TinkMessage_() {
+        ~_tinkMessage() {
             printf("~tink_message() data->%d:%d", data.use_count(), data.get());
         }
     } TinkMessage ;
 
-    typedef struct RemoteName_ {
+    typedef struct _remoteName {
         char name[GLOBALNAME_LENGTH];
         uint32_t handle;
     } RemoteName;
 
-    typedef struct RemoteMessage_ {
+    typedef struct _remoteMessage {
         RemoteName destination;
         DataPtr message;
         size_t size;

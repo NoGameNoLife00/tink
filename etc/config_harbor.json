@@ -1,0 +1,12 @@
+{
+  "name" : "tink server",
+  "host" : "0.0.0.0",
+  "max_connection": 1000,
+  "worker_pool_size": 8,
+  "log_name" : "./logs/game.log",
+  "harbor" : 1,
+  "daemon" : "",
+  "profile" : false,
+  "module_path": "../lib/?.so",
+  "bootstrap" : "service_harbor 100 1"
+}

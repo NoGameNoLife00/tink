@@ -5,7 +5,7 @@ namespace tink {
         return type != PTYPE_SYSTEM && type != PTYPE_HARBOR;
     }
 
-    void Harbor::Send(const tink::RemoteMessagePtr& r_msg, uint32_t source, int session) {
+    void Harbor::Send(RemoteMessagePtr r_msg, uint32_t source, int session) {
         assert(invalid_type(r_msg->type) && remote_);
         remote_->Send(std::static_pointer_cast<void>(r_msg), sizeof(*r_msg), source, PTYPE_SYSTEM, session);
     }

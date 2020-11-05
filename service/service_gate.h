@@ -9,10 +9,6 @@
 #include <socket.h>
 #include "data_buffer.h"
 
-extern "C" {
-     tink::BaseModule* CreateModule();
-};
-
 namespace tink::Service {
     typedef struct Connection_ {
         int id;	// socket id
@@ -51,7 +47,7 @@ namespace tink::Service {
         std::shared_ptr<MessagePool> msg_pool_;
     };
 
-    }
+}
 
 
 

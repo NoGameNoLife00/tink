@@ -6,6 +6,7 @@
 #include <harbor.h>
 #include <string>
 
+
 namespace tink::Service {
 
     class ServiceHarbor : public BaseModule {
@@ -45,12 +46,12 @@ namespace tink::Service {
         } Slave;
 
         ServiceHarbor();
+        Slave & GetSlave(int id);
         int Init(ContextPtr ctx, std::string_view param) override;
         void PushSocketData(TinkSocketMsgPtr message);
         int GetHarborId(int fd);
         void ReportHarborDown(int id);
         void HarborCommand(const char *msg, size_t sz, int session, uint32_t source);
-        Slave & GetSlave(int id);
         int RemoteSendName(uint32_t source, const std::string& name, int type, int session, DataPtr msg, size_t sz);
         int RemoteSendHandle(uint32_t source, uint32_t destination, int type, int session, DataPtr msg, size_t sz);
     private:

@@ -521,7 +521,7 @@ namespace tink {
         return SOCKET_NONE;
     }
 
-    int SocketServer::Connect(uintptr_t opaque, const string &addr, int port) {
+    int SocketServer::Connect(uintptr_t opaque, std::string_view addr, int port) {
         RequestPackage request;
         int len = OpenRequest_(request, opaque, addr, port);
         if (len < 0)
@@ -530,10 +530,10 @@ namespace tink {
         return request.u.open.id;
     }
 
-    int SocketServer::OpenRequest_(RequestPackage &req, uintptr_t opaque, const string &addr, int port) {
+    int SocketServer::OpenRequest_(RequestPackage &req, uintptr_t opaque, std::string_view addr, int port) {
         int len = addr.size();
         if ((len + sizeof(req.u.open)) >= 256 ) {
-            fprintf(stderr, "socket server : Invalid addr %s.\n", addr.c_str());
+            fprintf(stderr, "socket server : Invalid addr %s.\n", addr.data());
             return SOCKET_NONE;
         }
         int id = ReserveId_();
@@ -542,7 +542,7 @@ namespace tink {
         req.u.open.opaque = opaque;
         req.u.open.id = id;
         req.u.open.port = port;
-        memcpy(req.u.open.host, addr.c_str(), len);
+        memcpy(req.u.open.host, addr.data(), len);
         req.u.open.host[len] = '\0';
         return len;
     }
@@ -724,7 +724,6 @@ namespace tink {
         if (s.GetDWBuffer()) {
             auto& dw_buffer = s.GetDWBuffer();
             WriteBufferPtr buf = std::make_shared<WriteBuffer>();
-            buf->userobj = false;
             buf->ptr = (reinterpret_cast<byte *>(dw_buffer->GetData().get()) + dw_buffer->GetOffset());
             buf->buffer = dw_buffer->GetData();
             buf->sz = dw_buffer->GetSize();

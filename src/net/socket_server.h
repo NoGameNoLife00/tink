@@ -28,66 +28,66 @@
 
 namespace tink {
 
-    typedef struct SocketMessage_ {
+    typedef struct _socketMessage {
         int id;
         uintptr_t opaque;
         int ud;
         DataPtr data;
     }SocketMessage;
 
-    typedef struct RequestStart_ {
+    typedef struct _requestStart {
         int id;
         uintptr_t opaque;
     }RequestStart;
-    typedef struct RequestBind_ {
+    typedef struct _requestBind {
         int id;
         int fd;
         uintptr_t opaque;
     }RequestBind;
-    typedef struct RequestListen_ {
+    typedef struct _requestListen {
         int id;
         int fd;
         uintptr_t opaque;
         char host[1];
     }RequestListen;
-    typedef struct RequestClose_ {
+    typedef struct _requestClose {
         int id;
         int shutdown;
         uintptr_t opaque;
     }RequestClose;
-    typedef struct RequestOpen_ {
+    typedef struct _requestOpen {
         int id;
         int port;
         uintptr_t opaque;
         char host[1];
     }RequestOpen;
-    typedef struct RequestSend_ {
+    typedef struct _requestSend {
         int id;
         size_t sz;
         char *buffer;
     }RequestSend;
-    typedef struct RequestSendUdp_ {
+    typedef struct _requestSendUdp {
         RequestSend send;
         uint8_t address[UDP_ADDRESS_SIZE];
     }RequestSendUdp;
-    typedef struct RequestSetUdp_ {
+    typedef struct _requestSetUdp {
         int id;
         uint8_t address[UDP_ADDRESS_SIZE];
     }RequestSetUdp;
-    typedef struct RequestSetOpt_ {
+    typedef struct _requestSetOpt {
         int id;
         int what;
         int value;
     }RequestSetOpt;
-    typedef struct RequestUdp_ {
+    typedef struct _requestUdp {
         int id;
         int fd;
         int family;
         uintptr_t opaque;
     }RequestUdp;
 
-    typedef struct RequestPackage_ {
-        RequestPackage_() = default;
+    typedef struct _requestPackage {
+        _requestPackage() = default;
 
         uint8_t header[8]{};	// 6 bytes dummy
         union {
@@ -141,7 +141,7 @@ namespace tink {
         int Send(int id, DataPtr buffer, int sz);
         int SendLowPriority(SocketSendBuffer &buffer);
         int Listen(uintptr_t opaque, std::string_view addr, int port, int backlog);
-        int Connect(uintptr_t opaque, const string &addr, int port);
+        int Connect(uintptr_t opaque, std::string_view addr, int port);
         int Bind(uintptr_t opaque, int fd);
         int NoDelay(int id);
 
@@ -153,7 +153,7 @@ namespace tink {
         int CtrlCmd_(SocketMessage &result);
         void SendRequest_(RequestPackage &request, byte type, int len);
         int ReserveId_();
-        int OpenRequest_(RequestPackage &req, uintptr_t opaque, const string &addr, int port);
+        int OpenRequest_(RequestPackage &req, uintptr_t opaque, std::string_view addr, int port);
         int StartSocket_(RequestStart *request, SocketMessage &result);
         int BindSocket_(RequestBind *request, SocketMessage& result);
         int ListenSocket_(RequestListen *request, SocketMessage& result);

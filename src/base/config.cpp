@@ -90,7 +90,7 @@ namespace tink {
             GetJsonValue(json, bootstrap_, "bootstrap", "lua bootstrap");
             InitDefaultLog_();
         } else {
-            fprintf(stderr,"tink open file etc/config.json failed");
+            fprintf(stderr,"tink open file %s failed", path.data());
             exit(0);
         }
         return 0;

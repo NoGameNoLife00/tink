@@ -6,7 +6,7 @@
 namespace tink {
     constexpr int MAX_EVENT = 64;
     typedef int PollFd;
-    typedef struct Event_ {
+    typedef struct _event {
         void * s;
         bool read;
         bool write;

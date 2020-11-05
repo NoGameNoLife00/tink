@@ -7,6 +7,15 @@
 #include "service_gate.h"
 
 #define BACKLOG 128
+
+extern "C" {
+tink::BaseModule *CreateModule() {
+    return new tink::Service::ServiceGate();
+}
+};
+
+
+
 namespace tink::Service {
     ServiceGate::ServiceGate() : listen_id_(-1) {
         name_ = "service_gate";
@@ -290,6 +299,3 @@ namespace tink::Service {
     }
 }
 
-tink::BaseModule *CreateModule() {
-    return new tink::Service::ServiceGate();
-}

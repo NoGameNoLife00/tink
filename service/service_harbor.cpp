@@ -6,6 +6,12 @@
 #include <socket_server.h>
 #include "service_harbor.h"
 
+extern "C" {
+tink::BaseModule* CreateModule() {
+    return new tink::Service::ServiceHarbor();
+}
+};
+
 namespace tink::Service {
 
 
@@ -63,7 +69,7 @@ namespace tink::Service {
         auto* h = static_cast<ServiceHarbor*>(ud);
         switch (type) {
         case PTYPE_SOCKET: {
-            auto message = std::dynamic_pointer_cast<TinkSocketMessage>(msg);
+            auto message = std::reinterpret_pointer_cast<TinkSocketMessage>(msg);
             switch (message->type) {
                 case TINK_SOCKET_TYPE_DATA:
                     h->PushSocketData(message);
@@ -99,7 +105,7 @@ namespace tink::Service {
             return E_OK;
         }
         case PTYPE_SYSTEM: {
-            RemoteMessagePtr r_msg = std::dynamic_pointer_cast<RemoteMessage>(msg);
+            RemoteMessagePtr r_msg = std::reinterpret_pointer_cast<RemoteMessage>(msg);
             if (r_msg->destination.handle == 0) {
                 if (h->RemoteSendName(source, r_msg->destination.name, r_msg->type, session, r_msg->message,
                                       r_msg->size)) {
@@ -140,7 +146,7 @@ namespace tink::Service {
         }
 
 //        BytePtr buffer = std::dynamic_pointer_cast<byte[]>(message->buffer) ;
-        uint8_t *buffer = static_cast<uint8_t *>(message->buffer.get());
+        auto *buffer = static_cast<uint8_t *>(message->buffer.get());
         int size = message->ud;
         for (;;) {
             switch (s->status) {
@@ -238,7 +244,7 @@ namespace tink::Service {
         }
         HarborMsg m;
         while (!queue->empty()) {
-            SendRemote_(fd, std::dynamic_pointer_cast<byte[]>(m.buffer), m.size, m.header);
+            SendRemote_(fd, std::reinterpret_pointer_cast<byte[]>(m.buffer), m.size, m.header);
         }
         s.queue = nullptr;
     }
@@ -292,6 +298,7 @@ namespace tink::Service {
             RemoteName rn {};
             memcpy(rn.name, name, s);
             rn.handle = source;
+            UpdateName_(rn.name, rn.handle);
             break;
         }
         case 'S':
@@ -374,7 +381,7 @@ namespace tink::Service {
 
         for (auto& msg : *queue) {
             msg.header.destination |= (handle & HANDLE_MASK);
-            SendRemote_(fd, std::dynamic_pointer_cast<byte[]>(msg.buffer), msg.size, msg.header);
+            SendRemote_(fd, std::reinterpret_pointer_cast<byte[]>(msg.buffer), msg.size, msg.header);
             msg.buffer.reset();
         }
         queue->clear();
@@ -458,7 +465,7 @@ namespace tink::Service {
             cookie.source = source;
             cookie.destination = (destination & HANDLE_MASK) | (static_cast<uint32_t>(type) << HANDLE_REMOTE_SHIFT) ;
             cookie.session = session;
-            SendRemote_(s.fd, std::dynamic_pointer_cast<byte[]>(msg), sz, cookie);
+            SendRemote_(s.fd, std::reinterpret_pointer_cast<byte[]>(msg), sz, cookie);
         }
         return 0;
     }
