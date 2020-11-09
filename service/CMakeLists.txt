@@ -13,7 +13,7 @@
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/cservice)
 
 # 遍历文件列表生成对应库
-SET(FILE_LIST gate harbor)
+SET(FILE_LIST gate harbor master)
 foreach (file ${FILE_LIST})
     add_library(${file} SHARED "service_${file}.cpp")
     set_property(TARGET ${file}  PROPERTY CXX_STANDARD 20)
