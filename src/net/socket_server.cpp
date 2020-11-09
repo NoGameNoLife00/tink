@@ -1212,8 +1212,8 @@ namespace tink {
     int SocketServer::Send(int id, DataPtr buffer, int sz) {
         SocketSendBuffer tmp;
         tmp.Init(id, buffer, sz);
-        Send(tmp);
-        return 0;
+        return Send(tmp);
+
     }
 
     SocketServer::SocketServer() : ev_(MAX_EVENT)
