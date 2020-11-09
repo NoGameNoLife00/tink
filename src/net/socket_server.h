@@ -28,66 +28,66 @@
 
 namespace tink {
 
-    typedef struct _socketMessage {
+    struct SocketMessage {
         int id;
         uintptr_t opaque;
         int ud;
         DataPtr data;
-    }SocketMessage;
+    };
 
-    typedef struct _requestStart {
+    struct RequestStart {
         int id;
         uintptr_t opaque;
-    }RequestStart;
-    typedef struct _requestBind {
+    };
+    struct RequestBind {
         int id;
         int fd;
         uintptr_t opaque;
-    }RequestBind;
-    typedef struct _requestListen {
+    };
+    struct RequestListen {
         int id;
         int fd;
         uintptr_t opaque;
         char host[1];
-    }RequestListen;
-    typedef struct _requestClose {
+    };
+    struct RequestClose {
         int id;
         int shutdown;
         uintptr_t opaque;
-    }RequestClose;
-    typedef struct _requestOpen {
+    };
+    struct RequestOpen {
         int id;
         int port;
         uintptr_t opaque;
         char host[1];
-    }RequestOpen;
-    typedef struct _requestSend {
+    };
+    struct RequestSend {
         int id;
         size_t sz;
         char *buffer;
-    }RequestSend;
-    typedef struct _requestSendUdp {
+    };
+    struct RequestSendUdp {
         RequestSend send;
         uint8_t address[UDP_ADDRESS_SIZE];
-    }RequestSendUdp;
-    typedef struct _requestSetUdp {
+    };
+    struct RequestSetUdp {
         int id;
         uint8_t address[UDP_ADDRESS_SIZE];
-    }RequestSetUdp;
-    typedef struct _requestSetOpt {
+    };
+    struct RequestSetOpt {
         int id;
         int what;
         int value;
-    }RequestSetOpt;
-    typedef struct _requestUdp {
+    };
+    struct RequestUdp {
         int id;
         int fd;
         int family;
         uintptr_t opaque;
-    }RequestUdp;
+    };
 
-    typedef struct _requestPackage {
-        _requestPackage() = default;
+    struct RequestPackage {
+        RequestPackage() = default;
 
         uint8_t header[8]{};	// 6 bytes dummy
         union {
@@ -104,9 +104,9 @@ namespace tink {
             RequestSetUdp set_udp;
         } u{};
         uint8_t dummy[256]{};
-    }RequestPackage;
+    };
 
-    typedef struct SendObject_ {
+    struct SendObject {
         DataPtr buffer;
         size_t sz;
 
@@ -118,7 +118,7 @@ namespace tink {
             buffer = std::shared_ptr<byte>(object);
             this->sz = size;
         }
-    }SendObject;
+    };
 
     typedef std::list<WriteBufferPtr> WriteBufferList;
     typedef std::shared_ptr<SocketMessage> SocketMsgPtr;

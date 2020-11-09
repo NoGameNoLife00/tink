@@ -7,6 +7,6 @@
   "harbor" : 1,
   "daemon" : "",
   "profile" : false,
-  "module_path": "../lib/?.so",
-  "bootstrap" : "service_gate t ! 0.0.0.0:8999 111 10000 204800"
+  "module_path": "cservice/?.so",
+  "bootstrap" : "gate t ! 0.0.0.0:8999 111 10000 204800"
 }

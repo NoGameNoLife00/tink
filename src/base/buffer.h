@@ -70,7 +70,7 @@ namespace tink {
     constexpr int SOCKET_BUFFER_MEMORY = 0;
     constexpr int SOCKET_BUFFER_OBJECT = 1;
     constexpr int SOCKET_BUFFER_RAWPOINTER = 2;
-    typedef struct SocketSendBuffer_ {
+    struct SocketSendBuffer {
         int id;
         int type;
         DataPtr buffer;
@@ -84,7 +84,7 @@ namespace tink {
         void FreeBuffer() {
             buffer.reset();
         }
-    }SocketSendBuffer;
+    };
 
 
 }

@@ -15,9 +15,12 @@ MESSAGE( "** INFO ------------------------------------------------")
 MESSAGE( "** STATUS Build tink ${TINK_VERSION}")
 
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+# 设置可执行文件输出目录
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR})
+
+#set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+#set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 include_directories(src/net)
 include_directories(src/base)
@@ -28,16 +31,11 @@ include_directories(src)
 add_subdirectory(3rdparty)
 add_subdirectory(src)
 add_subdirectory(service)
-add_subdirectory(test)
+#add_subdirectory(test)
 add_subdirectory(example)
-add_subdirectory(demo_game)
-
-
-
+#add_subdirectory(demo_game)
 
 
 #add_definitions(-std=c++2a)
-
-#file(GLOB_RECURSE SOURCES LIST_DIRECTORIES true *.h *.cpp)
 
 

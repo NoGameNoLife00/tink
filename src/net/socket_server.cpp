@@ -3,7 +3,6 @@
 #include <cassert>
 #include <cstring>
 #include <error_code.h>
-#include <spdlog/spdlog.h>
 #include <handle_storage.h>
 #include <netdb.h>
 #include <scope_guard.h>
@@ -187,13 +186,13 @@ namespace tink {
             case 'D':
             case 'P': {
                 int priority = (type == 'D') ? PRIORITY_HIGH : PRIORITY_LOW;
-                RequestSend * request = (RequestSend*) buffer;
+                auto * request = (RequestSend*) buffer;
                 int ret = SendSocket_(request, result, priority, nullptr);
                 DecSendingRef(request->id);
                 return ret;
             }
             case 'A': {
-                RequestSendUdp * rsu = (RequestSendUdp *)buffer;
+                auto * rsu = (RequestSendUdp *)buffer;
                 return SendSocket_(&rsu->send, result, PRIORITY_HIGH, rsu->address);
             }
             case 'C':

@@ -49,31 +49,31 @@
 #define TINK_SOCKET_TYPE_WARNING 7
 namespace tink {
 
-    typedef struct _writeBuffer {
+    struct WriteBuffer {
         DataPtr buffer;
         char *ptr;
         size_t sz;
         uint8_t upd_address[UDP_ADDRESS_SIZE];
-    }WriteBuffer;
+    };
 
-    typedef struct _socketStat {
+    struct SocketStat {
         uint64_t rtime;
         uint64_t wtime;
         uint64_t read;
         uint64_t write;
-    }SocketStat;
+    };
 
     typedef std::shared_ptr<WriteBuffer> WriteBufferPtr;
 
-    typedef struct _tinkSocketMessage {
+    struct TinkSocketMessage {
         int type;
         int id;
         int ud;
         DataPtr buffer;
-        ~_tinkSocketMessage() {
+        ~TinkSocketMessage() {
             printf("~TinkSocketMessage_() buff:%d", buffer.get());
         }
-    }TinkSocketMessage;
+    };
 
     typedef std::shared_ptr<TinkSocketMessage> TinkSocketMsgPtr;
     typedef std::list<WriteBufferPtr> WriteBufferList;

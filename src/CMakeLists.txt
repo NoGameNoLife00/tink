@@ -7,14 +7,9 @@ include_directories(net)
 
 file(GLOB_RECURSE SOURCES LIST_DIRECTORIES true *.h *.cpp)
 set(SOURCES ${SOURCES} ../3rdparty/cjson/cJSON.c)
-add_definitions(-DELPP_THREAD_SAFE
-        -DELPP_STL_LOGGING
-        -DELPP_LOG_UNORDERED_MAP
-        -DELPP_LOG_STD_ARRAY
-        -DELPP_LOG_UNORDERED_SET)
 
 #add_definitions(-std=c++2a)
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../etc DESTINATION ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/../)
+#file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../etc DESTINATION ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/../)
 
 add_executable(${BINARY} ${SOURCES})
 target_link_libraries(${BINARY} ${SPDLOG_LIBS} -pthread -ldl)

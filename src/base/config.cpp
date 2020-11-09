@@ -86,7 +86,7 @@ namespace tink {
             GetJsonValue(json, log_name_, "log_name", "./logs/tink.log");
             GetJsonValue(json, daemon_, "daemon", "");
             GetJsonValue(json, profile_, "profile", false);
-            GetJsonValue(json, module_path_, "module_path", "./lib/?.so");
+            GetJsonValue(json, module_path_, "module_path", "cservice/?.so");
             GetJsonValue(json, bootstrap_, "bootstrap", "lua bootstrap");
             InitDefaultLog_();
         } else {

@@ -7,6 +7,6 @@
   "harbor" : 1,
   "daemon" : "",
   "profile" : false,
-  "module_path": "../lib/?.so",
-  "bootstrap" : "service_harbor 100 1"
+  "module_path": "cservice/?.so",
+  "bootstrap" : "harbor 100 1"
 }

@@ -6,13 +6,13 @@
 namespace tink {
     constexpr int MAX_EVENT = 64;
     typedef int PollFd;
-    typedef struct _event {
+    struct Event {
         void * s;
         bool read;
         bool write;
         bool error;
         bool eof;
-    } Event;
+    };
     typedef std::vector<Event> EventList;
     class Poller {
     public:

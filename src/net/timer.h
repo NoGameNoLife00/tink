@@ -9,16 +9,16 @@
 
 namespace tink {
     // 定时器事件
-    typedef struct TimerEvent_ {
+    struct TimerEvent {
         uint32_t handle;
         int32_t session;
-    } TimerEvent;
+    };
 
     // 定时器节点
-    typedef struct TimerNode_ {
+    struct TimerNode {
         uint32_t expire; // 到期滴答数
         TimerEvent event;
-    } TimerNode;
+    };
 
     typedef std::unique_ptr<TimerNode> TimerNodePtr;
     namespace TimeUtil {

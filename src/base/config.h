@@ -11,10 +11,6 @@
 #include <spdlog/spdlog.h>
 #include <string_util.h>
 
-#define READ_BUF_SIZE 1024
-
-//#define ConfigMngInstance (tink::Singleton<tink::ConfigMng>::GetInstance())
-
 namespace tink {
     // 存储框架的全局参数
     using std::string;
