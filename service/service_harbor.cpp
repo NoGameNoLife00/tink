@@ -15,33 +15,8 @@ tink::BaseModule* CreateModule() {
 namespace tink::Service {
 
 
-    static inline void ToBigEndian(uint8_t *buffer, uint32_t n) {
-        buffer[0] = (n >> 24) & 0xff;
-        buffer[1] = (n >> 16) & 0xff;
-        buffer[2] = (n >> 8) & 0xff;
-        buffer[3] = n & 0xff;
-    }
 
-    static inline uint32_t FromBigEndian(uint32_t n) {
-        union {
-            uint32_t big;
-            uint8_t bytes[4];
-        } u;
-        u.big = n;
-        return u.bytes[0] << 24 | u.bytes[1] << 16 | u.bytes[2] << 8 | u.bytes[3];
-    }
 
-    static inline void HeaderToMessage(const ServiceHarbor::RemoteMsgHeader &header, uint8_t *message) {
-        ToBigEndian(message, header.source);
-        ToBigEndian(message + 4, header.destination);
-        ToBigEndian(message + 8, header.session);
-    }
-
-    static inline void MessageToHeader(const uint32_t *message, ServiceHarbor::RemoteMsgHeader &header) {
-        header.source = FromBigEndian(message[0]);
-        header.destination = FromBigEndian(message[1]);
-        header.session = FromBigEndian(message[2]);
-    }
 
 
     ServiceHarbor::ServiceHarbor() {
@@ -251,7 +226,7 @@ namespace tink::Service {
 
 
 
-    void ServiceHarbor::SendRemote_(int fd, const BytePtr& buffer, size_t sz, ServiceHarbor::RemoteMsgHeader &cookie) {
+    void ServiceHarbor::SendRemote_(int fd, const BytePtr& buffer, size_t sz, RemoteMsgHeader &cookie) {
         size_t sz_header = sz + sizeof(cookie);
         if (sz_header > UINT32_MAX) {
             logger->error("remote message from {0:08x} to :{0:08x} is too large.", cookie.source, cookie.destination);

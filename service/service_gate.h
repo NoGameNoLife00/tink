@@ -7,7 +7,8 @@
 #include <string_view>
 #include <context.h>
 #include <socket.h>
-#include "data_buffer.h"
+#include <data_buffer.h>
+
 
 namespace tink::Service {
     typedef struct Connection_ {
@@ -22,7 +23,6 @@ namespace tink::Service {
     class ServiceGate : public BaseModule {
     public:
         ServiceGate();
-
         int Init(ContextPtr ctx, std::string_view param) override;
         int StartListen(std::string_view listen_addr);
         void Ctrl(DataPtr &msg, int sz);

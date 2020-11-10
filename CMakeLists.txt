@@ -27,6 +27,7 @@ include_directories(src/base)
 include_directories(3rdparty/cjson)
 include_directories(3rdparty/spdlog/include)
 include_directories(src)
+include_directories(service)
 
 add_subdirectory(3rdparty)
 add_subdirectory(src)

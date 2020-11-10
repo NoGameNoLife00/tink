@@ -35,11 +35,11 @@ namespace tink::Service {
         void UpdateName_(uint32_t handle, const std::string &name);
         void UpdateAddress_(int harbor_id, const std::string &addr);
         void ConnectTo_(int id);
-        std::array<int, REMOTE_MAX> remote_fd;
-        std::array<bool, REMOTE_MAX> connected;
-        std::array<StringPtr, REMOTE_MAX> remote_addr;
+        std::array<int, REMOTE_MAX> remote_fd_;
+        std::array<bool, REMOTE_MAX> connected_;
+        std::array<StringPtr, REMOTE_MAX> remote_addr_;
 
-        std::unordered_map<std::string, uint32_t> name_map;
+        std::unordered_map<std::string, uint32_t> name_map_;
         ContextPtr ctx_;
 
     };

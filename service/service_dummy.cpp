@@ -27,4 +27,35 @@ namespace tink::Service {
         }
     }
 
+    void ServiceDummy::UpdateName_(const std::string &name, uint32_t handle) {
+        auto it = map_.find(name);
+        if (it == map_.end()) {
+            bool ret;
+            std::tie(it, ret) = map_.emplace(name, std::pair(handle, nullptr));
+        }
+        std::pair<int, HarborMsgQueuePtr>& val = it->second;
+        val.first = handle;
+        if (val.second) {
+            DispatchQueue_(it);
+            val.second.reset();
+        }
+    }
+
+    void ServiceDummy::SendName_(uint32_t source, const std::string &name, int type, int session, DataPtr msg, size_t sz) {
+
+    }
+
+    void ServiceDummy::DispatchQueue_(QueueMap::iterator &node) {
+        QueueBind& val = node->second;
+        MsgQueuePtr queue = val.second;
+        uint32_t handle = val.first;
+        auto & name = node->first;
+        int harbor_id = handle >> HANDLE_REMOTE_SHIFT;
+        if (queue) {
+            for (Msg& m : *queue) {
+                
+            }
+        }
+    }
+
 }

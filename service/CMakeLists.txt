@@ -12,6 +12,7 @@
 # 设置库生成路径
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/cservice)
 
+include_directories(.)
 # 遍历文件列表生成对应库
 SET(FILE_LIST gate harbor master dummy)
 foreach (file ${FILE_LIST})

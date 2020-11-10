@@ -9,10 +9,10 @@
 namespace tink::Service {
     constexpr auto MESSAGEPOOL = 1023;
 
-    typedef struct Message_ {
+    struct Message {
         DataPtr buffer;
         int size;
-    } Message;
+    };
 
     typedef PoolSet<Message> MessagePool;
     class DataBuffer {

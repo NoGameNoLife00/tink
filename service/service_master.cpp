@@ -1,4 +1,5 @@
 #include "service_master.h"
+#include "harbor_message.h"
 #include <memory>
 #include <base_module.h>
 #include <string_util.h>
@@ -38,14 +39,14 @@ namespace tink::Service {
 
     void ServiceMaster::Release() {
         for (int i = 0; i < REMOTE_MAX; i++) {
-            int fd = remote_fd[i];
+            int fd = remote_fd_[i];
             if (fd >= 0) {
                 assert(ctx_);
                 SOCKET_SERVER.Close(ctx_->Handle(), fd);
             }
-            remote_addr[i].reset();
+            remote_addr_[i].reset();
         }
-        name_map.clear();
+        name_map_.clear();
     }
 
     void ServiceMaster::Signal(int signal) {
@@ -100,19 +101,19 @@ namespace tink::Service {
     }
 
     int ServiceMaster::SocketId(int id) {
-        auto it = std::find(remote_fd.begin(), remote_fd.end(), id);
-        return std::distance(remote_fd.begin(), it);
+        auto it = std::find(remote_fd_.begin() + 1, remote_fd_.end(), id);
+        return std::distance(remote_fd_.begin(), it);
     }
 
     void ServiceMaster::OnConnected_(int id) {
-        Broadcast(remote_addr[id]->data(), remote_addr[id]->length(), id);
-        connected[id] = true;
+        Broadcast(remote_addr_[id]->data(), remote_addr_[id]->length(), id);
+        connected_[id] = true;
         for (int i = 1; i < REMOTE_MAX; i++) {
             if (i == id) {
                 continue;
             }
-            StringPtr addr = remote_addr[i];
-            if (!addr || !connected[i]) {
+            StringPtr addr = remote_addr_[i];
+            if (!addr || !connected_[i]) {
                 continue;
             }
             SendTo_(id, reinterpret_cast<const void *>(*addr->data()), addr->length(), i);
@@ -121,19 +122,12 @@ namespace tink::Service {
 
     void ServiceMaster::Broadcast(const byte *name, size_t sz, uint32_t handle) {
         for (int i = 1; i < REMOTE_MAX; i++) {
-            int fd = remote_fd[i];
-            if (fd < 0 || !connected[i]) {
+            int fd = remote_fd_[i];
+            if (fd < 0 || !connected_[i]) {
                 continue;
             }
             SendTo_(i, name, sz, handle);
         }
-    }
-
-    static inline void ToBigEndian(uint8_t *buffer, uint32_t n) {
-        buffer[0] = (n >> 24) & 0xff;
-        buffer[1] = (n >> 16) & 0xff;
-        buffer[2] = (n >> 8) & 0xff;
-        buffer[3] = n & 0xff;
     }
 
     void ServiceMaster::SendTo_(int id, const void *buf, int sz, uint32_t handle) {
@@ -145,32 +139,32 @@ namespace tink::Service {
         ToBigEndian(buffer + 4 + sz +8, 0);
         sz += 4 + 12;
         DataPtr data(buffer, std::default_delete<uint8_t[]>());
-        if (SOCKET_SERVER.Send(remote_fd[id], data, sz)) {
+        if (SOCKET_SERVER.Send(remote_fd_[id], data, sz)) {
             logger->error("Harbor {} : send error", id);
         }
     }
 
     void ServiceMaster::CloseHarbor_(int harbor_id) {
-        if (connected[harbor_id]) {
-            SOCKET_SERVER.Close(ctx_->Handle(), remote_fd[harbor_id]);
-            remote_fd[harbor_id] = -1;
-            remote_addr[harbor_id].reset();
+        if (connected_[harbor_id]) {
+            SOCKET_SERVER.Close(ctx_->Handle(), remote_fd_[harbor_id]);
+            remote_fd_[harbor_id] = -1;
+            remote_addr_[harbor_id].reset();
         }
     }
 
     void ServiceMaster::RequestName_(const std::string& name) {
-        auto it = name_map.find(name);
-        if (it == name_map.end()) {
+        auto it = name_map_.find(name);
+        if (it == name_map_.end()) {
             return;
         }
         Broadcast(name.data(), name.length(), it->second);
     }
 
     void ServiceMaster::UpdateName_(uint32_t handle, const std::string &name) {
-        auto it = name_map.find(name);
-        if (it == name_map.end()) {
+        auto it = name_map_.find(name);
+        if (it == name_map_.end()) {
             bool ret;
-            std::tie(it, ret) = name_map.emplace(name, 0);
+            std::tie(it, ret) = name_map_.emplace(name, 0);
         }
         it->second = handle;
         Broadcast(name.data(), name.length(), handle);
@@ -178,21 +172,21 @@ namespace tink::Service {
 
     ServiceMaster::ServiceMaster() {
         for (int i = 0; i < REMOTE_MAX; i++) {
-            remote_fd[i] = -1;
+            remote_fd_[i] = -1;
         }
     }
 
     void ServiceMaster::UpdateAddress_(int harbor_id, const std::string &addr) {
-        if (remote_fd[harbor_id] >= 0) {
+        if (remote_fd_[harbor_id] >= 0) {
             CloseHarbor_(harbor_id);
         }
-        remote_addr[harbor_id] = std::make_shared<std::string>(addr);
+        remote_addr_[harbor_id] = std::make_shared<std::string>(addr);
         ConnectTo_(harbor_id);
     }
 
     void ServiceMaster::ConnectTo_(int id) {
-        assert(!connected[id]);
-        StringPtr ip_address = remote_addr[id];
+        assert(!connected_[id]);
+        StringPtr ip_address = remote_addr_[id];
         StringList out;
         StringUtil::Split(*ip_address, ':', out);
         if (out.size() < 2) {
@@ -202,7 +196,7 @@ namespace tink::Service {
         std::string& ip = out[0];
         int port = std::stol(out[1]);
         logger->info("Master connect to harbor({}) {}:{}", id, ip, port);
-        remote_fd[id] = SOCKET_SERVER.Connect(ctx_->Handle(), ip, port);
+        remote_fd_[id] = SOCKET_SERVER.Connect(ctx_->Handle(), ip, port);
     }
 
 }
