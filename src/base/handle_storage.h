@@ -15,6 +15,7 @@ namespace tink {
     class HandleStorage {
     public:
         int Init(int harbor);
+        // 创建一个新服务的context
         ContextPtr CreateContext(std::string_view name, std::string_view param);
         uint32_t Register(ContextPtr ctx);
         std::string BindName(uint32_t handle, std::string_view name);
@@ -26,10 +27,10 @@ namespace tink {
         int PushMessage(uint32_t handle, TinkMessage &msg);
         void ContextEndless(uint32_t handle);
     private:
-        uint32_t harbor_;
-        uint32_t handle_index_;
-        std::map<std::string, uint32_t> name_map_;
-        std::unordered_map<uint32_t, ContextPtr> handle_map_;
+        uint32_t harbor_; // 组网的唯一harbor id
+        uint32_t handle_index_; // 用于生成handle id
+        std::map<std::string, uint32_t> name_map_; // <ctx名字,handle>
+        std::unordered_map<uint32_t, ContextPtr> handle_map_; // <handle, context>
         mutable std::shared_mutex mutex_;
     };
 }

@@ -13,7 +13,7 @@ namespace tink {
     private:
         ModulePtr Query_(std::string_view name);
         std::vector<ModulePtr> m_;
-        std::string path_;
+        std::string path_; // .so¿âµÄÂ·¾¶
         mutable Mutex mutex_;
     };
 }

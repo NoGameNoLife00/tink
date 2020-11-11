@@ -176,18 +176,18 @@ namespace tink {
         void DecSendingRef(int id);
 
         volatile uint64_t time_;
-        int recv_ctrl_fd;
-        int send_ctrl_fd;
-        int check_ctrl_;
-        PollerPtr poll_;
-        std::atomic_int alloc_id_;
-        int event_n_;
-        int event_index_;
+        int recv_ctrl_fd; // 接受管道
+        int send_ctrl_fd; // 发送管道
+        int check_ctrl_; // 管道是否有数据
+        PollerPtr poll_; // poll实例
+        std::atomic_int alloc_id_; // 已经分配的socket池索引
+        int event_n_; // 当前poll事件数
+        int event_index_; // 下个未处理的poll事件索引
         fd_set rfds_;
         BytePtr buffer_;
         uint8_t udp_buffer_[MAX_UDP_PACKAGE];
-        EventList ev_;
-        std::array<SocketPtr, MAX_SOCKET> slot_;
+        EventList ev_; // poll事件列表
+        std::array<SocketPtr, MAX_SOCKET> slot_; // socket池
     };
 
     typedef std::shared_ptr<SocketServer> SocketServerPtr;

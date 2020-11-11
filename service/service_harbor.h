@@ -21,13 +21,6 @@ namespace tink::Service {
         static constexpr int REMOTE_MAX = 256;
         static constexpr int HEADER_COOKIE_LENGTH = 12;
 
-
-        typedef std::list<HarborMsg> HarborMsgQueue;
-        typedef std::shared_ptr<HarborMsgQueue> HarborMsgQueuePtr;
-        typedef std::pair<int32_t, HarborMsgQueuePtr> HarborValue;
-        typedef std::unordered_map<std::string, HarborValue> HarborMap;
-
-
         typedef struct Slave_ : public noncopyable {
             int fd;
             std::shared_ptr<HarborMsgQueue> queue;

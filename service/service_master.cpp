@@ -29,7 +29,8 @@ namespace tink::Service {
         }
         std::string&& self_addr = ctx_->Command("REG", "");
         int n = sprintf(tmp.get(),"broker %s", self_addr.data());
-        BytePtr start(new byte[]{"start"}, std::default_delete<byte[]>());
+        byte* s = new byte[6]{"start"};
+        BytePtr start(s, std::default_delete<byte[]>());
         ctx_->Send(0, gate, PTYPE_TEXT, 0, tmp, n);
         ctx_->Send(0, gate, PTYPE_TEXT, 0, start, 5);
 

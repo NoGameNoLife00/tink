@@ -10,6 +10,7 @@ namespace tink {
     int HandleStorage::Init(int harbor) {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         handle_index_ = 1;
+        // harbor取最高8位, 组网最多2^8=255个节点
         harbor_ = (harbor & 0xff) << HANDLE_REMOTE_SHIFT;
         return E_OK;
     }
@@ -120,7 +121,7 @@ namespace tink {
 
     ContextPtr HandleStorage::CreateContext(std::string_view name, std::string_view param) {
         ContextPtr ctx = std::make_shared<Context>();
-        auto mod = MODULE_MNG.Query(name);
+        auto mod = MODULE_MNG.Query(name); // 获取对应的模块
         if (!mod) {
             return nullptr;
         }
@@ -134,13 +135,13 @@ namespace tink {
         ctx->cpu_start_ = 0;
         ctx->profile_ = false;
         ctx->message_count_ = 0;
-        ctx->handle_ = HANDLE_STORAGE.Register(ctx);
+        ctx->handle_ = HANDLE_STORAGE.Register(ctx); // 获取唯一标识
         if (ctx->handle_ == 0) {
             return nullptr;
         }
         ctx->queue_ = std::make_shared<MessageQueue>(ctx->handle_);
         ctx->mutex_.lock();
-        int ret = mod->Init(ctx, param);
+        int ret = mod->Init(ctx, param); // 模块初始化
         ctx->mutex_.unlock();
         if (ret == E_OK) {
             ctx->init_ = true;

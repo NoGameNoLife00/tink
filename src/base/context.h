@@ -53,24 +53,23 @@ namespace tink {
         friend class HandleStorage;
     private:
         static std::atomic_int total;
-
+        // 预处理消息数据
         int FilterArgs_(int type, int &session, DataPtr data, size_t &sz);
 
         mutable std::mutex mutex_;
-        MQPtr queue_;
-        bool endless_;
-        uint32_t handle_;
-        int message_count_;
-        ContextCallBack callback_;
+        MQPtr queue_; // 消息队列
+        bool endless_; // 是否堵塞
+        uint32_t handle_; // 唯一id
+        int message_count_; // 累计的收到的消息数
+        ContextCallBack callback_; // 消息处理的回调函数, 一般在module的init里面设置
         uint64_t cpu_cost_;
         uint64_t cpu_start_;
-        int session_id_;
-        int ref_;
-        bool init_;
-        bool profile_;
-        void *cb_ud_;
+        int session_id_; // 发送方设置一个session,用于区分返回的消息
+        bool init_; // 是否初始化
+        bool profile_; // 是否开启性能监测
+        void *cb_ud_; // callback的第二次参数
 
-        ModulePtr mod_;
+        ModulePtr mod_; // module
     };
 }
 

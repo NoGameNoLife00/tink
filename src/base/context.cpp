@@ -19,14 +19,7 @@ namespace tink {
         --total;
     }
 
-    void Context::Send(DataPtr data, size_t sz, uint32_t source, int type, int session) {
-        TinkMessage msg;
-        msg.source = source;
-        msg.session = session;
-        msg.data = std::move(data);
-        msg.size = sz | (static_cast<size_t>(type) << MESSAGE_TYPE_SHIFT);
-        queue_->Push(msg);
-    }
+
 
     void Context::SetCallBack(const ContextCallBack &cb, void *ud) {
         this->callback_ = cb;
@@ -59,6 +52,7 @@ namespace tink {
         int type = msg.size >> MESSAGE_TYPE_SHIFT;
         size_t sz = msg.size & MESSAGE_TYPE_MASK;
         message_count_++;
+        // 消息回调
         if (profile_) {
             cpu_start_ = TimeUtil::GetThreadTime();
             callback_(*this, cb_ud_, type, msg.session, msg.source, msg.data, sz);
@@ -67,6 +61,15 @@ namespace tink {
         } else {
             callback_(*this, cb_ud_, type, msg.session, msg.source, msg.data, sz);
         }
+    }
+
+    void Context::Send(DataPtr data, size_t sz, uint32_t source, int type, int session) {
+        TinkMessage msg;
+        msg.source = source;
+        msg.session = session;
+        msg.data = std::move(data);
+        msg.size = sz | (static_cast<size_t>(type) << MESSAGE_TYPE_SHIFT);
+        queue_->Push(msg);
     }
 
     int Context::Send(uint32_t source, uint32_t destination, int type, int session, DataPtr data,
@@ -88,6 +91,7 @@ namespace tink {
             return session;
         }
         if (HARBOR.MessageIsRemote(destination)) {
+            // 发送目标不在同一节点,交给harbor处理
             RemoteMessagePtr r_msg = std::make_shared<RemoteMessage>();
             r_msg->destination.handle = destination;
             r_msg->message = data;
@@ -100,6 +104,7 @@ namespace tink {
             s_msg.session = session;
             s_msg.data = data;
             s_msg.size = sz;
+            // push到目标ctx的消息队列
             if (HANDLE_STORAGE.PushMessage(destination, s_msg)) {
                 return E_FAILED;
             }
@@ -109,6 +114,7 @@ namespace tink {
 
     int Context::FilterArgs_(int type, int &session, DataPtr data, size_t &sz) {
 //        int needcopy = !(type & PTYPE_TAG_DONTCOPY);
+        // 如果在type里设上PTYPE_TAG_ALLOCSESSION，就忽略掉传入的session参数, 重新生成个唯一session
         int allocsession = type & PTYPE_TAG_ALLOCSESSION;
         type &= 0xff;
 

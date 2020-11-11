@@ -23,6 +23,10 @@ namespace tink::Service {
 
     typedef std::shared_ptr<HarborMsg> HarborMsgPtr;
     typedef std::shared_ptr<RemoteMsgHeader> RemoteMsgHeaderPtr;
+    typedef std::list<HarborMsg> HarborMsgQueue;
+    typedef std::shared_ptr<HarborMsgQueue> HarborMsgQueuePtr;
+    typedef std::pair<int32_t, HarborMsgQueuePtr> HarborValue;
+    typedef std::unordered_map<std::string, HarborValue> HarborMap;
 
      inline void ToBigEndian(uint8_t *buffer, uint32_t n) {
         buffer[0] = (n >> 24) & 0xff;

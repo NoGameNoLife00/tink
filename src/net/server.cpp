@@ -118,7 +118,7 @@ namespace tink {
             // socket_updatetime();
             CHECK_ABORT
             Wakeup(*m, m->count - 1);
-            usleep(2500);
+            usleep(2500); // 0.0025s
             if (SIG) {
                 SignalHup();
                 SIG = 0;
@@ -157,9 +157,11 @@ namespace tink {
             }
         }
         uint32_t handle = q->Handle();
+        // 获取消息队列的ctx
         ContextPtr ctx = HANDLE_STORAGE.HandleGrab(handle);
         if (!ctx) {
-            struct DropT d = {handle };
+            // 释放消息队列
+            struct DropT d = { handle };
             q->Release(Context::DropMessage, &d);
             return GLOBAL_MQ.Pop();
         }
@@ -167,8 +169,11 @@ namespace tink {
         TinkMessage msg;
         for (int i = 0; i < n; i++) {
             if (!q->Pop(msg)) {
+                // 当前消息队列为空则再弹出一个消息队列给上层继续处理
                 return GLOBAL_MQ.Pop();
             } else if (i == 0 && weight >= 0) {
+                // weight:-1表示只处理一条消息
+                // weight>0, i:0时: n=所有消息数*1/(2^weight) 条
                 n = q->Size();
                 n >>= weight;
             }
@@ -176,9 +181,10 @@ namespace tink {
             ctx->DispatchMessage(msg);
             m_node.Trigger(0, 0);
         }
-        assert(q.get() == ctx->Queue().get());
+        assert(q == ctx->Queue());
         MQPtr nq = GLOBAL_MQ.Pop();
         if (nq) {
+            // 全局消息队列不为空就将当前消息队列push进去,供下次工作线程调度
             GLOBAL_MQ.Push(q);
             q = nq;
         }

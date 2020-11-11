@@ -392,7 +392,7 @@ namespace tink::Service {
             if (!val.second) {
                 val.second.reset(new HarborMsgQueue);
             }
-            RemoteMsgHeader header;
+            RemoteMsgHeader header{};
             header.source = source;
             header.destination = type << HANDLE_REMOTE_SHIFT;
             header.session = session;

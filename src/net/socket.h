@@ -156,28 +156,25 @@ namespace tink {
         std::atomic_uint16_t udp_connecting;
         mutable std::recursive_mutex mutex;
     private:
-        int id_{};
-        int sock_fd_;
-        std::atomic_uint8_t type_;
-        uintptr_t opaque_{};
-        int protocol_{};
-        uint64_t wb_size_{};
-        WriteBufferList high;
-        WriteBufferList low;
+        int id_{}; // 在socket池的id
+        int sock_fd_; // socket文件描述符
+        std::atomic_uint8_t type_; // 状态
+        uintptr_t opaque_{}; // socket关联的服务地址
+        int protocol_{}; // 协议
+        uint64_t wb_size_{}; // 发送数据大小
+        WriteBufferList high; // 高优先级发送队列
+        WriteBufferList low; // 低优先级发送队列
         std::atomic_uint32_t sending_;
         SocketStat stat_{};
-
         int64_t warn_size_{};
         union {
             int size;
             uint8_t udp_address[UDP_ADDRESS_SIZE];
         } p_{};
-        DataBufferPtr dw_buffer_;
+        DataBufferPtr dw_buffer_; // 立刻发送缓冲
 //        int dw_offset_;
 //        DataPtr dw_buffer_;
 //        size_t dw_size_;
-
-
     };
     typedef std::shared_ptr<Socket> SocketPtr;
 }

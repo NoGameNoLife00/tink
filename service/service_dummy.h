@@ -7,15 +7,15 @@
 namespace tink::Service {
     class ServiceDummy : public BaseModule {
     public:
-        struct Msg {
-            std::shared_ptr<uint8_t[]> buffer;
-            size_t size;
-        };
-
-        typedef std::list<Msg> MsgQueue;
-        typedef std::shared_ptr<MsgQueue> MsgQueuePtr;
-        typedef std::pair<uint32_t, MsgQueuePtr> QueueBind;
-        typedef std::unordered_map<std::string, QueueBind> QueueMap;
+//        struct Msg {
+//            std::shared_ptr<uint8_t[]> buffer;
+//            size_t size;
+//        };
+//
+//        typedef std::list<Msg> MsgQueue;
+//        typedef std::shared_ptr<MsgQueue> MsgQueuePtr;
+//        typedef std::pair<uint32_t, MsgQueuePtr> QueueBind;
+//        typedef std::unordered_map<std::string, QueueBind> QueueMap;
 
         int Init(ContextPtr ctx, std::string_view param) override;
 
@@ -25,8 +25,9 @@ namespace tink::Service {
 
         void UpdateName_(const std::string &name, uint32_t handle);
         void SendName_(uint32_t source, const std::string &name, int type, int session, DataPtr msg, size_t sz);
-        void DispatchQueue_(QueueMap::iterator &node);
-        QueueMap map_;
+        void DispatchQueue_(HarborMap::iterator &node);
+        void PushQueue_(HarborMsgQueue& queue, DataPtr buffer, size_t sz, RemoteMsgHeader& header);
+        HarborMap map_;
 
         ContextPtr ctx_;
     };
