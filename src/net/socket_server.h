@@ -165,7 +165,7 @@ namespace tink {
         int NoDelay(int id);
 
     private:
-        SocketPtr NewSocket_(int id, int fd, int protocol, uintptr_t opaque, bool add);
+        SocketPtr NewSocket_(int id, int fd, SocketProtocol protocol, uintptr_t opaque, bool add);
         int Poll_(SocketMessage &result, int &more);
         void ForceClose_(Socket &s, SocketMessage &result);
         int HasCmd_();

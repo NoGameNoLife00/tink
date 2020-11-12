@@ -250,7 +250,7 @@ namespace tink {
     }
 
 
-    SocketPtr SocketServer::NewSocket_(int id, int fd, int protocol, uintptr_t opaque, bool add) {
+    SocketPtr SocketServer::NewSocket_(int id, int fd, SocketProtocol protocol, uintptr_t opaque, bool add) {
         SocketPtr s = GetSocket(id);
         assert(s->GetType() == Socket::Type::RESERVE);
 
@@ -959,7 +959,7 @@ namespace tink {
         if (s->GetType() == Socket::Type::INVALID || s->GetId() !=id) {
             return SOCKET_NONE;
         }
-        int type = request->address[0];
+        auto type = static_cast<SocketProtocol>(request->address[0]);
         if (type != s->GetProtocol()) {
             // protocol mismatch
             result.opaque = s->GetOpaque();
@@ -989,7 +989,7 @@ namespace tink {
 
     void SocketServer::AddUdpSocket_(RequestUdp *udp) {
         int id = udp->id;
-        int protocol;
+        SocketProtocol protocol;
         if (udp->family == AF_INET6) {
             protocol = SocketProtocol::UDPv6;
         } else {
