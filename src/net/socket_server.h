@@ -10,29 +10,25 @@
 #include <poller.h>
 #include <socket.h>
 
-#define SOCKET_NONE -1
-#define SOCKET_DATA 0
-#define SOCKET_CLOSE 1
-#define SOCKET_OPEN 2
-#define SOCKET_ACCEPT 3
-#define SOCKET_ERR 4
-#define SOCKET_EXIT 5
-#define SOCKET_UDP 6
-#define SOCKET_WARNING 7
-
 #define UDP_ADDRESS_SIZE 19	// ipv6 128bit + port 16bit + 1 byte type
-#define MAX_INFO 128
-#define MAX_UDP_PACKAGE 65535
+
+#define TINK_SOCKET_TYPE_DATA 1
+#define TINK_SOCKET_TYPE_CONNECT 2
+#define TINK_SOCKET_TYPE_CLOSE 3
+#define TINK_SOCKET_TYPE_ACCEPT 4
+#define TINK_SOCKET_TYPE_ERROR 5
+#define TINK_SOCKET_TYPE_UDP 6
+#define TINK_SOCKET_TYPE_WARNING 7
 
 #define SOCKET_SERVER tink::Singleton<tink::SocketServer>::GetInstance()
 
 namespace tink {
 
     struct SocketMessage {
-        int id;
-        uintptr_t opaque;
-        int ud;
-        DataPtr data;
+        int id; // socket池中的id
+        uintptr_t opaque; // 服务地址
+        int ud; // 字节数
+        DataPtr data; // 数据
     };
 
     struct RequestStart {
@@ -125,6 +121,29 @@ namespace tink {
 
     class SocketServer {
     public:
+        enum SocketCode {
+            SOCKET_NONE = -1,
+            SOCKET_DATA = 0,
+            SOCKET_CLOSE = 1,
+            SOCKET_OPEN = 2,
+            SOCKET_ACCEPT = 3,
+            SOCKET_ERR = 4,
+            SOCKET_EXIT = 5,
+            SOCKET_UDP = 6,
+            SOCKET_WARNING = 7,
+        };
+        enum class SocketType {
+            DATA = 1,
+            CONNECT = 2,
+            CLOSE = 3,
+            ACCEPT = 4,
+            ERROR = 5,
+            UDP = 6,
+            WARNING = 7,
+        };
+
+        static const int MAX_UDP_PACKAGE = 65535;
+        static const int MAX_INFO = 128;
         SocketServer();
         int Init(uint64_t time);
         void UpdateTime(uint64_t time);

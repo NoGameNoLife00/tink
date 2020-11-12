@@ -65,9 +65,9 @@ namespace tink {
                 continue;
             }
             switch (s->GetType()) {
-                case SOCKET_TYPE_CONNECTING:
+                case Socket::Type::CONNECTING:
                     return ReportConnect_(*s, result);
-                case SOCKET_TYPE_LISTEN: {
+                case Socket::Type::LISTEN: {
                     int ok = ReportAccept_(*s, result);
                     if (ok > 0) {
                         return SOCKET_ACCEPT;
@@ -77,13 +77,13 @@ namespace tink {
                     // when ok == 0, retry
                     break;
                 }
-                case SOCKET_TYPE_INVALID:
+                case Socket::Type::INVALID:
                     fprintf(stderr, "socket server: invalid socket\n");
                 break;
                 default:
                     if (e.read) {
                         int type;
-                        if (s->GetProtocol() == PROTOCOL_TCP) {
+                        if (s->GetProtocol() == SocketProtocol::TCP) {
                             type = ForwardMessageTcp_(*s, result);
                         } else {
                             type = ForwardMessageUpd_(*s, result);
@@ -241,7 +241,7 @@ namespace tink {
 
         for (int i = 0; i < slot_.max_size(); i++) {
             slot_[i] = std::make_shared<Socket>();
-            slot_[i]->SetType(SOCKET_TYPE_INVALID);
+            slot_[i]->SetType(Socket::Type::INVALID);
         }
 
         FD_ZERO(&rfds_);
@@ -252,11 +252,11 @@ namespace tink {
 
     SocketPtr SocketServer::NewSocket_(int id, int fd, int protocol, uintptr_t opaque, bool add) {
         SocketPtr s = GetSocket(id);
-        assert(s->GetType() == SOCKET_TYPE_RESERVE);
+        assert(s->GetType() == Socket::Type::RESERVE);
 
         if (add) {
             if (poll_->Add(fd, &s)) {
-                s->SetType(SOCKET_TYPE_INVALID);
+                s->SetType(Socket::Type::INVALID);
                 return nullptr;
             }
         }
@@ -267,7 +267,7 @@ namespace tink {
     void SocketServer::Destroy() {
         SocketMessage dummy;
         for (auto s : slot_) {
-            if (s->GetType() != SOCKET_TYPE_RESERVE) {
+            if (s->GetType() != Socket::Type::RESERVE) {
                 s->Destroy();
             }
         }
@@ -313,23 +313,23 @@ namespace tink {
         result.ud = 0;
         result.data = nullptr;
         result.opaque = s.GetOpaque();
-        int type = s.GetType();
-        if (type == SOCKET_TYPE_INVALID) {
+        Socket::Type type = s.GetType();
+        if (type == Socket::Type::INVALID) {
             return;
         }
-        assert(type != SOCKET_TYPE_RESERVE);
+        assert(type != Socket::Type::RESERVE);
         FreeWbList(s.GetHigh());
         FreeWbList(s.GetLow());
-        if (type != SOCKET_TYPE_PACCEPT && type != SOCKET_TYPE_PLISTEN) {
+        if (type != Socket::Type::PACCEPT && type != Socket::Type::PLISTEN) {
             poll_->Del(s.GetSockFd());
         }
         s.mutex.lock();
-        if (type != SOCKET_TYPE_BIND) {
+        if (type != Socket::Type::BIND) {
             if (close(s.GetSockFd()) < 0) {
                 perror("close socket:");
             }
         }
-        s.SetType(SOCKET_TYPE_INVALID);
+        s.SetType(Socket::Type::INVALID);
         s.GetDWBuffer().reset();
         s.mutex.unlock();
     }
@@ -381,16 +381,17 @@ namespace tink {
     int SocketServer::Send(SocketSendBuffer &buffer) {
         int id = buffer.id;
         SocketPtr s = GetSocket(id);
-        if (s->GetId() != id || s->GetType() == SOCKET_TYPE_INVALID) {
+        if (s->GetId() != id || s->GetType() == Socket::Type::INVALID) {
             return SOCKET_NONE;
         }
-
+        // 检查是否可以直接发送
         if (s->CanDirectWrite(id) && s->mutex.try_lock()) {
+            // 双重检查
             if (s->CanDirectWrite(id)) {
                 SendObject so;
                 so.InitFromSendBuffer(buffer);
                 ssize_t n;
-                if (s->GetProtocol() == PROTOCOL_TCP) {
+                if (s->GetProtocol() == SocketProtocol::TCP) {
                     n = SocketApi::Write(s->GetSockFd(), so.buffer.get(), so.sz);
                 } else {
                     SockAddress sa;
@@ -435,7 +436,7 @@ namespace tink {
     int SocketServer::SendLowPriority(SocketSendBuffer &buffer) {
         int id = buffer.id;
         SocketPtr s = GetSocket(id);
-        if (s->GetId() != id || s->GetType() == SOCKET_TYPE_INVALID) {
+        if (s->GetId() != id || s->GetType() == Socket::Type::INVALID) {
             buffer.FreeBuffer();
             return SOCKET_NONE;
         }
@@ -474,7 +475,7 @@ namespace tink {
         int family = 0;
         int listen_fd = DoBind(host, port, IPPROTO_TCP, family);
         if (listen_fd < 0) {
-            return SOCKET_NONE;
+            return SocketServer::SOCKET_NONE;
         }
         if (SocketApi::Listen(listen_fd, backlog) < 0) {
             SocketApi::Close(listen_fd);
@@ -508,7 +509,7 @@ namespace tink {
                 id = alloc_id_.fetch_and(0x7fffffff);
             }
             SocketPtr s = GetSocket(id);
-            if (s->GetType() == SOCKET_TYPE_INVALID) {
+            if (s->GetType() == Socket::Type::INVALID) {
                 if (s->Reserve(id)) {
                     return id;
                 } else {
@@ -532,7 +533,7 @@ namespace tink {
     int SocketServer::OpenRequest_(RequestPackage &req, uintptr_t opaque, std::string_view addr, int port) {
         int len = addr.size();
         if ((len + sizeof(req.u.open)) >= 256 ) {
-            fprintf(stderr, "socket server : Invalid addr %s.\n", addr.data());
+            fprintf(stderr, "socket server : invalid addr %s.\n", addr.data());
             return SOCKET_NONE;
         }
         int id = ReserveId_();
@@ -568,7 +569,7 @@ namespace tink {
     }
 
     // mainloop thread
-    static void ForwardMessage(int type, bool padding, SocketMessage &result) {
+    static void ForwardMessage(SocketServer::SocketType type, bool padding, SocketMessage &result) {
         TinkSocketMsgPtr sm = std::make_shared<TinkSocketMessage>();
 
 
@@ -577,7 +578,7 @@ namespace tink {
 //        if (result.data) {
 //            sz += strlen(static_cast<byte*>(result.data.get()));
 //        }
-        sm->type = type;
+        sm->type = static_cast<int>(type);
         sm->id = result.id;
         sm->ud = result.ud;
         sm->buffer = result.data;
@@ -597,25 +598,25 @@ namespace tink {
             case SOCKET_EXIT:
                 return 0;
             case SOCKET_DATA:
-                ForwardMessage(TINK_SOCKET_TYPE_DATA, false, result);
+                ForwardMessage(SocketType::DATA, false, result);
                 break;
             case SOCKET_CLOSE:
-                ForwardMessage(TINK_SOCKET_TYPE_CLOSE, false, result);
+                ForwardMessage(SocketType::CLOSE, false, result);
                 break;
             case SOCKET_OPEN:
-                ForwardMessage(TINK_SOCKET_TYPE_CONNECT, true, result);
+                ForwardMessage(SocketType::CONNECT, true, result);
                 break;
             case SOCKET_ERR:
-                ForwardMessage(TINK_SOCKET_TYPE_ERROR, true, result);
+                ForwardMessage(SocketType::ERROR, true, result);
                 break;
             case SOCKET_ACCEPT:
-                ForwardMessage(TINK_SOCKET_TYPE_ACCEPT, true, result);
+                ForwardMessage(SocketType::ACCEPT, true, result);
                 break;
             case SOCKET_UDP:
-                ForwardMessage(TINK_SOCKET_TYPE_UDP, false, result);
+                ForwardMessage(SocketType::UDP, false, result);
                 break;
             case SOCKET_WARNING:
-                ForwardMessage(TINK_SOCKET_TYPE_WARNING, false, result);
+                ForwardMessage(SocketType::WARNING, false, result);
                 break;
             default:
                 spdlog::error("Unknown socket message type {}.",type);
@@ -634,21 +635,21 @@ namespace tink {
         result.ud = 0;
         result.data = nullptr;
         SocketPtr s = GetSocket(id);
-        if (s->GetType() == SOCKET_TYPE_INVALID || s->GetId() !=id) {
+        if (s->GetType() == Socket::Type::INVALID || s->GetId() !=id) {
             result.data = StringMessage("invalid socket");
             return SOCKET_ERR;
         }
-        if (s->GetType() == SOCKET_TYPE_PACCEPT || s->GetType() == SOCKET_TYPE_PLISTEN) {
+        if (s->GetType() == Socket::Type::PACCEPT || s->GetType() == Socket::Type::PLISTEN) {
             if (poll_->Add(s->GetSockFd(), s.get())) {
                 ForceClose_(*s, result);
                 result.data = StringMessage(strerror(errno));
                 return SOCKET_ERR;
             }
-            s->SetType((s->GetType() == SOCKET_TYPE_PACCEPT) ? SOCKET_TYPE_CONNECTED : SOCKET_TYPE_LISTEN);
+            s->SetType((s->GetType() == Socket::Type::PACCEPT) ? Socket::Type::CONNECTED : Socket::Type::LISTEN);
             s->SetOpaque(request->opaque);
             result.data = StringMessage("start");
             return SOCKET_OPEN;
-        } else if (s->GetType() == SOCKET_TYPE_CONNECTED) {
+        } else if (s->GetType() == Socket::Type::CONNECTED) {
             s->SetOpaque(request->opaque);
             result.data = StringMessage("transfer");
             return SOCKET_OPEN;
@@ -661,13 +662,13 @@ namespace tink {
         result.id = id;
         result.opaque = request->opaque;
         result.ud = 0;
-        SocketPtr s = NewSocket_(id, request->fd, PROTOCOL_TCP, request->opaque, true);
+        SocketPtr s = NewSocket_(id, request->fd, SocketProtocol::TCP, request->opaque, true);
         if (!s) {
             result.data = StringMessage("reach socket number limit");
             return SOCKET_ERR;
         }
         SocketApi::NonBlocking(request->fd);
-        s->SetType(SOCKET_TYPE_BIND);
+        s->SetType(Socket::Type::BIND);
         result.data = StringMessage("binding");
         return SOCKET_OPEN;
     }
@@ -675,24 +676,24 @@ namespace tink {
     int SocketServer::ListenSocket_(RequestListen *request, SocketMessage &result) {
         int id = request->id;
         int listen_fd = request->fd;
-        SocketPtr s = NewSocket_(id, listen_fd, PROTOCOL_TCP, request->opaque, false);
+        SocketPtr s = NewSocket_(id, listen_fd, SocketProtocol::TCP, request->opaque, false);
         if (!s) {
             SocketApi::Close(listen_fd);
             result.opaque = request->opaque;
             result.id = id;
             result.ud = 0;
             result.data = StringMessage("reach socket number limit");
-            slot_[HASH_ID(id)]->SetType(SOCKET_TYPE_INVALID);
+            slot_[HASH_ID(id)]->SetType(Socket::Type::INVALID);
             return SOCKET_ERR;
         }
-        s->SetType(SOCKET_TYPE_PLISTEN);
+        s->SetType(Socket::Type::PLISTEN);
         return SOCKET_NONE;
     }
 
     int SocketServer::CloseSocket_(RequestClose *request, SocketMessage &result) {
         int id = request->id;
         SocketPtr s = GetSocket(id);
-        if (s->GetType() == SOCKET_TYPE_INVALID || s->GetId() != id) {
+        if (s->GetType() == Socket::Type::INVALID || s->GetId() != id) {
             result.id = id;
             result.opaque = request->opaque;
             result.ud = 0;
@@ -711,7 +712,7 @@ namespace tink {
             result.opaque = request->opaque;
             return SOCKET_CLOSE;
         }
-        s->SetType(SOCKET_TYPE_HALFCLOSE);
+        s->SetType(Socket::Type::HALFCLOSE);
         return SOCKET_NONE;
     }
 
@@ -744,7 +745,7 @@ namespace tink {
     }
 
     int SocketServer::SendList_(Socket &s, WriteBufferList &list, SocketMessage &result) {
-        if (s.GetProtocol() == PROTOCOL_TCP) {
+        if (s.GetProtocol() == SocketProtocol::TCP) {
             return SendListTCP_(s, list, result);
         } else {
             return SendListUDP_(s, list, result);
@@ -836,7 +837,7 @@ namespace tink {
             freeaddrinfo( ai_list );
         });
         auto _failed = [this, &id] {
-            GetSocket(id)->SetType(SOCKET_TYPE_INVALID);
+            GetSocket(id)->SetType(Socket::Type::INVALID);
             return SOCKET_ERR;
         };
         if ( status != 0 ) {
@@ -862,7 +863,7 @@ namespace tink {
             result.data = StringMessage(strerror(errno));
             return _failed();
         }
-        ns = NewSocket_(id, sock, PROTOCOL_TCP, request->opaque, true);
+        ns = NewSocket_(id, sock, SocketProtocol::TCP, request->opaque, true);
         if (!ns) {
             SocketApi::Close(sock);
             result.data = StringMessage("reach socket number limit");
@@ -870,13 +871,13 @@ namespace tink {
         }
 
         if (status == 0) {
-            ns->SetType(SOCKET_TYPE_CONNECTED);
+            ns->SetType(Socket::Type::CONNECTED);
             struct ::sockaddr * addr = ai_ptr->ai_addr;
             SocketApi::ToIp(buffer_.get(), MAX_INFO, ai_ptr->ai_addr);
             result.data = buffer_;
 
         } else {
-            ns->SetType(SOCKET_TYPE_CONNECTING);
+            ns->SetType(Socket::Type::CONNECTING);
             poll_->Write(ns->GetSockFd(), ns.get(), true);
         }
         return SOCKET_NONE;
@@ -885,20 +886,20 @@ namespace tink {
     int SocketServer::SendSocket_(RequestSend *request, SocketMessage &result, int priority, const uint8_t *udp_address) {
         int id = request->id;
         SocketPtr s = GetSocket(id);
-        int type = s->GetType();
+        Socket::Type type = s->GetType();
         SendObject so;
         so.Init(request->buffer, request->sz);
-        if (type == SOCKET_TYPE_INVALID || s->GetId() != id
-            || type == SOCKET_TYPE_HALFCLOSE
-            || type == SOCKET_TYPE_PACCEPT) {
+        if (type == Socket::Type::INVALID || s->GetId() != id
+            || type == Socket::Type::HALFCLOSE
+            || type == Socket::Type::PACCEPT) {
             return SOCKET_NONE;
         }
-        if (type == SOCKET_TYPE_PLISTEN || type == SOCKET_TYPE_LISTEN) {
+        if (type == Socket::Type::PLISTEN || type == Socket::Type::LISTEN) {
             fprintf(stderr, "socket server: write to listen fd %d.\n", id);
             return SOCKET_NONE;
         }
-        if (s->SendBufferEmpty() && type == SOCKET_TYPE_CONNECTED) {
-            if (s->GetProtocol() == PROTOCOL_TCP) {
+        if (s->SendBufferEmpty() && type == Socket::Type::CONNECTED) {
+            if (s->GetProtocol() == SocketProtocol::TCP) {
                 AppendSendBuffer(s, request);
             } else {
                 if (udp_address == nullptr) {
@@ -920,7 +921,7 @@ namespace tink {
             }
             poll_->Write(s->GetSockFd(), s.get(), true);
         } else {
-            if (s->GetProtocol() == PROTOCOL_TCP) {
+            if (s->GetProtocol() == SocketProtocol::TCP) {
                 if (priority == PRIORITY_LOW) {
                     AppendSendBufferLow(s, request);
                 } else {
@@ -955,7 +956,7 @@ namespace tink {
     int SocketServer::SetUdpAddress_(RequestSetUdp *request, SocketMessage &result) {
         int id = request->id;
         SocketPtr s = GetSocket(id);
-        if (s->GetType() == SOCKET_TYPE_INVALID || s->GetId() !=id) {
+        if (s->GetType() == Socket::Type::INVALID || s->GetId() !=id) {
             return SOCKET_NONE;
         }
         int type = request->address[0];
@@ -967,7 +968,7 @@ namespace tink {
             result.data = StringMessage("protocol mismatch");
             return SOCKET_ERR;
         }
-        if (type == PROTOCOL_UDP) {
+        if (type == SocketProtocol::UDP) {
             memcpy((void *) s->GetUdpAddress(), request->address, 1 + 2 + 4);	// 1 type, 2 port, 4 ipv4
         } else {
             memcpy((void *) s->GetUdpAddress(), request->address, 1+2+16);	// 1 type, 2 port, 16 ipv6
@@ -979,7 +980,7 @@ namespace tink {
     void SocketServer::SetOptSocket_(RequestSetOpt *request) {
         int id = request->id;
         SocketPtr s = GetSocket(id);
-        if (s->GetType() == SOCKET_TYPE_INVALID || s->GetId() !=id) {
+        if (s->GetType() == Socket::Type::INVALID || s->GetId() !=id) {
             return;
         }
         int v = request->value;
@@ -990,17 +991,17 @@ namespace tink {
         int id = udp->id;
         int protocol;
         if (udp->family == AF_INET6) {
-            protocol = PROTOCOL_UDPv6;
+            protocol = SocketProtocol::UDPv6;
         } else {
-            protocol = PROTOCOL_UDP;
+            protocol = SocketProtocol::UDP;
         }
         SocketPtr ns = NewSocket_(id, udp->fd, protocol, udp->opaque, true);
         if (!ns) {
             close(udp->fd);
-            GetSocket(id)->SetType(SOCKET_TYPE_INVALID);
+            GetSocket(id)->SetType(Socket::Type::INVALID);
             return;
         }
-        ns->SetType(SOCKET_TYPE_CONNECTED);
+        ns->SetType(Socket::Type::CONNECTED);
         memset((void *) ns->GetUdpAddress(), 0, UDP_ADDRESS_SIZE);
     }
 
@@ -1012,7 +1013,7 @@ namespace tink {
                 Event &e = ev_[i];
                 Socket *s = static_cast<Socket *>(e.s);
                 if (s) {
-                    if (s->GetType() == SOCKET_TYPE_INVALID && s->GetId() == id) {
+                    if (s->GetType() == Socket::Type::INVALID && s->GetId() == id) {
                         e.s = nullptr;
                         break;
                     }
@@ -1033,7 +1034,7 @@ namespace tink {
                 result.data = StringMessage(strerror(errno));
             return SOCKET_ERR;
         } else {
-            s.SetType(SOCKET_TYPE_CONNECTED);
+            s.SetType(Socket::Type::CONNECTED);
             result.opaque = s.GetOpaque();
             result.id = s.GetId();
             result.ud = 0;
@@ -1075,14 +1076,14 @@ namespace tink {
             return 0;
         }
         SocketApi::NonBlocking(client_fd);
-        SocketPtr ns = NewSocket_(id, client_fd, PROTOCOL_TCP, s.GetOpaque(), false);
+        SocketPtr ns = NewSocket_(id, client_fd, SocketProtocol::TCP, s.GetOpaque(), false);
         if (!ns) {
             SocketApi::Close(client_fd);
         }
         ns->SetKeepAlive(true);
 
         s.StatRead(1, time_);
-        ns->SetType(SOCKET_TYPE_PACCEPT);
+        ns->SetType(Socket::Type::PACCEPT);
         result.opaque = s.GetOpaque();
         result.id = s.GetId();
         result.ud = id;
@@ -1117,7 +1118,7 @@ namespace tink {
             return SOCKET_CLOSE;
         }
 
-        if (s.GetType() == SOCKET_TYPE_HALFCLOSE) {
+        if (s.GetType() == Socket::Type::HALFCLOSE) {
             return SOCKET_NONE;
         }
 
@@ -1152,15 +1153,15 @@ namespace tink {
         }
         uint8_t * data;
         if (s_len == sizeof(struct sockaddr_in)) {
-            if (s.GetProtocol() != PROTOCOL_UDP)
+            if (s.GetProtocol() != SocketProtocol::UDP)
                 return SOCKET_NONE;
             data = new uint8_t[n + 1 + 2 + 4];
-            sa.GenUpdAddress(PROTOCOL_UDP, data + n);
+            sa.GenUpdAddress(SocketProtocol::UDP, data + n);
         } else {
-            if (s.GetProtocol() != PROTOCOL_UDPv6)
+            if (s.GetProtocol() != SocketProtocol::UDPv6)
                 return SOCKET_NONE;
             data = new uint8_t[n + 1 + 2 + 16];
-            sa.GenUpdAddress(PROTOCOL_UDPv6, data + n);
+            sa.GenUpdAddress(SocketProtocol::UDPv6, data + n);
         }
         memcpy(data, udp_buffer_, n);
 
@@ -1193,7 +1194,7 @@ namespace tink {
             }
             assert(s.SendBufferEmpty() && s.GetWbSize() == 0);
             poll_->Write(s.GetSockFd(), &s, false);
-            if (s.GetType() == SOCKET_TYPE_HALFCLOSE) {
+            if (s.GetType() == Socket::Type::HALFCLOSE) {
                 ForceClose_(s, result);
                 return SOCKET_CLOSE;
             }

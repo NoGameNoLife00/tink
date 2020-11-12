@@ -70,7 +70,7 @@ namespace tink {
         SocketApi::SetKeepAlive(sock_fd_, active);
     }
 
-    int Socket::Init(int id, int fd, int protocol, uintptr_t opaque) {
+    int Socket::Init(int id, int fd, SocketProtocol protocol, uintptr_t opaque) {
         id_ = id;
         sock_fd_ = fd;
         sending_ = ID_TAG16(id) << 16 | 0;
@@ -90,22 +90,22 @@ namespace tink {
     }
 
     socklen_t Socket::UdpAddress(const uint8_t udp_address[UDP_ADDRESS_SIZE], SockAddress &sa) const {
-        int type = (uint8_t)udp_address[0];
+        auto type = static_cast<SocketProtocol>(udp_address[0]);
         if (type != protocol_)
             return 0;
         uint16_t port = 0;
         memcpy(&port, udp_address+1, sizeof(uint16_t));
         switch (protocol_) {
-            case PROTOCOL_UDP:
+            case SocketProtocol::UDP:
                 return sa.Init(udp_address + 1 + sizeof(uint16_t), port, false);
-            case PROTOCOL_UDPv6:
+            case SocketProtocol::UDPv6:
                 return sa.Init(udp_address + 1 + sizeof(uint16_t), port, true);
         }
         return 0;
     }
 
     void Socket::IncSendingRef(int id) {
-        if (protocol_ != PROTOCOL_TCP)
+        if (protocol_ != SocketProtocol::TCP)
             return;
         for (;;) {
             if ((sending_ >> 16) == ID_TAG16(id)) {
@@ -127,7 +127,7 @@ namespace tink {
     }
 
     void Socket::DecSendingRef(int id) {
-        if (id == id_ && protocol_ == PROTOCOL_TCP) {
+        if (id == id_ && protocol_ == SocketProtocol::TCP) {
             assert((sending_ & 0xffff) != 0);
             sending_ -= 1;
         }
@@ -154,10 +154,10 @@ namespace tink {
     }
 
     bool Socket::Reserve(int id) {
-        uint8_t pl = SOCKET_TYPE_INVALID;
-        if (type_.compare_exchange_strong(pl, SOCKET_TYPE_RESERVE)) {
+        Type pl = Type::INVALID;
+        if (type_.compare_exchange_strong(pl, Type::RESERVE)) {
             id_ = id;
-            protocol_ = PROTOCOL_UNKNOWN;
+            protocol_ = SocketProtocol::UNKNOWN;
             udp_connecting = 0;
             sock_fd_ = -1;
             return true;

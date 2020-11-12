@@ -105,10 +105,10 @@ namespace tink {
         }
     }
 
-    int SockAddress::GenUpdAddress(int protocol, uint8_t *udp_address) {
+    int SockAddress::GenUpdAddress(SocketProtocol protocol, uint8_t *udp_address) {
         int addrsz = 1;
         udp_address[0] = (uint8_t)protocol;
-        if (protocol == PROTOCOL_UDP) {
+        if (protocol == SocketProtocol::UDP) {
             memcpy(udp_address+addrsz, &addr_.sin_port, sizeof(addr_.sin_port));
             addrsz += sizeof(addr_.sin_port);
             memcpy(udp_address+addrsz, &addr_.sin_addr, sizeof(addr_.sin_addr));

@@ -45,9 +45,9 @@ namespace tink::Service {
         static int MainLoop_(Context& ctx, void* ud, int type, int session, uint32_t source, DataPtr msg, size_t sz);
         void CloseSlave_(int id);
         void DispatchQueue_(int id);
+        void DispatchNameQueue_(HarborMap::iterator &node);
         void SendRemote_(int fd, const BytePtr& buffer, size_t sz, RemoteMsgHeader& cookie);
         void UpdateName_(const std::string& name, uint32_t handle);
-        void DispatchNameQueue_(HarborMap::iterator &node);
         void Handshake_(int id);
         void ForwardLocalMessage(DataPtr msg, int sz);
         void PushQueue_(HarborMsgQueue& queue, DataPtr buffer, size_t sz, RemoteMsgHeader& header);

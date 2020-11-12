@@ -17,21 +17,7 @@
 #include <utility>
 #include <spdlog/spdlog.h>
 
-#define PROTOCOL_TCP 0
-#define PROTOCOL_UDP 1
-#define PROTOCOL_UDPv6 2
-#define PROTOCOL_UNKNOWN 255
-
 #define UDP_ADDRESS_SIZE 19	// ipv6 128bit + port 16bit + 1 byte type
-#define SOCKET_TYPE_INVALID 0
-#define SOCKET_TYPE_RESERVE 1
-#define SOCKET_TYPE_PLISTEN 2
-#define SOCKET_TYPE_LISTEN 3
-#define SOCKET_TYPE_CONNECTING 4
-#define SOCKET_TYPE_CONNECTED 5
-#define SOCKET_TYPE_HALFCLOSE 6
-#define SOCKET_TYPE_PACCEPT 7
-#define SOCKET_TYPE_BIND 8
 
 #define MAX_SOCKET_P 16
 #define MAX_SOCKET (1<<MAX_SOCKET_P)
@@ -39,14 +25,6 @@
 #define HASH_ID(id) (((unsigned)id) % MAX_SOCKET)
 #define ID_TAG16(id) ((id>>MAX_SOCKET_P) & 0xffff)
 #define MIN_READ_BUFFER 64
-
-#define TINK_SOCKET_TYPE_DATA 1
-#define TINK_SOCKET_TYPE_CONNECT 2
-#define TINK_SOCKET_TYPE_CLOSE 3
-#define TINK_SOCKET_TYPE_ACCEPT 4
-#define TINK_SOCKET_TYPE_ERROR 5
-#define TINK_SOCKET_TYPE_UDP 6
-#define TINK_SOCKET_TYPE_WARNING 7
 namespace tink {
 
     struct WriteBuffer {
@@ -80,9 +58,21 @@ namespace tink {
 
     class Socket : noncopyable {
     public:
+        enum class Type {
+            INVALID = 0, // 空闲
+            RESERVE = 1, // 已占用
+            PLISTEN = 2, // 等待监听(listen socket使用)
+            LISTEN = 3, // 监听中,接受客户端连接(listen socket使用)
+            CONNECTING = 4, // 正在连接(connect失败的状态,之后会重新连接)
+            CONNECTED = 5, // 已连接,可以收发数据
+            HALFCLOSE = 6,
+            PACCEPT = 7, // 等待连接(listen socket使用)
+            BIND = 8,
+        };
+
         explicit Socket(int fd):sock_fd_(fd) {}
         explicit Socket():sock_fd_(0) {}
-        int Init(int id, int fd, int protocol, uintptr_t opaque);
+        int Init(int id, int fd, SocketProtocol protocol, uintptr_t opaque);
         void Destroy();
         void Close() const;
         ~Socket();
@@ -95,8 +85,8 @@ namespace tink {
         void ShutDownWrite() const;
 
         socklen_t UdpAddress(const uint8_t udp_address[UDP_ADDRESS_SIZE], SockAddress& sa) const;
-        void SetType(int t) { type_ = t; }
-        int GetType() const { return type_; }
+        void SetType(Type t) { type_ = t; }
+        Type GetType() const { return type_; }
         int GetId() const { return id_; }
         void SetId(int id) { id_ = id; }
 
@@ -104,13 +94,13 @@ namespace tink {
 
         bool NoMoreSendingData() { return SendBufferEmpty() && dw_buffer_ && (sending_ & 0xffff) == 0; }
 
-        bool CanDirectWrite(int id) { return id_ == id && NoMoreSendingData() && type_ == SOCKET_TYPE_CONNECTED && udp_connecting == 0;}
+        bool CanDirectWrite(int id) { return id_ == id && NoMoreSendingData() && type_ == Socket::Type::CONNECTED && udp_connecting == 0;}
 
         uintptr_t GetOpaque() const { return opaque_; }
         void SetOpaque(uintptr_t opaque) { opaque_ = opaque; }
 
-        uint8_t GetProtocol() const {return protocol_;}
-        void SetProtocol(uint8_t protocol) { protocol_ = protocol;}
+        SocketProtocol GetProtocol() const {return protocol_;}
+        void SetProtocol(SocketProtocol protocol) { protocol_ = protocol;}
 
         std::list<WriteBufferPtr>& GetHigh() { return high; }
         std::list<WriteBufferPtr>& GetLow() { return low; }
@@ -158,9 +148,9 @@ namespace tink {
     private:
         int id_{}; // 在socket池的id
         int sock_fd_; // socket文件描述符
-        std::atomic_uint8_t type_; // 状态
+        std::atomic<Type> type_; // 状态
         uintptr_t opaque_{}; // socket关联的服务地址
-        int protocol_{}; // 协议
+        SocketProtocol protocol_{}; // 协议
         uint64_t wb_size_{}; // 发送数据大小
         WriteBufferList high; // 高优先级发送队列
         WriteBufferList low; // 低优先级发送队列

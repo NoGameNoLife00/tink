@@ -7,8 +7,14 @@
 #include <memory>
 #include <netinet/in.h>
 #include <socket_api.h>
-
 namespace tink {
+    enum class SocketProtocol {
+        TCP = 0,
+        UDP = 1,
+        UDPv6 = 2,
+        UNKNOWN = 255,
+    };
+
     class SockAddress : public copyable {
     public:
         explicit SockAddress(uint16_t port = 0, bool loopback_only = false, bool ipv6 = false );
@@ -26,7 +32,7 @@ namespace tink {
         uint16_t PortNetEndian() const { return addr_.sin_port; }
         static bool Resolve(std::string_view hostname, SockAddress* result);
         void SetScopeId(uint32_t scope_id);
-        int GenUpdAddress(int protocol, uint8_t *udp_address);
+        int GenUpdAddress(SocketProtocol protocol, uint8_t *udp_address);
     private:
         union {
             struct sockaddr_in addr_;

@@ -14,11 +14,6 @@ tink::BaseModule* CreateModule() {
 
 namespace tink::Service {
 
-
-
-
-
-
     ServiceHarbor::ServiceHarbor() {
 
     }
