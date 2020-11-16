@@ -188,7 +188,7 @@ namespace tink::Service {
 
     void ServiceGate::DispatchSocketMessage(TinkSocketMsgPtr msg, int sz) {
         switch (msg->type) {
-            case TINK_SOCKET_TYPE_DATA: {
+            case TinkSocketMessage::DATA: {
                 if (auto it = conn_.find(msg->id); it != conn_.end()) {
                     Connection * c = it->second;
                     DispatchMessage(*c, msg->id, msg->buffer, msg->ud);
@@ -198,7 +198,7 @@ namespace tink::Service {
                     msg->buffer.reset();
                 }
             }
-            case TINK_SOCKET_TYPE_CONNECT: {
+            case TinkSocketMessage::CONNECT: {
                 if (msg->id == listen_id_) {
                     // start listening
                     break;
@@ -209,8 +209,8 @@ namespace tink::Service {
                 }
                 break;
             }
-            case TINK_SOCKET_TYPE_CLOSE:
-            case TINK_SOCKET_TYPE_ERROR: {
+            case TinkSocketMessage::CLOSE:
+            case TinkSocketMessage::ERROR: {
                 if (auto it = conn_.find(msg->id); it != conn_.end()) {
                     Connection *c = it->second;
                     c->buffer.Clear(*msg_pool_);
@@ -220,7 +220,7 @@ namespace tink::Service {
                 }
                 break;
             }
-            case TINK_SOCKET_TYPE_ACCEPT: {
+            case TinkSocketMessage::ACCEPT: {
                 if (conn_pool_->IsFreePoolEmpty()) {
                     SOCKET_SERVER.Close(ctx_->Handle(), msg->ud);
                 } else {
@@ -237,7 +237,7 @@ namespace tink::Service {
                 }
                 break;
             }
-            case TINK_SOCKET_TYPE_WARNING:
+            case TinkSocketMessage::WARNING:
                 logger->error("fd (%d) send buffer (%d)K", msg->id, msg->ud);
                 break;
         }

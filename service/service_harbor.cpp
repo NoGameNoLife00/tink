@@ -41,11 +41,11 @@ namespace tink::Service {
         case PTYPE_SOCKET: {
             auto message = std::reinterpret_pointer_cast<TinkSocketMessage>(msg);
             switch (message->type) {
-                case TINK_SOCKET_TYPE_DATA:
+                case TinkSocketMessage::DATA:
                     h->PushSocketData(message);
                     break;
-                case TINK_SOCKET_TYPE_ERROR:
-                case TINK_SOCKET_TYPE_CLOSE: {
+                case TinkSocketMessage::ERROR:
+                case TinkSocketMessage::CLOSE: {
                     int id = h->GetHarborId(message->id);
                     if (id) {
                         h->ReportHarborDown(id);
@@ -54,10 +54,10 @@ namespace tink::Service {
                     }
                     break;
                 }
-                case TINK_SOCKET_TYPE_CONNECT:
+                case TinkSocketMessage::CONNECT:
                     // fd forward to this service
                     break;
-                case TINK_SOCKET_TYPE_WARNING: {
+                case TinkSocketMessage::WARNING: {
                     int id = h->GetHarborId(message->id);
                     if (id) {
                         h->logger->error("message haven't send to harbor ({}) reach {} K", id, message->ud);
@@ -100,7 +100,7 @@ namespace tink::Service {
     }
 
     void ServiceHarbor::PushSocketData(TinkSocketMsgPtr message) {
-        assert(message->type == TINK_SOCKET_TYPE_DATA);
+        assert(message->type == TinkSocketMessage::DATA);
         int fd = message->id;
         int id;
         Slave *s = nullptr;

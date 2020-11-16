@@ -10,20 +10,9 @@
 #include <poller.h>
 #include <socket.h>
 
-#define UDP_ADDRESS_SIZE 19	// ipv6 128bit + port 16bit + 1 byte type
-
-#define TINK_SOCKET_TYPE_DATA 1
-#define TINK_SOCKET_TYPE_CONNECT 2
-#define TINK_SOCKET_TYPE_CLOSE 3
-#define TINK_SOCKET_TYPE_ACCEPT 4
-#define TINK_SOCKET_TYPE_ERROR 5
-#define TINK_SOCKET_TYPE_UDP 6
-#define TINK_SOCKET_TYPE_WARNING 7
-
 #define SOCKET_SERVER tink::Singleton<tink::SocketServer>::GetInstance()
 
 namespace tink {
-
     struct SocketMessage {
         int id; // socket池中的id
         uintptr_t opaque; // 服务地址
@@ -84,7 +73,6 @@ namespace tink {
 
     struct RequestPackage {
         RequestPackage() = default;
-
         uint8_t header[8]{};	// 6 bytes dummy
         union {
             char buffer[256];

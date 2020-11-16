@@ -17,15 +17,14 @@
 #include <utility>
 #include <spdlog/spdlog.h>
 
-#define UDP_ADDRESS_SIZE 19	// ipv6 128bit + port 16bit + 1 byte type
-
-#define MAX_SOCKET_P 16
-#define MAX_SOCKET (1<<MAX_SOCKET_P)
-#define MAX_SOCKET (1<<MAX_SOCKET_P)
-#define HASH_ID(id) (((unsigned)id) % MAX_SOCKET)
-#define ID_TAG16(id) ((id>>MAX_SOCKET_P) & 0xffff)
-#define MIN_READ_BUFFER 64
 namespace tink {
+    const int UDP_ADDRESS_SIZE = 19;	// ipv6 128bit + port 16bit + 1 byte type
+    const int MIN_READ_BUFFER = 64;
+    const int MAX_SOCKET_P = 16;
+    const int MAX_SOCKET = (1<<MAX_SOCKET_P);
+
+    inline uint32_t HASH_ID(int id) { return ((unsigned)id) % MAX_SOCKET; }
+    inline uint32_t ID_TAG16(int id) { return (id>>MAX_SOCKET_P) & 0xffff; }
 
     struct WriteBuffer {
         DataPtr buffer;
@@ -49,8 +48,17 @@ namespace tink {
         int ud;
         DataPtr buffer;
         ~TinkSocketMessage() {
-            printf("~TinkSocketMessage_() buff:%d", buffer.get());
+            printf("~TinkSocketMessage_() buff:%d", buffer.use_count());
         }
+        enum Type {
+            DATA = 1,
+            CONNECT = 2,
+            CLOSE = 3,
+            ACCEPT = 4,
+            ERROR = 5,
+            UDP = 6,
+            WARNING = 7,
+        };
     };
 
     typedef std::shared_ptr<TinkSocketMessage> TinkSocketMsgPtr;

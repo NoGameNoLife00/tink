@@ -85,14 +85,14 @@ namespace tink::Service {
     void ServiceMaster::DispatchSocket(TinkSocketMsgPtr msg, int sz) {
         int id = SocketId(msg->id);
         switch (msg->type) {
-            case TINK_SOCKET_TYPE_CONNECT:
+            case TinkSocketMessage::CONNECT:
                 assert(id);
                 OnConnected_(id);
                 break;
-            case TINK_SOCKET_TYPE_ERROR:
+            case TinkSocketMessage::ERROR:
                 logger->error("socket error on harbor {}", id);
                 // 继续, 关闭连接
-            case TINK_SOCKET_TYPE_CLOSE:
+            case TinkSocketMessage::CLOSE:
                 CloseHarbor_(id);
                 break;
             default:
