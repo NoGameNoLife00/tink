@@ -54,7 +54,6 @@ namespace tink {
         poll_fd_ = epoll_create1(EPOLL_CLOEXEC);
         if (poll_fd_ < 0) {
             fprintf(stderr, "create epoll failed");
-            std::form
         }
     }
 

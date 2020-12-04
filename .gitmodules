@@ -6,3 +6,7 @@
 [submodule "3rdparty/spdlog"]
 	path = 3rdparty/spdlog
 	url = https://github.com/gabime/spdlog.git
+
+[submodule "3rdparty/libcoroutine"]
+	path = 3rdparty/libcoroutine
+	url = https://github.com/NoGameNoLife00/libcoroutine.git

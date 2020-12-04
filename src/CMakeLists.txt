@@ -12,5 +12,5 @@ set(SOURCES ${SOURCES} ../3rdparty/cjson/cJSON.c)
 #file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../etc DESTINATION ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/../)
 
 add_executable(${BINARY} ${SOURCES})
-target_link_libraries(${BINARY} ${SPDLOG_LIBS} -pthread -ldl)
+target_link_libraries(${BINARY} ${SPDLOG_LIBS} -pthread -ldl libcoroutine)
 set_property(TARGET ${BINARY}  PROPERTY CXX_STANDARD 20)

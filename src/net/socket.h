@@ -47,9 +47,9 @@ namespace tink {
         int id;
         int ud;
         DataPtr buffer;
-        ~TinkSocketMessage() {
-            printf("~TinkSocketMessage_() buff:%d", buffer.use_count());
-        }
+//        ~TinkSocketMessage() {
+//            printf("~TinkSocketMessage_() buff:%d", buffer.use_count());
+//        }
         enum Type {
             DATA = 1,
             CONNECT = 2,
@@ -79,7 +79,7 @@ namespace tink {
         };
 
         explicit Socket(int fd):sock_fd_(fd) {}
-        explicit Socket():sock_fd_(0) {}
+        explicit Socket():sock_fd_(0),type_(Type::INVALID) {}
         int Init(int id, int fd, SocketProtocol protocol, uintptr_t opaque);
         void Destroy();
         void Close() const;

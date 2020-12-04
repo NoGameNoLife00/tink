@@ -21,6 +21,114 @@
 #define WARNING_SIZE (1024*1024)
 
 namespace tink {
+    static const int MAX_INFO = 128;
+
+    struct SocketMessage {
+        int id; // socket池中的id
+        uintptr_t opaque; // 服务地址
+        int ud; // 字节数
+        DataPtr data; // 数据
+    };
+
+    struct SendObject {
+        DataPtr buffer;
+        size_t sz;
+
+        void InitFromSendBuffer(SocketSendBuffer &buf) {
+            buffer = buf.buffer;
+            sz = buf.sz;
+        }
+        void Init(char * object, size_t size) {
+            buffer = std::shared_ptr<byte>(object);
+            this->sz = size;
+        }
+    };
+
+
+    struct RequestStart {
+        int id;
+        uintptr_t opaque;
+    };
+    struct RequestBind {
+        int id;
+        int fd;
+        uintptr_t opaque;
+    };
+
+    struct RequestListen {
+        int id;
+        int fd;
+        uintptr_t opaque;
+        char host[1];
+    };
+    struct RequestClose {
+        int id;
+        int shutdown;
+        uintptr_t opaque;
+    };
+    struct RequestOpen {
+        int id;
+        int port;
+        uintptr_t opaque;
+        char host[1];
+    };
+    struct RequestSend {
+        int id;
+        size_t sz;
+        char *buffer;
+    };
+    struct RequestSendUdp {
+        RequestSend send;
+        uint8_t address[UDP_ADDRESS_SIZE];
+    };
+    struct RequestSetUdp {
+        int id;
+        uint8_t address[UDP_ADDRESS_SIZE];
+    };
+    struct RequestSetOpt {
+        int id;
+        int what;
+        int value;
+    };
+    struct RequestUdp {
+        int id;
+        int fd;
+        int family;
+        uintptr_t opaque;
+    };
+
+    struct RequestPackage {
+        RequestPackage() = default;
+        uint8_t header[8]{};	// 6 bytes dummy
+        union {
+            char buffer[256];
+            RequestOpen open;
+            RequestSend send;
+            RequestSendUdp send_udp;
+            RequestClose close;
+            RequestListen listen;
+            RequestBind bind;
+            RequestStart start;
+            RequestSetOpt setopt;
+            RequestUdp udp;
+            RequestSetUdp set_udp;
+        } u{};
+        uint8_t dummy[256]{};
+    };
+
+
+    enum class SocketType {
+        DATA = 1,
+        CONNECT = 2,
+        CLOSE = 3,
+        ACCEPT = 4,
+        ERROR = 5,
+        UDP = 6,
+        WARNING = 7,
+    };
+
+
+
     void SocketServer::UpdateTime(uint64_t time) {
         time_ = time;
     }
@@ -188,7 +296,7 @@ namespace tink {
                 int priority = (type == 'D') ? PRIORITY_HIGH : PRIORITY_LOW;
                 auto * request = (RequestSend*) buffer;
                 int ret = SendSocket_(request, result, priority, nullptr);
-                DecSendingRef(request->id);
+                DecSendingRef_(request->id);
                 return ret;
             }
             case 'A': {
@@ -239,9 +347,8 @@ namespace tink {
         event_n_ = 0;
         event_index_ = 0;
 
-        for (int i = 0; i < slot_.max_size(); i++) {
-            slot_[i] = std::make_shared<Socket>();
-            slot_[i]->SetType(Socket::Type::INVALID);
+        for (auto& s : slot_) {
+            s = std::make_shared<Socket>();
         }
 
         FD_ZERO(&rfds_);
@@ -339,7 +446,7 @@ namespace tink {
         SendRequest_(request, 'x', 0);
     }
 
-    void SocketServer::SendRequest_(RequestPackage &request, char type, int len) {
+    void SocketServer::SendRequest_(RequestPackage &request, char type, int len) const {
         request.header[6] = (uint8_t)type;
         request.header[7] = (uint8_t)len;
         for (;;) {
@@ -569,7 +676,7 @@ namespace tink {
     }
 
     // mainloop thread
-    static void ForwardMessage(SocketServer::SocketType type, bool padding, SocketMessage &result) {
+    static void ForwardMessage(SocketType type, bool padding, SocketMessage &result) {
         TinkSocketMsgPtr sm = std::make_shared<TinkSocketMessage>();
 
 
@@ -948,7 +1055,7 @@ namespace tink {
         return SOCKET_NONE;
     }
 
-    void SocketServer::DecSendingRef(int id) {
+    void SocketServer::DecSendingRef_(int id) {
         SocketPtr s = GetSocket(id);
         s->DecSendingRef(id);
     }

@@ -4,13 +4,11 @@
 #include <base_module.h>
 #include <socket.h>
 
-#define REMOTE_MAX 256
-
-
 namespace tink::Service {
 
     class ServiceMaster : public BaseModule {
     public:
+
         ServiceMaster();
 
         int Init(ContextPtr ctx, std::string_view param) override;
@@ -24,9 +22,8 @@ namespace tink::Service {
         int SocketId(int id);
 
     private:
-
+        static constexpr int REMOTE_MAX = 256;
         static int MainLoop_(Context& ctx, void* ud, int type, int session, uint32_t source, DataPtr msg, size_t sz);
-
         void OnConnected_(int id);
         void Broadcast(const byte *name, size_t sz, uint32_t handle);
         void SendTo_(int id, const void *buf, int sz, uint32_t handle);

@@ -115,7 +115,7 @@ namespace tink {
                 }
                 // inc sending only matching the same socket id
                 auto cur = sending_.load();
-                if (sending_.compare_exchange_strong(cur, sending_ + 1)) {
+                if (sending_.compare_exchange_weak(cur, sending_ + 1)) {
                     return;
                 }
                 // atom inc failed, retry

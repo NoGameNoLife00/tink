@@ -25,7 +25,6 @@ namespace tink {
     typedef std::shared_ptr<MessageHandler> MessageHandlerPtr;
     typedef std::shared_ptr<ConnManager> ConnManagerPtr;
 
-
     namespace Global {
         extern thread_local uint32_t t_handle;
         extern uint32_t monitor_exit;
@@ -39,7 +38,6 @@ namespace tink {
         inline void InitThread(int m) { t_handle = static_cast<uint32_t>(-m); }
         inline void SetHandle(uint32_t h) { t_handle = h; }
     }
-
 
     class Server : public std::enable_shared_from_this<Server> {
     public:
