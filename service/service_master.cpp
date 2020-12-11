@@ -34,7 +34,7 @@ namespace tink::Service {
         ctx_->Send(0, gate, PTYPE_TEXT, 0, tmp, n);
         ctx_->Send(0, gate, PTYPE_TEXT, 0, start, 5);
 
-        ctx_->SetCallBack(MainLoop_, this);
+        ctx_->SetCallBack(this, 0, 0, 0, tink::DataPtr(), 0);
         return E_OK;
     }
 
@@ -54,7 +54,7 @@ namespace tink::Service {
         BaseModule::Signal(signal);
     }
 
-    int ServiceMaster::MainLoop_(Context &ctx, void *ud, int type, int session, uint32_t source, DataPtr msg, size_t sz) {
+    int ServiceMaster::MainLoop_(void *ud, int type, int session, uint32_t source, DataPtr msg, size_t sz) {
         auto m = reinterpret_cast<ServiceMaster*>(ud);
         if (type == PTYPE_TEXT) {
             m->DispatchSocket(std::reinterpret_pointer_cast<TinkSocketMessage>(msg), sz);

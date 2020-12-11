@@ -22,7 +22,7 @@ namespace tink {
 
 
     void Context::SetCallBack(const ContextCallBack &cb, void *ud) {
-        this->callback_ = cb;
+        callback_ = cb;
         cb_ud_ = ud;
     }
 
@@ -55,11 +55,11 @@ namespace tink {
         // 消息回调
         if (profile_) {
             cpu_start_ = TimeUtil::GetThreadTime();
-            callback_(*this, cb_ud_, type, msg.session, msg.source, msg.data, sz);
+            callback_(cb_ud_, type, msg.session, msg.source, msg.data, sz);
             uint64_t cost_tm = TimeUtil::GetThreadTime() - cpu_start_;
             cpu_cost_ += cost_tm;
         } else {
-            callback_(*this, cb_ud_, type, msg.session, msg.source, msg.data, sz);
+            callback_(cb_ud_, type, msg.session, msg.source, msg.data, sz);
         }
     }
 

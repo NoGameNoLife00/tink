@@ -55,7 +55,7 @@ namespace tink::Service {
         msg_pool_ = std::make_shared<MessagePool>(100, 100);
         this->client_tag_ = client_tag;
         this->header_size_ = header == 'S' ? 2 : 4;
-        ctx->SetCallBack(CallBack_, this);
+        ctx->SetCallBack(this, 0, 0, 0, <#initializer#>, 0);
         return StartListen(binding);
     }
 
@@ -98,7 +98,7 @@ namespace tink::Service {
     }
 
     int
-    ServiceGate::CallBack_(Context &ctx, void *ud, int type, int session, uint32_t source, DataPtr &msg, size_t sz) {
+    ServiceGate::CallBack_(void *ud, int type, int session, uint32_t source, DataPtr &msg, size_t sz) {
         auto *g = static_cast<ServiceGate *>(ud);
         switch (type) {
             case PTYPE_TEXT:

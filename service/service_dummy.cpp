@@ -6,14 +6,14 @@ namespace tink::Service {
     int ServiceDummy::Init(std::shared_ptr<Context> ctx, std::string_view param) {
         ctx_ = ctx;
         HARBOR.Start(ctx);
-        ctx->SetCallBack(MainLoop_, this);
+        ctx_->SetCallBack(this, 0, 0, 0, tink::DataPtr(), 0);
     }
 
     void ServiceDummy::Release() {
         BaseModule::Release();
     }
 
-    int ServiceDummy::MainLoop_(Context &ctx, void *ud, int type, int session, uint32_t source, DataPtr msg, size_t sz) {
+    int ServiceDummy::MainLoop_(void *ud, int type, int session, uint32_t source, DataPtr msg, size_t sz) {
         auto *d = static_cast<ServiceDummy*>(ud);
         RemoteMessagePtr r_msg = std::reinterpret_pointer_cast<RemoteMessage>(msg);
         switch (type) {
@@ -26,7 +26,7 @@ namespace tink::Service {
                 if (r_msg->destination.handle == 0) {
                     d->SendName_(source, r_msg->destination.name, type, session, r_msg->message, r_msg->size);
                 } else {
-                    ctx.Send(source, r_msg->destination.handle, type, session, r_msg->message, r_msg->size);
+                    d->ctx_->Send(source, r_msg->destination.handle, type, session, r_msg->message, r_msg->size);
                 }
                 return 0;
             }

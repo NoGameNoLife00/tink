@@ -15,8 +15,6 @@
 #include <timer.h>
 #include <monitor.h>
 
-
-#define MAX_BUF_SIZE 2048
 namespace tink {
     static volatile int SIG = 0;
 
@@ -221,14 +219,13 @@ namespace tink {
 
         thread_list.emplace_back(std::make_shared<Thread>([m] { return ThreadMonitor(m); }, "monitor"));
         thread_list.emplace_back(std::make_shared<Thread>([m] { return ThreadTimer(m); }, "timer"));
-        thread_list.emplace_back(std::make_shared<Thread>( [m] { return ThreadSocket(m); }, "socket"));
-
+        thread_list.emplace_back(std::make_shared<Thread>([m] { return ThreadSocket(m); }, "socket"));
 
         static int weight[] = {
-                -1, -1, -1, -1, 0, 0, 0, 0,
-                1, 1, 1, 1, 1, 1, 1, 1,
-                2, 2, 2, 2, 2, 2, 2, 2,
-                3, 3, 3, 3, 3, 3, 3, 3, };
+        -1, -1, -1, -1, 0, 0, 0, 0,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        2, 2, 2, 2, 2, 2, 2, 2,
+        3, 3, 3, 3, 3, 3, 3, 3, };
 
         for (int i = 0; i < thread; i++) {
             int w = 0;

@@ -42,7 +42,7 @@ namespace tink::Service {
         int RemoteSendHandle(uint32_t source, uint32_t destination, int type, int session, DataPtr msg, size_t sz);
     private:
 
-        static int MainLoop_(Context& ctx, void* ud, int type, int session, uint32_t source, DataPtr msg, size_t sz);
+        static int MainLoop_(void *ud, int type, int session, uint32_t source, DataPtr msg, size_t sz);
         void CloseSlave_(int id);
         void DispatchQueue_(int id);
         void DispatchNameQueue_(HarborMap::iterator &node);

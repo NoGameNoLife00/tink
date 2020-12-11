@@ -34,4 +34,11 @@
 #include <common.h>
 #include <error_code.h>
 #include <version.h>
+
+
+namespace tink {
+
+}
+
+
 #endif //TINK_TINK_H

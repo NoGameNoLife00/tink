@@ -29,12 +29,12 @@ namespace tink::Service {
         if (slave_ == 0) {
             return E_FAILED;
         }
-        ctx_->SetCallBack(MainLoop_, this);
+        ctx_->SetCallBack(this, 0, 0, 0, tink::DataPtr(), 0);
         HARBOR.Start(ctx_);
         return 0;
     }
 
-    int ServiceHarbor::MainLoop_(Context &ctx, void *ud, int type, int session, uint32_t source, DataPtr msg, size_t sz) {
+    int ServiceHarbor::MainLoop_(void *ud, int type, int session, uint32_t source, DataPtr msg, size_t sz) {
         auto* h = static_cast<ServiceHarbor*>(ud);
         switch (type) {
         case PTYPE_SOCKET: {

@@ -21,7 +21,7 @@ namespace tink::Service {
 
         void Release() override;
     private:
-        static int MainLoop_(Context& ctx, void* ud, int type, int session, uint32_t source, DataPtr msg, size_t sz);
+        static int MainLoop_(void *ud, int type, int session, uint32_t source, DataPtr msg, size_t sz);
 
         void UpdateName_(const std::string &name, uint32_t handle);
         void SendName_(uint32_t source, const std::string &name, int type, int session, DataPtr msg, size_t sz);

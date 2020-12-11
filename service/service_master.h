@@ -23,7 +23,7 @@ namespace tink::Service {
 
     private:
         static constexpr int REMOTE_MAX = 256;
-        static int MainLoop_(Context& ctx, void* ud, int type, int session, uint32_t source, DataPtr msg, size_t sz);
+        static int MainLoop_(void *ud, int type, int session, uint32_t source, DataPtr msg, size_t sz);
         void OnConnected_(int id);
         void Broadcast(const byte *name, size_t sz, uint32_t handle);
         void SendTo_(int id, const void *buf, int sz, uint32_t handle);

@@ -11,7 +11,7 @@ namespace tink {
     class BaseModule;
     typedef std::shared_ptr<BaseModule> ModulePtr;
     typedef std::shared_ptr<Context> ContextPtr;
-    typedef std::function<int (Context& ctx, void* ud, int type, int session, uint32_t source, DataPtr& msg, size_t sz)> ContextCallBack;
+    typedef std::function<int (void* ud, int type, int session, uint32_t source, DataPtr msg, size_t sz)> ContextCallBack;
 
     struct DropT {
         uint32_t handle;

@@ -16,15 +16,6 @@
 #define TINK_SERVER tink::Singleton<tink::Server>::GetInstance()
 
 namespace tink {
-    class Connection;
-    class MessageHandler;
-    class ConnManager;
-    class BaseRouter;
-    typedef std::shared_ptr<Connection> ConnectionPtr;
-    typedef std::function<void(ConnectionPtr&)> ConnHookFunc;
-    typedef std::shared_ptr<MessageHandler> MessageHandlerPtr;
-    typedef std::shared_ptr<ConnManager> ConnManagerPtr;
-
     namespace Global {
         extern thread_local uint32_t t_handle;
         extern uint32_t monitor_exit;

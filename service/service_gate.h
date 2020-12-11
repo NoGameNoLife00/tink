@@ -31,7 +31,7 @@ namespace tink::Service {
         void DispatchMessage(Connection &c, int id, DataPtr data, int sz);
         typedef PoolSet<Connection> ConnPool;
     private:
-        static int CallBack_(Context& ctx, void* ud, int type, int session, uint32_t source, DataPtr& msg, size_t sz);
+        static int CallBack_(void *ud, int type, int session, uint32_t source, DataPtr &msg, size_t sz);
         void ForwardAgent_(int fd, uint32_t agent_addr, uint32_t client_addr);
         void Forward_(Connection& c, int size);
         void Report_(const char * data, ...);
