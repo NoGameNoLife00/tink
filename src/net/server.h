@@ -16,6 +16,10 @@
 #define TINK_SERVER tink::Singleton<tink::Server>::GetInstance()
 
 namespace tink {
+    class Server;
+
+    std::shared_ptr<Server>& GetGlobalServer();
+
     namespace Global {
         extern thread_local uint32_t t_handle;
         extern uint32_t monitor_exit;

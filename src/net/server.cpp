@@ -18,13 +18,16 @@
 namespace tink {
     static volatile int SIG = 0;
 
+    std::shared_ptr<Server> &GetGlobalServer() {
+        static std::shared_ptr<Server> g_server;
+        return g_server;
+    }
+
     namespace Global {
         thread_local uint32_t t_handle = 0;
         uint32_t monitor_exit = 0;
         bool profile = false;
     }
-
-
 
     static void HandleHup(int signal) {
         if (signal == SIGHUP) {
@@ -155,10 +158,10 @@ namespace tink {
             }
         }
         uint32_t handle = q->Handle();
-        // »ñÈ¡ÏûÏ¢¶ÓÁÐµÄctx
+        // ï¿½ï¿½È¡ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½Ðµï¿½ctx
         ContextPtr ctx = HANDLE_STORAGE.HandleGrab(handle);
         if (!ctx) {
-            // ÊÍ·ÅÏûÏ¢¶ÓÁÐ
+            // ï¿½Í·ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½
             struct DropT d = { handle };
             q->Release(Context::DropMessage, &d);
             return GLOBAL_MQ.Pop();
@@ -167,11 +170,11 @@ namespace tink {
         TinkMessage msg;
         for (int i = 0; i < n; i++) {
             if (!q->Pop(msg)) {
-                // µ±Ç°ÏûÏ¢¶ÓÁÐÎª¿ÕÔòÔÙµ¯³öÒ»¸öÏûÏ¢¶ÓÁÐ¸øÉÏ²ã¼ÌÐø´¦Àí
+                // ï¿½ï¿½Ç°ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½Ùµï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½Ð¸ï¿½ï¿½Ï²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 return GLOBAL_MQ.Pop();
             } else if (i == 0 && weight >= 0) {
-                // weight:-1±íÊ¾Ö»´¦ÀíÒ»ÌõÏûÏ¢
-                // weight>0, i:0Ê±: n=ËùÓÐÏûÏ¢Êý*1/(2^weight) Ìõ
+                // weight:-1ï¿½ï¿½Ê¾Ö»ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ï¢
+                // weight>0, i:0Ê±: n=ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½*1/(2^weight) ï¿½ï¿½
                 n = q->Size();
                 n >>= weight;
             }
@@ -182,7 +185,7 @@ namespace tink {
         assert(q == ctx->Queue());
         MQPtr nq = GLOBAL_MQ.Pop();
         if (nq) {
-            // È«¾ÖÏûÏ¢¶ÓÁÐ²»Îª¿Õ¾Í½«µ±Ç°ÏûÏ¢¶ÓÁÐpush½øÈ¥,¹©ÏÂ´Î¹¤×÷Ïß³Ìµ÷¶È
+            // È«ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½Ð²ï¿½Îªï¿½Õ¾Í½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½pushï¿½ï¿½È¥,ï¿½ï¿½ï¿½Â´Î¹ï¿½ï¿½ï¿½ï¿½ß³Ìµï¿½ï¿½ï¿½
             GLOBAL_MQ.Push(q);
             q = nq;
         }
