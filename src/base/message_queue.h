@@ -104,6 +104,11 @@ namespace tink {
         bool in_global;
     };
 
+    std::shared_ptr<GlobalMQ> GetGlobalMQ() {
+        static std::shared_ptr<GlobalMQ> g_global_mq;
+        return g_global_mq;
+    }
+
 
 }
 #endif //TINK_MESSAGE_QUEUE_H

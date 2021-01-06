@@ -3,7 +3,7 @@
 #include <cassert>
 #include <cstring>
 #include <error_code.h>
-#include <handle_storage.h>
+#include <handle_manager.h>
 #include <netdb.h>
 #include <scope_guard.h>
 

@@ -5,10 +5,15 @@
 #include <list>
 #include <message.h>
 #include <message_queue.h>
-#define GLOBAL_MQ tink::Singleton<tink::GlobalMQ>::GetInstance()
+
+
+//#define GLOBAL_MQ tink::Singleton<tink::GlobalMQ>::GetInstance()
+
 namespace tink {
     class MessageQueue;
+
     typedef std::shared_ptr<MessageQueue> MQPtr;
+
     class GlobalMQ {
     public:
         void Push(MQPtr mq);
@@ -17,6 +22,8 @@ namespace tink {
         std::list<MQPtr> list;
         mutable Mutex mutex_;
     };
+
+    std::shared_ptr<GlobalMQ> GetGlobalMQ();
 }
 
 

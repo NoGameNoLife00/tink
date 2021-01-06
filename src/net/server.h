@@ -7,13 +7,16 @@
 #include <unordered_map>
 #include <map>
 #include <vector>
-#include <socket.h>
 #include <functional>
-#include <context.h>
-#include <socket_server.h>
-#include <config.h>
 
-#define TINK_SERVER tink::Singleton<tink::Server>::GetInstance()
+
+#include "base/context.h"
+#include "base/config.h"
+#include "base/module_manager.h"
+#include "net/socket.h"
+#include "net/socket_server.h"
+#include "base/handle_manager.h"
+#include "net/harbor.h"
 
 namespace tink {
     class Server;
@@ -34,14 +37,24 @@ namespace tink {
         inline void SetHandle(uint32_t h) { t_handle = h; }
     }
 
-    class Server : public std::enable_shared_from_this<Server> {
+    class Server : public std::enable_shared_from_this<Server> ,noncopyable {
     public:
         int Init(ConfigPtr config);
         int Start(); // 启动
         int Stop(); // 停止
         void Bootstrap(const std::string& cmdline);
+
+        ModuleMgr* GetModuleMgr() const;
+        HandleMgr* GetHandlerMgr() const;
+        Harbor* GetHarbor() const;
+        GlobalMQ* GetGlobalMQ() const;
     private:
         ConfigPtr config_;
+
+        std::unique_ptr<ModuleMgr> module_mgr_;
+        std::unique_ptr<HandleMgr> handler_mgr_;
+        std::unique_ptr<Harbor> harbor_;
+        std::unique_ptr<GlobalMQ> global_mq_;
     };
 }
 

@@ -6,10 +6,10 @@
 #include <common.h>
 #include <message.h>
 #include <context.h>
-#include <handle_storage.h>
+#include <handle_manager.h>
 #include <csignal>
 #include <daemon.h>
-#include <module_manage.h>
+#include <module_manager.h>
 #include <thread.h>
 #include <harbor.h>
 #include <timer.h>
@@ -152,29 +152,29 @@ namespace tink {
 
     MQPtr ContextMessageDispatch(MonitorNode &m_node, MQPtr q, int weight) {
         if (!q) {
-            q = GLOBAL_MQ.Pop();
+            q = GetGlobalMQ().Pop();
             if (!q) {
                 return nullptr;
             }
         }
         uint32_t handle = q->Handle();
-        // ��ȡ��Ϣ���е�ctx
+        // ?????????��?ctx
         ContextPtr ctx = HANDLE_STORAGE.HandleGrab(handle);
         if (!ctx) {
-            // �ͷ���Ϣ����
+            // ??????????
             struct DropT d = { handle };
             q->Release(Context::DropMessage, &d);
-            return GLOBAL_MQ.Pop();
+            return GetGlobalMQ().Pop();
         }
         int n = 1;
         TinkMessage msg;
         for (int i = 0; i < n; i++) {
             if (!q->Pop(msg)) {
-                // ��ǰ��Ϣ����Ϊ�����ٵ���һ����Ϣ���и��ϲ��������
-                return GLOBAL_MQ.Pop();
+                // ?????????????????????????????��???????????
+                return GetGlobalMQ().Pop();
             } else if (i == 0 && weight >= 0) {
-                // weight:-1��ʾֻ����һ����Ϣ
-                // weight>0, i:0ʱ: n=������Ϣ��*1/(2^weight) ��
+                // weight:-1??????????????
+                // weight>0, i:0?: n=?????????*1/(2^weight) ??
                 n = q->Size();
                 n >>= weight;
             }
@@ -183,10 +183,10 @@ namespace tink {
             m_node.Trigger(0, 0);
         }
         assert(q == ctx->Queue());
-        MQPtr nq = GLOBAL_MQ.Pop();
+        MQPtr nq = GetGlobalMQ().Pop();
         if (nq) {
-            // ȫ����Ϣ���в�Ϊ�վͽ���ǰ��Ϣ����push��ȥ,���´ι����̵߳���
-            GLOBAL_MQ.Push(q);
+            // ?????????��????????????????push???,????��?????????
+            GetGlobalMQ().Push(q);
             q = nq;
         }
         return q;
@@ -259,11 +259,27 @@ namespace tink {
         int pos = cmdline.find_first_of(' ');
         std::string name = cmdline.substr(0, pos);
         std::string args = cmdline.substr(pos+1);
-        ContextPtr ctx = HANDLE_STORAGE.CreateContext(name, args);
+        ContextPtr ctx = handler_mgr_->CreateContext(name, args);
         if (!ctx) {
             spdlog::error("bootstrap error: {}", cmdline);
             exit(1);
         }
+    }
+
+    ModuleMgr *Server::GetModuleMgr() const {
+        return module_mgr_.get();
+    }
+
+    HandleMgr *Server::GetHandlerMgr() const {
+        return handler_mgr_.get();
+    }
+
+    Harbor *Server::GetHarbor() const {
+        return harbor_.get();
+    }
+
+    GlobalMQ *Server::GetGlobalMQ() const {
+        return global_mq_.get();
     }
 
 

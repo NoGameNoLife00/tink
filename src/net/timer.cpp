@@ -2,7 +2,7 @@
 #include <error_code.h>
 #include "timer.h"
 #include "message.h"
-#include "handle_storage.h"
+#include "handle_manager.h"
 
 namespace tink {
     namespace TimeUtil {

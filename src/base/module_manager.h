@@ -1,11 +1,11 @@
-#ifndef TINK_MODULE_MANAGE_H
-#define TINK_MODULE_MANAGE_H
+#ifndef TINK_MODULE_MANAGER_H
+#define TINK_MODULE_MANAGER_H
 
 #include <base_module.h>
 #include <singleton.h>
-#define MODULE_MNG tink::Singleton<tink::ModuleManage>::GetInstance()
+#define MODULE_MNG tink::Singleton<tink::ModuleMgr>::GetInstance()
 namespace tink {
-    class ModuleManage {
+    class ModuleMgr {
     public:
         constexpr static int MAX_MODULE_TYPE = 64;
         int Init(std::string_view path);
@@ -21,4 +21,4 @@ namespace tink {
 
 
 
-#endif //TINK_MODULE_MANAGE_H
+#endif //TINK_MODULE_MANAGER_H

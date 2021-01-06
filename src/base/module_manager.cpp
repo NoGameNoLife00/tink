@@ -1,7 +1,7 @@
 #include <cstring>
 #include <dlfcn.h>
 #include <error_code.h>
-#include <module_manage.h>
+#include <module_manager.h>
 #include <string_util.h>
 
 namespace tink {
@@ -46,7 +46,7 @@ namespace tink {
         return dl;
     }
 
-    ModulePtr ModuleManage::Query(std::string_view name) {
+    ModulePtr ModuleMgr::Query(std::string_view name) {
         ModulePtr result = Query_(name);
         if (result) {
             return result;
@@ -68,7 +68,7 @@ namespace tink {
         return result;
     }
 
-    ModulePtr ModuleManage::Query_(std::string_view name) {
+    ModulePtr ModuleMgr::Query_(std::string_view name) {
         for (auto &it : m_) {
             if (strcmp(it->Name().c_str(), name.data()) != 0) {
                 return it;
@@ -77,7 +77,7 @@ namespace tink {
         return nullptr;
     }
 
-    int ModuleManage::Init(std::string_view path) {
+    int ModuleMgr::Init(std::string_view path) {
         path_ = path;
         return E_OK;
     }

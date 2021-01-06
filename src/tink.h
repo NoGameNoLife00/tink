@@ -5,13 +5,13 @@
 #include <base/copyable.h>
 #include <base/config.h>
 #include <base/global_mq.h>
-#include <base/module_manage.h>
+#include <base/module_manager.h>
 #include <base/pool_set.h>
 #include <base/scope_guard.h>
 #include <base/count_down_latch.h>
 #include <base/buffer.h>
 #include <base/daemon.h>
-#include <base/handle_storage.h>
+#include <base/handle_manager.h>
 #include <base/message_queue.h>
 #include <base/leaked_object_detector.h>
 #include <base/context.h>

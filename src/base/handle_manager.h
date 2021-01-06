@@ -1,5 +1,5 @@
-#ifndef TINK_HANDLE_STORAGE_H
-#define TINK_HANDLE_STORAGE_H
+#ifndef TINK_HANDLE_MANAGER_H
+#define TINK_HANDLE_MANAGER_H
 
 
 #include <shared_mutex>
@@ -8,11 +8,11 @@
 #include <singleton.h>
 #include <string>
 
-#define HANDLE_STORAGE tink::Singleton<tink::HandleStorage>::GetInstance()
+#define HANDLE_STORAGE tink::Singleton<tink::HandleMgr>::GetInstance()
 
 namespace tink {
 
-    class HandleStorage {
+    class HandleMgr {
     public:
         int Init(int harbor);
         // 创建一个新服务的context
@@ -37,4 +37,4 @@ namespace tink {
 
 
 
-#endif //TINK_HANDLE_STORAGE_H
+#endif //TINK_HANDLE_MANAGER_H

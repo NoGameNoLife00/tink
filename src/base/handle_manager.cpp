@@ -2,12 +2,12 @@
 #include <cassert>
 #include <spdlog/spdlog.h>
 #include <string>
-#include <handle_storage.h>
-#include <module_manage.h>
+#include <handle_manager.h>
+#include <module_manager.h>
 
 namespace tink {
 
-    int HandleStorage::Init(int harbor) {
+    int HandleMgr::Init(int harbor) {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         handle_index_ = 1;
         // harbor取最高8位, 组网最多2^8=255个节点
@@ -15,7 +15,7 @@ namespace tink {
         return E_OK;
     }
 
-    uint32_t HandleStorage::Register(ContextPtr ctx) {
+    uint32_t HandleMgr::Register(ContextPtr ctx) {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         uint32_t handle = handle_index_;
         assert(handle_map_.size() <= HANDLE_MASK);
@@ -33,7 +33,7 @@ namespace tink {
         return 0;
     }
 
-    int HandleStorage::Unregister(int handle) {
+    int HandleMgr::Unregister(int handle) {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         uint32_t hash = handle & HANDLE_MASK;
         auto it = handle_map_.find(hash);
@@ -58,7 +58,7 @@ namespace tink {
         return E_OK;
     }
 
-    void HandleStorage::UnregisterAll() {
+    void HandleMgr::UnregisterAll() {
         for (auto& it : handle_map_) {
             it.second->Destroy();
         }
@@ -66,7 +66,7 @@ namespace tink {
         name_map_.clear();
     }
 
-    std::string HandleStorage::BindName(uint32_t handle, std::string_view name) {
+    std::string HandleMgr::BindName(uint32_t handle, std::string_view name) {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         if (auto it = name_map_.find(name.data()); it != name_map_.end()) {
             return "";
@@ -75,14 +75,14 @@ namespace tink {
         return ret.first->first;
     }
 
-    uint32_t HandleStorage::FindName(std::string_view name) {
+    uint32_t HandleMgr::FindName(std::string_view name) {
         if (auto it = name_map_.find(name.data()); it != name_map_.end()) {
             return it->second;
         }
         return 0;
     }
 
-    ContextPtr HandleStorage::HandleGrab(uint32_t handle) {
+    ContextPtr HandleMgr::HandleGrab(uint32_t handle) {
         std::shared_lock<std::shared_mutex> lock(mutex_);
         uint32_t hash = handle & (HANDLE_MASK);
         if (auto it = handle_map_.find(hash); it != handle_map_.end()) {
@@ -91,7 +91,7 @@ namespace tink {
         return nullptr;
     }
 
-    int HandleStorage::PushMessage(uint32_t handle, TinkMessage &msg) {
+    int HandleMgr::PushMessage(uint32_t handle, TinkMessage &msg) {
         ContextPtr ctx = HandleGrab(handle);
         if (!ctx) {
             return E_FAILED;
@@ -100,7 +100,7 @@ namespace tink {
         return E_OK;
     }
 
-    void HandleStorage::ContextEndless(uint32_t handle) {
+    void HandleMgr::ContextEndless(uint32_t handle) {
         ContextPtr ctx = HandleGrab(handle);
         if (!ctx) {
             return ;
@@ -108,7 +108,7 @@ namespace tink {
         ctx->SetEndless(true);
     }
 
-    uint32_t HandleStorage::QueryName(std::string_view name) {
+    uint32_t HandleMgr::QueryName(std::string_view name) {
         switch (name[0]) {
             case ':':
                 return strtoul(name.data() + 1, nullptr, 16);
@@ -119,7 +119,7 @@ namespace tink {
         return 0;
     }
 
-    ContextPtr HandleStorage::CreateContext(std::string_view name, std::string_view param) {
+    ContextPtr HandleMgr::CreateContext(std::string_view name, std::string_view param) {
         ContextPtr ctx = std::make_shared<Context>();
         auto mod = MODULE_MNG.Query(name); // 获取对应的模块
         if (!mod) {

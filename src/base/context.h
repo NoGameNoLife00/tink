@@ -50,7 +50,7 @@ namespace tink {
 
         std::string Command(std::string_view cmd, std::string_view param);
         std::string result;
-        friend class HandleStorage;
+        friend class HandleMgr;
     private:
         static std::atomic_int total;
         // 预处理消息数据
