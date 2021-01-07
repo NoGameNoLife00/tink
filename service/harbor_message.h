@@ -2,11 +2,11 @@
 #define TINK_HARBOR_MESSAGE_H
 
 #include <sys/types.h>
-#include <common.h>
 #include <string>
 #include <list>
 #include <memory>
 #include <unordered_map>
+#include "common.h"
 
 namespace tink::Service {
     struct RemoteMsgHeader {

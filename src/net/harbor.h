@@ -1,14 +1,18 @@
 
 #ifndef TINK_HARBOR_H
 #define TINK_HARBOR_H
-#include <common.h>
-#include <context.h>
+#include "common.h"
+#include "base/context.h"
 
 #define HARBOR tink::Singleton<tink::Harbor>::GetInstance()
 
 namespace tink {
+    class Context;
+
     class Harbor {
     public:
+        using ContextPtr = std::shared_ptr<Context>;
+
         void Init(int harbor);
         void Start(ContextPtr ctx);
         void Exit();

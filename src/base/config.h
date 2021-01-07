@@ -6,10 +6,9 @@
 #define TINK_CONFIG_H
 
 #include <memory>
-#include <singleton.h>
 #include <string>
-#include <spdlog/spdlog.h>
-#include <string_util.h>
+#include "spdlog/spdlog.h"
+#include "base/string_util.h"
 
 namespace tink {
     // 存储框架的全局参数

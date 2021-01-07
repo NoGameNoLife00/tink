@@ -1,12 +1,12 @@
 #ifndef TINK_SOCK_ADDRESS_H
 #define TINK_SOCK_ADDRESS_H
-
-#include <copyable.h>
-#include <cstdint>
-#include <string_util.h>
 #include <memory>
 #include <netinet/in.h>
-#include <socket_api.h>
+#include <cstdint>
+#include "base/copyable.h"
+#include "base/string_util.h"
+#include "net/socket_api.h"
+
 namespace tink {
     enum class SocketProtocol {
         TCP = 0,

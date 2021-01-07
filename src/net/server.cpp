@@ -1,24 +1,22 @@
-#include <server.h>
-#include <cstring>
 #include <unistd.h>
-#include <config.h>
-#include <scope_guard.h>
-#include <common.h>
-#include <message.h>
-#include <context.h>
-#include <handle_manager.h>
 #include <csignal>
-#include <daemon.h>
-#include <module_manager.h>
-#include <thread.h>
-#include <harbor.h>
-#include <timer.h>
-#include <monitor.h>
+#include "base/config.h"
+#include "base/scope_guard.h"
+#include "base/context.h"
+#include "base/daemon.h"
+#include "base/handle_manager.h"
+#include "base/module_manager.h"
+#include "base/thread.h"
+#include "net/harbor.h"
+#include "net/timer_manager.h"
+#include "net/monitor.h"
+#include "net/server.h"
+#include "common.h"
 
 namespace tink {
     static volatile int SIG = 0;
 
-    std::shared_ptr<Server> &GetGlobalServer() {
+    ServerPtr &GetGlobalServer() {
         static std::shared_ptr<Server> g_server;
         return g_server;
     }
@@ -46,6 +44,12 @@ namespace tink {
 
 
     int Server::Init(ConfigPtr config) {
+        harbor_ = std::make_unique<Harbor>();
+        handler_mgr_ = std::make_unique<HandleMgr>(shared_from_this());
+        module_mgr_ = std::make_unique<ModuleMgr>();
+        timer_mgr_ = std::make_unique<TimerMgr>();
+        socket_server_ = std::make_unique<SocketServer>();
+
         config_ = config;
         Global::InitThread(THREAD_MAIN);
         Sigign();
@@ -61,11 +65,13 @@ namespace tink {
                 exit(1);
             }
         }
-        HARBOR.Init(config_->GetHarbor());
-        HANDLE_STORAGE.Init(config_->GetHarbor());
-        MODULE_MNG.Init(config_->GetModulePath());
-        TIMER.Init();
-        SOCKET_SERVER.Init(TIMER.Now());
+
+        harbor_->Init(config->GetHarbor());
+        handler_mgr_->Init(config->GetHarbor());
+        module_mgr_->Init(config->GetModulePath());
+        timer_mgr_->Init();
+        socket_server_->Init(timer_mgr_->Now());
+
         Bootstrap(config->GetBootstrap());
         return 0;
     }
@@ -280,6 +286,14 @@ namespace tink {
 
     GlobalMQ *Server::GetGlobalMQ() const {
         return global_mq_.get();
+    }
+
+    TimerMgr *Server::GetTimerMgr() const {
+        return timer_mgr_.get();
+    }
+
+    SocketServer *Server::GetSocketServer() const {
+        return socket_server_.get();
     }
 
 

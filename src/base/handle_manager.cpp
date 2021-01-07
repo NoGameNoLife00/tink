@@ -1,9 +1,8 @@
-#include <error_code.h>
-#include <cassert>
-#include <spdlog/spdlog.h>
 #include <string>
-#include <handle_manager.h>
-#include <module_manager.h>
+#include <cassert>
+#include "spdlog/spdlog.h"
+#include "error_code.h"
+#include "base/handle_manager.h"
 
 namespace tink {
 
@@ -120,8 +119,8 @@ namespace tink {
     }
 
     ContextPtr HandleMgr::CreateContext(std::string_view name, std::string_view param) {
-        ContextPtr ctx = std::make_shared<Context>();
-        auto mod = MODULE_MNG.Query(name); // 获取对应的模块
+        ContextPtr ctx = std::make_shared<Context>(server_);
+        auto mod = server_->GetModuleMgr()->Query(name); // 获取对应的模块
         if (!mod) {
             return nullptr;
         }
@@ -135,20 +134,20 @@ namespace tink {
         ctx->cpu_start_ = 0;
         ctx->profile_ = false;
         ctx->message_count_ = 0;
-        ctx->handle_ = HANDLE_STORAGE.Register(ctx); // 获取唯一标识
+        ctx->handle_ = server_->GetHandlerMgr()->Register(ctx); // 获取唯一标识
         if (ctx->handle_ == 0) {
             return nullptr;
         }
-        ctx->queue_ = std::make_shared<MessageQueue>(ctx->handle_);
+        ctx->queue_ = std::make_shared<MessageQueue>(server_->GetGlobalMQ(), ctx->handle_);
         ctx->mutex_.lock();
         int ret = mod->Init(ctx, param); // 模块初始化
         ctx->mutex_.unlock();
         if (ret == E_OK) {
             ctx->init_ = true;
-            GLOBAL_MQ.Push(ctx->queue_);
+            server_->GetGlobalMQ()->Push(ctx->queue_);
         } else {
             spdlog::error("Failed launch {}", name);
-            HANDLE_STORAGE.Unregister(ctx->handle_);
+            server_->GetHandlerMgr()->Unregister(ctx->handle_);
             struct DropT d = {ctx->handle_};
             ctx->queue_->Release(Context::DropMessage, &d);
         }

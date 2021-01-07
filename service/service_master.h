@@ -1,8 +1,8 @@
 #ifndef TINK_SERVICE_MASTER_H
 #define TINK_SERVICE_MASTER_H
 
-#include <base_module.h>
-#include <socket.h>
+#include "base/base_module.h"
+#include "net/socket.h"
 
 namespace tink::Service {
 

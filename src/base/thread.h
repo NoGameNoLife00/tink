@@ -3,7 +3,7 @@
 
 #include <functional>
 #include <atomic>
-#include <count_down_latch.h>
+#include "base/count_down_latch.h"
 
 namespace tink{
 

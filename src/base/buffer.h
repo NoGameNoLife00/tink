@@ -3,11 +3,12 @@
 
 
 #include <cstdint>
-#include <common.h>
 #include <cstring>
 #include <utility>
-#include <error_code.h>
-#include <noncopyable.h>
+#include "base/noncopyable.h"
+#include "common.h"
+#include "error_code.h"
+
 
 namespace tink {
     class FixBuffer : noncopyable {

@@ -9,19 +9,23 @@
 #include <vector>
 #include <functional>
 
-
 #include "base/context.h"
 #include "base/config.h"
 #include "base/module_manager.h"
+#include "base/handle_manager.h"
 #include "net/socket.h"
 #include "net/socket_server.h"
-#include "base/handle_manager.h"
 #include "net/harbor.h"
+#include "net/timer_manager.h"
 
 namespace tink {
     class Server;
+    class HandleMgr;
+    class ModuleMgr;
+    class Harbor;
 
-    std::shared_ptr<Server>& GetGlobalServer();
+    typedef std::shared_ptr<Server> ServerPtr;
+    ServerPtr& GetGlobalServer();
 
     namespace Global {
         extern thread_local uint32_t t_handle;
@@ -37,7 +41,7 @@ namespace tink {
         inline void SetHandle(uint32_t h) { t_handle = h; }
     }
 
-    class Server : public std::enable_shared_from_this<Server> ,noncopyable {
+    class Server : public noncopyable, std::enable_shared_from_this<Server> {
     public:
         int Init(ConfigPtr config);
         int Start(); // 启动
@@ -48,6 +52,8 @@ namespace tink {
         HandleMgr* GetHandlerMgr() const;
         Harbor* GetHarbor() const;
         GlobalMQ* GetGlobalMQ() const;
+        TimerMgr* GetTimerMgr() const;
+        SocketServer* GetSocketServer() const;
     private:
         ConfigPtr config_;
 
@@ -55,6 +61,9 @@ namespace tink {
         std::unique_ptr<HandleMgr> handler_mgr_;
         std::unique_ptr<Harbor> harbor_;
         std::unique_ptr<GlobalMQ> global_mq_;
+        std::unique_ptr<TimerMgr> timer_mgr_;
+        std::unique_ptr<SocketServer> socket_server_;
+
     };
 }
 

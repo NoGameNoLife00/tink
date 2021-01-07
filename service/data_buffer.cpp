@@ -1,10 +1,8 @@
-
-#include <error_code.h>
 #include <cstdint>
 #include <cassert>
 #include <string.h>
 #include "data_buffer.h"
-
+#include "error_code.h"
 namespace tink::Service {
     void DataBuffer::Clear(tink::Service::MessagePool &mp) {
         while (!list.empty()) {

@@ -1,6 +1,6 @@
 #include <sys/socket.h>
-#include <config.h>
-#include <socket.h>
+#include "base/config.h"
+#include "net/socket.h"
 
 namespace tink {
 

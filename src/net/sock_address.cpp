@@ -1,9 +1,11 @@
-#include <sock_address.h>
+
 #include <cstring>
 #include <cassert>
 #include <netdb.h>
-#include <config.h>
-#include <socket.h>
+
+#include "base/config.h"
+#include "net/socket.h"
+#include "net/sock_address.h"
 
 namespace tink {
     SockAddress::SockAddress(uint16_t port, bool loopback_only, bool ipv6) {

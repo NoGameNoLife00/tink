@@ -1,11 +1,11 @@
-#ifndef TINK_TIMER_H
-#define TINK_TIMER_H
+#ifndef TINK_TIMER_MANAGER_H
+#define TINK_TIMER_MANAGER_H
 
 #include <cstdint>
 #include <list>
 #include <shared_mutex>
 
-#define TIMER tink::Singleton<tink::Timer>::GetInstance()
+#define TIMER tink::Singleton<tink::TimerMgr>::GetInstance()
 
 namespace tink {
     // 定时器事件
@@ -29,7 +29,7 @@ namespace tink {
         void SysTime(uint32_t &sec, uint32_t &cs);
     }
 
-    class Timer {
+    class TimerMgr {
     public:
         void Init();
         void UpdateTime();
@@ -67,4 +67,4 @@ namespace tink {
 
 
 
-#endif //TINK_TIMER_H
+#endif //TINK_TIMER_MANAGER_H

@@ -1,14 +1,15 @@
 #ifndef TINK_BASE_MODULE_H
 #define TINK_BASE_MODULE_H
 
-#include <common.h>
+
 #include <functional>
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/sinks/daily_file_sink.h>
-#include <spdlog/async_logger.h>
-#include <spdlog/async.h>
-#include <context.h>
-#include <spdlog/spdlog.h>
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/sinks/daily_file_sink.h"
+#include "spdlog/async_logger.h"
+#include "spdlog/async.h"
+#include "spdlog/spdlog.h"
+#include "base/context.h"
+#include "common.h"
 
 namespace tink {
     class Context;

@@ -1,9 +1,9 @@
 #ifndef TINK_MESSAGE_H
 #define TINK_MESSAGE_H
+#include "spdlog/spdlog.h"
+#include "base/leaked_object_detector.h"
+#include "common.h"
 
-#include <leaked_object_detector.h>
-#include <common.h>
-#include <spdlog/spdlog.h>
 
 namespace tink {
     constexpr auto MESSAGE_TYPE_MASK = (SIZE_MAX >> 8);

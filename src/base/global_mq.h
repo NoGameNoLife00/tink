@@ -1,11 +1,9 @@
 #ifndef TINK_GLOBAL_MQ_H
 #define TINK_GLOBAL_MQ_H
-#include <singleton.h>
-#include <common.h>
 #include <list>
-#include <message.h>
-#include <message_queue.h>
-
+#include "net/message.h"
+#include "base/message_queue.h"
+#include "common.h"
 
 //#define GLOBAL_MQ tink::Singleton<tink::GlobalMQ>::GetInstance()
 

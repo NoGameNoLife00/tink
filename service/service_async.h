@@ -1,7 +1,7 @@
 #ifndef TINK_SERVICE_ASYNC_H
 #define TINK_SERVICE_ASYNC_H
 
-#include <base_module.h>
+#include "base/base_module.h"
 
 namespace tink::Service {
     class ServiceAsync : public BaseModule {

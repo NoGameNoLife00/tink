@@ -2,11 +2,10 @@
 #include <memory>
 #include <execinfo.h>
 #include <cxxabi.h>
-#include <thread.h>
 #include <config.h>
 #include <sys/prctl.h>
 #include <pthread.h>
-
+#include "base/thread.h"
 namespace tink {
     namespace CurrentThread {
         thread_local const char* t_thread_name = "None";

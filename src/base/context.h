@@ -1,14 +1,17 @@
 #ifndef TINK_CONTEXT_H
 #define TINK_CONTEXT_H
 
-#include <base_module.h>
-#include <common.h>
 #include <atomic>
-#include <global_mq.h>
+#include "common.h"
+#include "base/base_module.h"
+#include "base/global_mq.h"
+#include "net/server.h"
+#include "base/handle_manager.h"
 
 namespace tink {
     class Context;
     class BaseModule;
+    class Server;
     typedef std::shared_ptr<BaseModule> ModulePtr;
     typedef std::shared_ptr<Context> ContextPtr;
     typedef std::function<int (void* ud, int type, int session, uint32_t source, DataPtr msg, size_t sz)> ContextCallBack;
@@ -20,11 +23,13 @@ namespace tink {
 
     class Context : public std::enable_shared_from_this<Context> {
     public:
-        Context() { ++total; }
+        using ServerPtr = std::shared_ptr<Server>;
+        Context(ServerPtr s) : server_(s) { ++total; }
         ~Context() {  }
         static int Total() { return total.load(); }
         static void DropMessage(TinkMessage &msg, void *ud);
 
+        ServerPtr GetServer() const { return server_; }
         void Destroy();
         void Send(DataPtr data, size_t sz, uint32_t source, int type, int session);
         int Send(uint32_t source, uint32_t destination, int type, int session, DataPtr data, size_t sz);
@@ -55,7 +60,7 @@ namespace tink {
         static std::atomic_int total;
         // 预处理消息数据
         int FilterArgs_(int type, int &session, DataPtr data, size_t &sz);
-
+        ServerPtr server_;
         mutable std::mutex mutex_;
         MQPtr queue_; // 消息队列
         bool endless_; // 是否堵塞

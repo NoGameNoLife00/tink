@@ -4,8 +4,8 @@
 #include <cstdint>
 #include <atomic>
 #include <memory>
-#include <common.h>
 #include <condition_variable>
+#include "common.h"
 
 namespace tink {
     class MonitorNode {

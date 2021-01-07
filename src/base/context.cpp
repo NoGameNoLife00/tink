@@ -1,14 +1,12 @@
-#include "context.h"
-#include "handle_manager.h"
-#include "string_util.h"
-#include <module_manager.h>
-#include <error_code.h>
-#include <spdlog/spdlog.h>
-#include <common.h>
-#include <timer.h>
-#include <harbor.h>
 #include <sstream>
-#include <server.h>
+#include "base/context.h"
+#include "base/string_util.h"
+#include "base/handle_manager.h"
+#include "net/timer_manager.h"
+#include "net/harbor.h"
+#include "net/server.h"
+#include "error_code.h"
+#include "common.h"
 
 namespace tink {
     std::atomic_int Context::total = 0;
@@ -105,7 +103,7 @@ namespace tink {
             s_msg.data = data;
             s_msg.size = sz;
             // push到目标ctx的消息队列
-            if (HANDLE_STORAGE.PushMessage(destination, s_msg)) {
+            if (server_->GetHandlerMgr()->PushMessage(destination, s_msg)) {
                 return E_FAILED;
             }
         }
@@ -145,7 +143,7 @@ namespace tink {
         if (addr[0] == ':') {
             des = strtoul(addr.data()+1, nullptr, 16);
         } else if ( addr[0] == '.') {
-            des = HANDLE_STORAGE.FindName(addr.substr(1));
+            des = server_->GetHandlerMgr()->FindName(addr.substr(1));
             if (des == 0) {
                 return E_FAILED;
             }
@@ -191,7 +189,7 @@ namespace tink {
             return context.result;
         } else if (param[0] == '.') {
             auto&& name = param.substr(1);
-            return HANDLE_STORAGE.BindName(context.Handle(), name);
+            return context.GetServer()->GetHandlerMgr()->BindName(context.Handle(), name);
         } else {
             spdlog::error("can't register global name %s", param);
             return "";
@@ -200,7 +198,7 @@ namespace tink {
 
     std::string CMD_Query(Context& context, std::string_view& param) {
         if (param[0] == '.') {
-            uint32_t handle = HANDLE_STORAGE.FindName(param.substr(1));
+            uint32_t handle = GetGlobalServer()->GetHandlerMgr()->FindName(param.substr(1));
             if (handle) {
                 context.result = StringUtil::Format(":%x", context.Handle());
                 return context.result;
@@ -222,7 +220,7 @@ namespace tink {
             return "";
         }
         if (name[0] == '.') {
-            return HANDLE_STORAGE.BindName(context.Handle(), name.data() + 1);
+            return context.GetServer()->GetHandlerMgr()->BindName(context.Handle(), name.data() + 1);
         } else {
             spdlog::error("Can't set global name %s", name);
         }
@@ -247,7 +245,7 @@ namespace tink {
         char *args = tmp.data();
         char * mod = strsep(&args, " \t\r\n");
         args = strsep(&args, "\r\n");
-        ContextPtr inst = HANDLE_STORAGE.CreateContext(mod, args);
+        ContextPtr inst = context.GetServer()->GetHandlerMgr()->CreateContext(mod, args);
         if (!inst) {
             return "";
         } else {
@@ -263,7 +261,7 @@ namespace tink {
     }
 
     std::string CMD_Abort(Context& context, std::string_view& param) {
-        HANDLE_STORAGE.UnregisterAll();
+        context.GetServer()->GetHandlerMgr()->UnregisterAll();
         return "";
     }
 
@@ -315,7 +313,7 @@ namespace tink {
         if (handle == 0) {
             return "";
         }
-        ContextPtr ctx = HANDLE_STORAGE.HandleGrab(handle);
+        ContextPtr ctx = context.GetServer()->GetHandlerMgr()->HandleGrab(handle);
         if (!ctx) {
             return "";
         }
@@ -370,7 +368,7 @@ namespace tink {
         if (Global::MonitorExit()) {
             Send(handle, Global::MonitorExit(), PTYPE_CLIENT, 0, nullptr, 0);
         }
-        HANDLE_STORAGE.Unregister(handle);
+        server_->GetHandlerMgr()->Unregister(handle);
     }
 
     uint32_t Context::ToHandle(std::string_view param) {
@@ -378,7 +376,7 @@ namespace tink {
         if (param[0] == ':') {
             handle = strtoul(param.data()+1, nullptr, 16);
         } else if (param[0] == '.') {
-            handle = HANDLE_STORAGE.FindName(param.substr(1));
+            handle = server_->GetHandlerMgr()->FindName(param.substr(1));
         } else {
             spdlog::error("Can't convert %s to handle", param);
         }

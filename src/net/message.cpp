@@ -1,5 +1,5 @@
-#include <error_code.h>
-#include <message.h>
+#include "error_code.h"
+#include "net/message.h"
 
 namespace tink {
     int TinkMessage::Init(uint32_t _source, int32_t _session, BytePtr &_data, size_t _size) {

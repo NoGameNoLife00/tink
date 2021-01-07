@@ -1,11 +1,11 @@
-#include <message_queue.h>
+#include "base/message_queue.h"
 
 namespace tink {
     void MessageQueue::Push(TinkMessage &msg){
         std::lock_guard <Mutex> lock(mutex_);
         queue_.push(msg);
-        if (!in_global) {
-            GLOBAL_MQ.Push(shared_from_this());
+        if (!in_global_) {
+            global_mq_->Push(shared_from_this());
         }
         //当使用阻塞模式从消息队列中获取消息时，由condition在新消息到达时提醒等待线程
         condition_.notify_one();
@@ -24,7 +24,7 @@ namespace tink {
         } else {
             std::lock_guard<Mutex> lock(mutex_);
             if (queue_.empty()) {
-                in_global = false;
+                in_global_ = false;
                 return false;
             }
             msg = queue_.front();
@@ -37,8 +37,8 @@ namespace tink {
         std::lock_guard<Mutex> lock(mutex_);
         assert(!release_);
         release_ = true;
-        if (!in_global) {
-            GLOBAL_MQ.Push(shared_from_this());
+        if (!in_global_) {
+            global_mq_->Push(shared_from_this());
         }
     }
 
@@ -48,7 +48,7 @@ namespace tink {
             lock.unlock();
             DropQueue_(std::move(drop_func), ud);
         } else {
-            GLOBAL_MQ.Push(shared_from_this());
+            global_mq_->Push(shared_from_this());
         }
     }
 
@@ -58,4 +58,13 @@ namespace tink {
             drop_func(msg, ud);
         }
     }
+
+    MessageQueue::MessageQueue(GlobalMQ *global_mq, uint32_t handle) :
+        global_mq_(global_mq), handle_(handle),
+        in_global_(true), release_(false),
+        queue_(), mutex_(), condition_() {
+
+    }
+
+
 }

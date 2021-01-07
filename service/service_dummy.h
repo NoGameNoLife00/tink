@@ -1,8 +1,8 @@
 #ifndef TINK_SERVICE_DUMMY_H
 #define TINK_SERVICE_DUMMY_H
 
-#include <base_module.h>
-#include <harbor_message.h>
+#include "base/base_module.h"
+#include "harbor_message.h"
 
 namespace tink::Service {
     class ServiceDummy : public BaseModule {

@@ -2,13 +2,13 @@
 #define TINK_SOCKET_SERVER_H
 
 #include <cstdint>
-#include <common.h>
-#include <map>
-#include <buffer.h>
 #include <list>
 #include <atomic>
-#include <poller.h>
-#include <socket.h>
+#include <map>
+#include "base/buffer.h"
+#include "net/poller.h"
+#include "net/socket.h"
+#include "common.h"
 
 #define SOCKET_SERVER tink::Singleton<tink::SocketServer>::GetInstance()
 

@@ -4,9 +4,9 @@
 
 #include <memory>
 #include <mutex>
-#include <noncopyable.h>
 #include <cassert>
 #include <pthread.h>
+#include "base/noncopyable.h"
 
 namespace tink {
     template<typename T>

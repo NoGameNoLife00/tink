@@ -1,11 +1,10 @@
+#include <memory>
+#include "base/base_module.h"
+#include "base/string_util.h"
+#include "net/socket_server.h"
+#include "error_code.h"
 #include "service_master.h"
 #include "harbor_message.h"
-#include <memory>
-#include <base_module.h>
-#include <string_util.h>
-#include <error_code.h>
-#include <socket_server.h>
-
 extern "C" {
 tink::BaseModule* CreateModule() {
     return new tink::Service::ServiceMaster();

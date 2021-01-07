@@ -1,8 +1,8 @@
 #ifndef TINK_MODULE_MANAGER_H
 #define TINK_MODULE_MANAGER_H
 
-#include <base_module.h>
-#include <singleton.h>
+#include "base/base_module.h"
+#include "base/singleton.h"
 #define MODULE_MNG tink::Singleton<tink::ModuleMgr>::GetInstance()
 namespace tink {
     class ModuleMgr {

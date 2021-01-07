@@ -1,9 +1,9 @@
 #include <string_view>
-#include <error_code.h>
 #include <sstream>
-#include <harbor.h>
-#include <socket_server.h>
-#include <service_harbor.h>
+#include "net/harbor.h"
+#include "net/socket_server.h"
+#include "service_harbor.h"
+#include "error_code.h"
 
 extern "C" {
 tink::BaseModule* CreateModule() {

@@ -1,9 +1,8 @@
-#include <spdlog/spdlog.h>
-#include <error_code.h>
-#include "timer.h"
-#include "message.h"
-#include "handle_manager.h"
-
+#include "spdlog/spdlog.h"
+#include "base/handle_manager.h"
+#include "net/timer_manager.h"
+#include "net/message.h¡°
+#include "error_code.h"
 namespace tink {
     namespace TimeUtil {
         uint64_t GetTime() {
@@ -29,7 +28,7 @@ namespace tink {
         }
     }
 
-    void Timer::Init() {
+    void TimerMgr::Init() {
         for (auto& list : near_) {
             list.clear();
         }
@@ -44,7 +43,7 @@ namespace tink {
         current_point_ = TimeUtil::GetTime();
     }
 
-    void Timer::UpdateTime() {
+    void TimerMgr::UpdateTime() {
         uint64_t tm = TimeUtil::GetTime();
         if (tm < current_point_) {
             spdlog::error("time diff error: change from {} to {}", tm, current_point_);
@@ -59,14 +58,14 @@ namespace tink {
         }
     }
 
-    void Timer::Update_() {
+    void TimerMgr::Update_() {
         std::unique_lock<std::mutex> lock(mutex_);
         Execute_();
         Shift_();
         Execute_();
     }
 
-    void Timer::Execute_() {
+    void TimerMgr::Execute_() {
         int idx = time_ & TIME_NEAR_MASK;
         if (!near_[idx].empty()) {
             TimerNodeList temp_list;
@@ -80,7 +79,7 @@ namespace tink {
         }
     }
 
-    void Timer::DispatchList_(TimerNodeList &curr) {
+    void TimerMgr::DispatchList_(TimerNodeList &curr) {
         for (auto& node : curr) {
             TimerEvent& event = node->event;
             TinkMessage msg;
@@ -92,7 +91,7 @@ namespace tink {
         }
     }
 
-    void Timer::AddNode_(TimerNodePtr &node) {
+    void TimerMgr::AddNode_(TimerNodePtr &node) {
         uint32_t tm = node->expire;
         if ((tm | TIME_NEAR_MASK) != (time_ | TIME_NEAR_MASK)) {
             uint32_t mask = TIME_NEAR << TIME_NEAR_SHIFT;
@@ -109,7 +108,7 @@ namespace tink {
         }
     }
 
-    void Timer::Add_(int time, const TimerEvent& event) {
+    void TimerMgr::Add_(int time, const TimerEvent& event) {
         TimerNodePtr node = std::make_unique<TimerNode>();
         memcpy(&node->event, &event, sizeof(TimerEvent));
 
@@ -118,7 +117,7 @@ namespace tink {
         AddNode_(node);
     }
 
-    void Timer::Shift_() {
+    void TimerMgr::Shift_() {
         int mask = TIME_NEAR;
         uint32_t ct = ++time_;
         if (ct == 0) {
@@ -139,14 +138,14 @@ namespace tink {
         }
     }
 
-    void Timer::MoveList_(int level, int idx) {
+    void TimerMgr::MoveList_(int level, int idx) {
         for (auto& current : t_[level][idx]) {
             AddNode_(current);
         }
         t_[level][idx].clear();
     }
 
-    int Timer::TimeOut(uint32_t handle, int time, int session) {
+    int TimerMgr::TimeOut(uint32_t handle, int time, int session) {
         if (time <= 0) {
             TinkMessage msg;
             msg.source = 0;

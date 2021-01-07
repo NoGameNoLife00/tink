@@ -1,13 +1,14 @@
 #ifndef TINK_SERVICE_GATE_H
 #define TINK_SERVICE_GATE_H
-#include <base_module.h>
+
 #include <memory>
 #include <common.h>
 #include <string>
 #include <string_view>
-#include <context.h>
-#include <socket.h>
-#include <data_buffer.h>
+#include "base/context.h"
+#include "net/socket.h"
+#include "data_buffer.h"
+#include "base/base_module.h"
 
 
 namespace tink::Service {

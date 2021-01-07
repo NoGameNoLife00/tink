@@ -1,12 +1,13 @@
 #ifndef TINK_SERVICE_HARBOR_H
 #define TINK_SERVICE_HARBOR_H
 
-#include <base_module.h>
 #include <string_view>
-#include <harbor.h>
 #include <string>
-#include <server.h>
-#include <harbor_message.h>
+
+#include "net/harbor.h"
+#include "net/server.h"
+#include "base/base_module.h"
+#include "harbor_message.h"
 
 namespace tink::Service {
 
