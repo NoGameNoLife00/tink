@@ -1,7 +1,7 @@
 #include "spdlog/spdlog.h"
 #include "base/handle_manager.h"
 #include "net/timer_manager.h"
-#include "net/message.h¡°
+#include "net/message.h"
 #include "error_code.h"
 namespace tink {
     namespace TimeUtil {
@@ -87,7 +87,7 @@ namespace tink {
             msg.session = event.session;
             msg.data = nullptr;
             msg.size = static_cast<size_t>(PTYPE_RESPONSE) << MESSAGE_TYPE_SHIFT;
-            HANDLE_STORAGE.PushMessage(event.handle, msg);
+            server_->GetHandlerMgr()->PushMessage(event.handle, msg);
         }
     }
 
@@ -152,7 +152,7 @@ namespace tink {
             msg.session = session;
             msg.data = nullptr;
             msg.size = static_cast<size_t>(PTYPE_RESPONSE) << MESSAGE_TYPE_SHIFT;
-            if (HANDLE_STORAGE.PushMessage(handle, msg)) {
+            if (server_->GetHandlerMgr()->PushMessage(handle, msg)) {
                 return E_FAILED;
             }
         } else {

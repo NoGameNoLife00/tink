@@ -9,13 +9,15 @@
 #include "net/poller.h"
 #include "net/socket.h"
 #include "common.h"
+#include "net/server.h"
 
-#define SOCKET_SERVER tink::Singleton<tink::SocketServer>::GetInstance()
+//#define SOCKET_SERVER tink::Singleton<tink::SocketServer>::GetInstance()
 
 namespace tink {
+    class Server;
+
     struct SocketMessage;
     struct SendObject;
-
     struct RequestStart;
     struct RequestBind;
     struct RequestListen;
@@ -28,11 +30,13 @@ namespace tink {
     struct RequestUdp;
     struct RequestPackage;
 
-    typedef std::list<WriteBufferPtr> WriteBufferList;
-    typedef std::shared_ptr<SocketMessage> SocketMsgPtr;
-
     class SocketServer : noncopyable {
     public:
+
+        using SocketPtr = std::shared_ptr<Socket>;
+        using WriteBufferList = std::list<WriteBufferPtr>;
+        using SocketMsgPtr = std::shared_ptr<SocketMessage>;
+
         enum SocketCode {
             SOCKET_NONE = -1,
             SOCKET_DATA = 0,
@@ -46,7 +50,7 @@ namespace tink {
         };
         static const int MAX_UDP_PACKAGE = 65535;
 
-        SocketServer();
+        SocketServer(std::shared_ptr<Server> server);
         int Init(uint64_t time);
         void UpdateTime(uint64_t time);
 
@@ -67,6 +71,16 @@ namespace tink {
         int NoDelay(int id);
 
     private:
+        enum class SocketType {
+            DATA = 1,
+            CONNECT = 2,
+            CLOSE = 3,
+            ACCEPT = 4,
+            ERROR = 5,
+            UDP = 6,
+            WARNING = 7,
+        };
+        void ForwardMessage(SocketType type, bool padding, SocketMessage &result);
         SocketPtr NewSocket_(int id, int fd, SocketProtocol protocol, uintptr_t opaque, bool add);
         int Poll_(SocketMessage &result, int &more);
         void ForceClose_(Socket &s, SocketMessage &result);
@@ -110,6 +124,7 @@ namespace tink {
         uint8_t udp_buffer_[MAX_UDP_PACKAGE];
         EventList ev_; // poll事件列表
         std::array<SocketPtr, MAX_SOCKET> slot_; // socket池
+        std::shared_ptr<Server> server_;
     };
 
     typedef std::shared_ptr<SocketServer> SocketServerPtr;

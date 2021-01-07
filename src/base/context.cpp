@@ -178,7 +178,7 @@ namespace tink {
         char* end_ptr = nullptr;
         int ti = strtol(param.data(), &end_ptr, 10);
         int session = context.NewSession();
-        TIMER.TimeOut(context.Handle(), ti, session);
+        context.GetServer()->GetTimerMgr()->TimeOut(context.Handle(), ti, session);
         context.result = std::to_string(session);
         return context.result;
     }
@@ -255,7 +255,7 @@ namespace tink {
     }
 
     std::string CMD_StartTime(Context& context, std::string_view& param) {
-        uint32_t sec = TIMER.StartTime();
+        uint32_t sec = context.GetServer()->GetTimerMgr()->StartTime();
         context.result = std::to_string(sec);
         return context.result;
     }

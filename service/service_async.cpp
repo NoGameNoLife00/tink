@@ -12,10 +12,10 @@ namespace tink::Service {
         std::string self = ctx_->Command("REG", "");
         uint32_t handle_id = strtol(self.data()+1, nullptr, 16);
         ctx_->Send(0, handle_id, PTYPE_TAG_DONTCOPY, 0, tmp, param.length()+1);
+        return 0;
     }
 
-    int
-    ServiceAsync::LaunchCb_(void *ud, int type, int session, uint32_t source, DataPtr msg, size_t sz) {
+    int ServiceAsync::LaunchCb_(void *ud, int type, int session, uint32_t source, DataPtr msg, size_t sz) {
         assert(type == 0 && session == 0);
         auto* service = static_cast<ServiceAsync *>(ud);
         service->ctx_->SetCallBack(nullptr, nullptr);

@@ -119,16 +119,6 @@ namespace tink {
     };
 
 
-    enum class SocketType {
-        DATA = 1,
-        CONNECT = 2,
-        CLOSE = 3,
-        ACCEPT = 4,
-        ERROR = 5,
-        UDP = 6,
-        WARNING = 7,
-    };
-
 
 
     void SocketServer::UpdateTime(uint64_t time) {
@@ -678,7 +668,7 @@ namespace tink {
     }
 
     // mainloop thread
-    static void ForwardMessage(SocketType type, bool padding, SocketMessage &result) {
+    void SocketServer::ForwardMessage(SocketType type, bool padding, SocketMessage &result) {
         TinkSocketMsgPtr sm = std::make_shared<TinkSocketMessage>();
 
 
@@ -697,7 +687,7 @@ namespace tink {
         message.session = 0;
         message.data = sm;
         message.size = sz | (static_cast<size_t>(PTYPE_SOCKET) << MESSAGE_TYPE_SHIFT);
-        HANDLE_STORAGE.PushMessage(result.opaque, message);
+        server_->GetHandlerMgr()->PushMessage(result.opaque, message);
     }
     int SocketServer::Poll() {
         SocketMessage result;
@@ -1326,8 +1316,8 @@ namespace tink {
 
     }
 
-    SocketServer::SocketServer() : ev_(MAX_EVENT)
-    ,buffer_(new byte[MAX_INFO], std::default_delete<byte[]>()) {
+    SocketServer::SocketServer(std::shared_ptr<Server> server) : server_(server),
+        ev_(MAX_EVENT) ,buffer_(new byte[MAX_INFO], std::default_delete<byte[]>()) {
     }
 
 }

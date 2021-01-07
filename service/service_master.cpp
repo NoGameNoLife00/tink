@@ -28,12 +28,13 @@ namespace tink::Service {
         }
         std::string&& self_addr = ctx_->Command("REG", "");
         int n = sprintf(tmp.get(),"broker %s", self_addr.data());
-        byte* s = new byte[6]{"start"};
+        byte* s = new byte[6];
+        memcpy(s, "start", 6);
         BytePtr start(s, std::default_delete<byte[]>());
         ctx_->Send(0, gate, PTYPE_TEXT, 0, tmp, n);
         ctx_->Send(0, gate, PTYPE_TEXT, 0, start, 5);
 
-        ctx_->SetCallBack(this, 0, 0, 0, tink::DataPtr(), 0);
+        ctx_->SetCallBack(MainLoop_, this);
         return E_OK;
     }
 
@@ -42,7 +43,7 @@ namespace tink::Service {
             int fd = remote_fd_[i];
             if (fd >= 0) {
                 assert(ctx_);
-                SOCKET_SERVER.Close(ctx_->Handle(), fd);
+                ctx_->GetServer()->GetSocketServer()->Close(ctx_->Handle(), fd);
             }
             remote_addr_[i].reset();
         }
@@ -139,14 +140,14 @@ namespace tink::Service {
         ToBigEndian(buffer + 4 + sz +8, 0);
         sz += 4 + 12;
         DataPtr data(buffer, std::default_delete<uint8_t[]>());
-        if (SOCKET_SERVER.Send(remote_fd_[id], data, sz)) {
+        if (ctx_->GetServer()->GetSocketServer()->Send(remote_fd_[id], data, sz)) {
             logger->error("Harbor {} : send error", id);
         }
     }
 
     void ServiceMaster::CloseHarbor_(int harbor_id) {
         if (connected_[harbor_id]) {
-            SOCKET_SERVER.Close(ctx_->Handle(), remote_fd_[harbor_id]);
+            ctx_->GetServer()->GetSocketServer()->Close(ctx_->Handle(), remote_fd_[harbor_id]);
             remote_fd_[harbor_id] = -1;
             remote_addr_[harbor_id].reset();
         }
@@ -196,7 +197,7 @@ namespace tink::Service {
         std::string& ip = out[0];
         int port = std::stol(out[1]);
         logger->info("Master connect to harbor({}) {}:{}", id, ip, port);
-        remote_fd_[id] = SOCKET_SERVER.Connect(ctx_->Handle(), ip, port);
+        remote_fd_[id] = ctx_->GetServer()->GetSocketServer()->Connect(ctx_->Handle(), ip, port);
     }
 
 }

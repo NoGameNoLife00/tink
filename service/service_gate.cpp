@@ -42,7 +42,7 @@ namespace tink::Service {
         if (watchdog[0] == '!') {
             this->watchdog_ = 0;
         } else {
-            this->watchdog_ = HANDLE_STORAGE.FindName(watchdog);
+            this->watchdog_ = ctx_->GetServer()->GetHandlerMgr()->FindName(watchdog);
             if (this->watchdog_ == 0) {
                 logger->error("Invalid watchdog {}", watchdog);
                 return E_FAILED;
@@ -54,14 +54,14 @@ namespace tink::Service {
         msg_pool_ = std::make_shared<MessagePool>(100, 100);
         this->client_tag_ = client_tag;
         this->header_size_ = header == 'S' ? 2 : 4;
-        ctx->SetCallBack(this, 0, 0, 0, <#initializer#>, 0);
+        ctx->SetCallBack(CallBack_, this);
         return StartListen(binding);
     }
 
     void ServiceGate::Release() {
         for (auto& it : conn_) {
             Connection *c = it.second;
-            SOCKET_SERVER.Close(ctx_->Handle(), c->id);
+            ctx_->GetServer()->GetSocketServer()->Close(ctx_->Handle(), c->id);
             conn_pool_->ReusePoolItem(c);
         }
         conn_.clear();
@@ -88,16 +88,16 @@ namespace tink::Service {
 
         }
         string host(listen_addr.substr(0, port_idx));
-        listen_id_ = SOCKET_SERVER.Listen(ctx_->Handle(), host, port, BACKLOG);
+        listen_id_ = ctx_->GetServer()->GetSocketServer()->Listen(ctx_->Handle(), host, port, BACKLOG);
         if (listen_id_ < 0) {
             return E_FAILED;
         }
-        SOCKET_SERVER.Start(ctx_->Handle(), listen_id_);
+        ctx_->GetServer()->GetSocketServer()->Start(ctx_->Handle(), listen_id_);
         return E_OK;
     }
 
     int
-    ServiceGate::CallBack_(void *ud, int type, int session, uint32_t source, DataPtr &msg, size_t sz) {
+    ServiceGate::CallBack_(void *ud, int type, int session, uint32_t source, DataPtr msg, size_t sz) {
         auto *g = static_cast<ServiceGate *>(ud);
         switch (type) {
             case PTYPE_TEXT:
@@ -111,7 +111,7 @@ namespace tink::Service {
                 const uint8_t *id_buf = static_cast<uint8_t *>(msg.get()) + sz - 4;
                 uint32_t uid = id_buf[0] | id_buf[1] << 8 | id_buf[2] << 16 | id_buf[3] << 24;
                 if (auto it = g->conn_.find(uid); it != g->conn_.end()) {
-                    SOCKET_SERVER.Send(uid, msg, sz-4);
+                    g->ctx_->GetServer()->GetSocketServer()->Send(uid, msg, sz-4);
                     return E_OK;
                 } else {
                     g->logger->error("Invalid client id {} from {}", uid, source);
@@ -141,7 +141,7 @@ namespace tink::Service {
         if (param_list[0] == "kick") {
             int uid = std::stol(param_list[1]);
             if (conn_.find(uid) != conn_.end()) {
-                SOCKET_SERVER.Close(ctx_->Handle(), uid);
+                ctx_->GetServer()->GetSocketServer()->Close(ctx_->Handle(), uid);
             }
             return ;
         }
@@ -156,19 +156,19 @@ namespace tink::Service {
             return ;
         }
         if (param_list[0] == "broker") {
-            broker_ = HANDLE_STORAGE.QueryName(param_list[1]);
+            broker_ = ctx_->GetServer()->GetHandlerMgr()->QueryName(param_list[1]);
             return;
         }
         if (param_list[0] == "start") {
             int uid = std::stol(param_list[1]);
             if (conn_.find(uid) != conn_.end()) {
-                SOCKET_SERVER.Start(ctx_->Handle(), uid);
+                ctx_->GetServer()->GetSocketServer()->Start(ctx_->Handle(), uid);
             }
             return ;
         }
         if (param_list[0] == "close") {
             if (listen_id_ >= 0) {
-                SOCKET_SERVER.Close(ctx_->Handle(), listen_id_);
+                ctx_->GetServer()->GetSocketServer()->Close(ctx_->Handle(), listen_id_);
                 listen_id_ = -1;
             }
             return;
@@ -193,7 +193,7 @@ namespace tink::Service {
                     DispatchMessage(*c, msg->id, msg->buffer, msg->ud);
                 } else {
                     logger->error("drop unknown connection {} message", msg->id);
-                    SOCKET_SERVER.Close(ctx_->Handle(), msg->id);
+                    ctx_->GetServer()->GetSocketServer()->Close(ctx_->Handle(), msg->id);
                     msg->buffer.reset();
                 }
             }
@@ -204,7 +204,7 @@ namespace tink::Service {
                 }
                 if (conn_.find(msg->id) == conn_.end()) {
                     logger->error("close unknown connection {}", msg->id);
-                    SOCKET_SERVER.Close(ctx_->Handle(), msg->id);
+                    ctx_->GetServer()->GetSocketServer()->Close(ctx_->Handle(), msg->id);
                 }
                 break;
             }
@@ -221,7 +221,7 @@ namespace tink::Service {
             }
             case TinkSocketMessage::ACCEPT: {
                 if (conn_pool_->IsFreePoolEmpty()) {
-                    SOCKET_SERVER.Close(ctx_->Handle(), msg->ud);
+                    ctx_->GetServer()->GetSocketServer()->Close(ctx_->Handle(), msg->ud);
                 } else {
                     Connection * c = conn_pool_->GetPoolItem();
                     if (sz >= sizeof(c->remote_name)) {
@@ -251,7 +251,7 @@ namespace tink::Service {
             } else if (size > 0) {
                 if (size >= 0x1000000) {
                     c.buffer.Clear(*msg_pool_);
-                    SOCKET_SERVER.Close(ctx_->Handle(), id);
+                    ctx_->GetServer()->GetSocketServer()->Close(ctx_->Handle(), id);
                     logger->error("Recv socket message > 16M");
                     return ;
                 } else {

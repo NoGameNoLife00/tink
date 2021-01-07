@@ -29,7 +29,7 @@ namespace tink::Service {
         if (slave_ == 0) {
             return E_FAILED;
         }
-        ctx_->SetCallBack(this, 0, 0, 0, tink::DataPtr(), 0);
+        ctx_->SetCallBack(MainLoop_, this);
         HARBOR.Start(ctx_);
         return 0;
     }
@@ -191,7 +191,7 @@ namespace tink::Service {
         Slave& s = GetSlave(id);
         s.status = STATUS_DOWN;
         if (s.fd) {
-            SOCKET_SERVER.Close(ctx_->Handle(), id);
+            ctx_->GetServer()->GetSocketServer()->Close(ctx_->Handle(), id);
         }
         if (s.queue) {
             s.queue->clear();
@@ -237,7 +237,7 @@ namespace tink::Service {
         tmp.buffer = std::shared_ptr<uint8_t>(send_buf, std::default_delete<uint8_t[]>());
         tmp.sz = sz_header + 4;
         // 这里忽略发送错误,一旦连接断开,主循环中会收到消息
-        SOCKET_SERVER.Send(tmp);
+        ctx_->GetServer()->GetSocketServer()->Send(tmp);
     }
 
     int ServiceHarbor::GetHarborId(int fd) {
@@ -286,7 +286,7 @@ namespace tink::Service {
                 return;
             }
             slave.fd = fd;
-            SOCKET_SERVER.Start(ctx_->Handle(), fd);
+            ctx_->GetServer()->GetSocketServer()->Start(ctx_->Handle(), fd);
             Handshake_(id);
             if (msg[0] == 'S') {
                 slave.status = STATUS_HANDSHAKE;
@@ -364,7 +364,7 @@ namespace tink::Service {
         tmp.type = SOCKET_BUFFER_RAWPOINTER;
         tmp.buffer = DataPtr(handshake, std::default_delete<uint8_t[]>());
         tmp.sz = 1;
-        SOCKET_SERVER.Send(tmp);
+        ctx_->GetServer()->GetSocketServer()->Send(tmp);
     }
 
     void ServiceHarbor::PushQueue_(HarborMsgQueue& queue, DataPtr buffer, size_t sz, RemoteMsgHeader& header) {

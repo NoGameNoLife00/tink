@@ -4,13 +4,8 @@
 #include "base/scope_guard.h"
 #include "base/context.h"
 #include "base/daemon.h"
-#include "base/handle_manager.h"
-#include "base/module_manager.h"
 #include "base/thread.h"
-#include "net/harbor.h"
-#include "net/timer_manager.h"
 #include "net/monitor.h"
-#include "net/server.h"
 #include "common.h"
 
 namespace tink {
@@ -47,8 +42,8 @@ namespace tink {
         harbor_ = std::make_unique<Harbor>();
         handler_mgr_ = std::make_unique<HandleMgr>(shared_from_this());
         module_mgr_ = std::make_unique<ModuleMgr>();
-        timer_mgr_ = std::make_unique<TimerMgr>();
-        socket_server_ = std::make_unique<SocketServer>();
+        timer_mgr_ = std::make_unique<TimerMgr>(shared_from_this());
+        socket_server_ = std::make_unique<SocketServer>(shared_from_this());
 
         config_ = config;
         Global::InitThread(THREAD_MAIN);
@@ -104,32 +99,32 @@ namespace tink {
     }
 
 
-    static void SignalHup() {
-        // make log file reopen
-        TinkMessage smsg;
-        smsg.source = 0;
-        smsg.session = 0;
-        smsg.data = nullptr;
-        smsg.size = static_cast<size_t>(PTYPE_SYSTEM) << MESSAGE_TYPE_SHIFT;
+//    static void SignalHup() {
+//        // make log file reopen
+//        TinkMessage smsg;
+//        smsg.source = 0;
+//        smsg.session = 0;
+//        smsg.data = nullptr;
+//        smsg.size = static_cast<size_t>(PTYPE_SYSTEM) << MESSAGE_TYPE_SHIFT;
+//
+//        uint32_t logger = HANDLE_STORAGE.FindName("logger");
+//        if (logger) {
+//            HANDLE_STORAGE.PushMessage(logger, smsg);
+//        }
+//    }
 
-        uint32_t logger = HANDLE_STORAGE.FindName("logger");
-        if (logger) {
-            HANDLE_STORAGE.PushMessage(logger, smsg);
-        }
-    }
-
-    static void ThreadTimer(MonitorPtr m) {
+    static void ThreadTimer(ServerPtr srv, MonitorPtr m) {
         Global::InitThread(THREAD_TIMER);
         for (;;) {
-            TIMER.UpdateTime();
+            srv->GetTimerMgr()->UpdateTime();
             // socket_updatetime();
             CHECK_ABORT
             Wakeup(*m, m->count - 1);
             usleep(2500); // 0.0025s
-            if (SIG) {
-                SignalHup();
-                SIG = 0;
-            }
+//            if (SIG) {
+////                SignalHup();
+//                SIG = 0;
+//            }
         }
         // wakeup socket thread
         // socket_exit();
@@ -141,10 +136,10 @@ namespace tink {
    }
 
 
-    static void ThreadSocket(MonitorPtr m) {
+    static void ThreadSocket(ServerPtr srv, MonitorPtr m) {
         Global::InitThread(THREAD_SOCKET);
         for (;;) {
-            int ret = SOCKET_SERVER.Poll();
+            int ret = srv->GetSocketServer()->Poll();
             if (ret == 0) {
                 break;
             }
@@ -156,28 +151,28 @@ namespace tink {
         }
     }
 
-    MQPtr ContextMessageDispatch(MonitorNode &m_node, MQPtr q, int weight) {
+    MQPtr ContextMessageDispatch(ServerPtr srv, MonitorNode &m_node, MQPtr q, int weight) {
         if (!q) {
-            q = GetGlobalMQ().Pop();
+            q = srv->GetGlobalMQ()->Pop();
             if (!q) {
                 return nullptr;
             }
         }
         uint32_t handle = q->Handle();
         // ?????????§Ö?ctx
-        ContextPtr ctx = HANDLE_STORAGE.HandleGrab(handle);
+        ContextPtr ctx = srv->GetHandlerMgr()->HandleGrab(handle);
         if (!ctx) {
             // ??????????
             struct DropT d = { handle };
             q->Release(Context::DropMessage, &d);
-            return GetGlobalMQ().Pop();
+            return srv->GetGlobalMQ()->Pop();
         }
         int n = 1;
         TinkMessage msg;
         for (int i = 0; i < n; i++) {
             if (!q->Pop(msg)) {
                 // ?????????????????????????????§Ú???????????
-                return GetGlobalMQ().Pop();
+                return srv->GetGlobalMQ()->Pop();
             } else if (i == 0 && weight >= 0) {
                 // weight:-1??????????????
                 // weight>0, i:0?: n=?????????*1/(2^weight) ??
@@ -189,22 +184,22 @@ namespace tink {
             m_node.Trigger(0, 0);
         }
         assert(q == ctx->Queue());
-        MQPtr nq = GetGlobalMQ().Pop();
+        MQPtr nq = srv->GetGlobalMQ()->Pop();
         if (nq) {
             // ?????????§Ó????????????????push???,????¦É?????????
-            GetGlobalMQ().Push(q);
+            srv->GetGlobalMQ()->Push(q);
             q = nq;
         }
         return q;
     }
 
 
-    static void ThreadWorker(MonitorPtr m, int id, int weight) {
+    static void ThreadWorker(ServerPtr srv, MonitorPtr m, int id, int weight) {
         MonitorNodePtr m_node = m->m[id];
         Global::InitThread(THREAD_WORKER);
         MQPtr q;
         while (!m->quit) {
-            q = ContextMessageDispatch(*m_node, q, weight);
+            q = ContextMessageDispatch(srv, *m_node, q, weight);
             if (!q) {
                 std::unique_lock lock(m->mutex);
                 ++m->sleep;
@@ -227,8 +222,8 @@ namespace tink {
         std::vector<std::shared_ptr<Thread>> thread_list;
 
         thread_list.emplace_back(std::make_shared<Thread>([m] { return ThreadMonitor(m); }, "monitor"));
-        thread_list.emplace_back(std::make_shared<Thread>([m] { return ThreadTimer(m); }, "timer"));
-        thread_list.emplace_back(std::make_shared<Thread>([m] { return ThreadSocket(m); }, "socket"));
+        thread_list.emplace_back(std::make_shared<Thread>([this, m] { return ThreadTimer(shared_from_this(), m); }, "timer"));
+        thread_list.emplace_back(std::make_shared<Thread>([this, m] { return ThreadSocket(shared_from_this(), m); }, "socket"));
 
         static int weight[] = {
         -1, -1, -1, -1, 0, 0, 0, 0,
@@ -242,7 +237,9 @@ namespace tink {
             if (i < sizeof(weight)/sizeof(weight[0])) {
                 w= weight[i];
             }
-            thread_list.emplace_back(std::make_shared<Thread>([this, m, id, w] { return ThreadWorker(m, id, w); }, "worker"));
+            thread_list.emplace_back(std::make_shared<Thread>([this, m, id, w] {
+                return ThreadWorker(shared_from_this(), m, id, w);
+                }, "worker"));
         }
 
         for (auto &t : thread_list) {

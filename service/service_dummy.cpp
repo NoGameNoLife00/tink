@@ -6,7 +6,8 @@ namespace tink::Service {
     int ServiceDummy::Init(std::shared_ptr<Context> ctx, std::string_view param) {
         ctx_ = ctx;
         HARBOR.Start(ctx);
-        ctx_->SetCallBack(this, 0, 0, 0, tink::DataPtr(), 0);
+        ctx_->SetCallBack(MainLoop_, this);
+        return 0;
     }
 
     void ServiceDummy::Release() {

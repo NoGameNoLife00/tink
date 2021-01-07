@@ -4,10 +4,12 @@
 #include <cstdint>
 #include <list>
 #include <shared_mutex>
+#include "net/server.h"
 
-#define TIMER tink::Singleton<tink::TimerMgr>::GetInstance()
+//#define TIMER tink::Singleton<tink::TimerMgr>::GetInstance()
 
 namespace tink {
+    class Server;
     // 定时器事件
     struct TimerEvent {
         uint32_t handle;
@@ -29,8 +31,9 @@ namespace tink {
         void SysTime(uint32_t &sec, uint32_t &cs);
     }
 
-    class TimerMgr {
+    class TimerMgr : public noncopyable {
     public:
+        explicit TimerMgr(std::shared_ptr<Server> server) : server_(server) {}
         void Init();
         void UpdateTime();
         int TimeOut(uint32_t handle, int time, int session);
@@ -45,7 +48,7 @@ namespace tink {
         void Execute_();
         void Shift_();
         void MoveList_(int level, int idx);
-        static void DispatchList_(TimerNodeList &curr);
+        void DispatchList_(TimerNodeList &curr);
         constexpr static int TIME_NEAR_SHIFT = 8;
         constexpr static int TIME_LEVEL_SHIFT = 6;
         constexpr static int TIME_NEAR = 1 << TIME_NEAR_SHIFT;
@@ -58,6 +61,7 @@ namespace tink {
         uint32_t time_; // 启动到现在走过的滴答数
         uint32_t start_time_;
 
+        std::shared_ptr<Server> server_;
         TimerNodeList near_[TIME_NEAR];
         TimerNodeList t_[TIME_LIST_CNT][TIME_LEVEL];
         mutable std::mutex mutex_;
