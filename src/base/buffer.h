@@ -45,7 +45,6 @@ namespace tink {
         byte *data_;
         size_t len_;
     };
-    typedef std::unique_ptr<FixBuffer> FixBufferPtr;
 
     class DynamicBuffer {
     public:
@@ -66,7 +65,7 @@ namespace tink {
         int offset_;
     } ;
 
-    typedef std::shared_ptr<DynamicBuffer> DataBufferPtr;
+
 
     constexpr int SOCKET_BUFFER_MEMORY = 0;
     constexpr int SOCKET_BUFFER_OBJECT = 1;

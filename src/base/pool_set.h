@@ -7,7 +7,7 @@ namespace tink {
     template <class T> class PoolSet
     {
     protected:
-        typedef  std::list<T*> PoolList;
+        using PoolList = std::list<T*>;
     public:
 
         // poolSize 定义对象池的初始大小与是否自动增长，注意对象池的清空操作

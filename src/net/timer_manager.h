@@ -22,7 +22,7 @@ namespace tink {
         TimerEvent event;
     };
 
-    typedef std::unique_ptr<TimerNode> TimerNodePtr;
+    using TimerNodePtr = std::unique_ptr<TimerNode>;
     namespace TimeUtil {
         constexpr static int NANO_SEC = 1000000000;
         constexpr static int MICRO_SEC = 1000000;
@@ -41,7 +41,8 @@ namespace tink {
         uint64_t Now() const { return current_; }
         uint64_t StartTime() const { return start_time_; }
     private:
-        typedef std::list<TimerNodePtr> TimerNodeList;
+        using TimerNodeList = std::list<TimerNodePtr>;
+
         void Add_(int time, const TimerEvent& event);
         void AddNode_(TimerNodePtr& node);
         void Update_();

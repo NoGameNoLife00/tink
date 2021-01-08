@@ -9,6 +9,8 @@
 #include "common.h"
 
 namespace tink {
+//    using ContextPtr = std::shared_ptr<Context>;
+
     std::atomic_int Context::total = 0;
 
     void Context::Destroy() {
@@ -16,8 +18,6 @@ namespace tink {
         queue_->MarkRelease();
         --total;
     }
-
-
 
     void Context::SetCallBack(const ContextCallBack &cb, void *ud) {
         callback_ = cb;
@@ -326,8 +326,8 @@ namespace tink {
         return "";
     }
 
-    typedef std::function<std::string(Context&, std::string_view&)> CmdFunc;
-    typedef std::pair<std::string, CmdFunc> CommandPair;
+    using CmdFunc = std::function<std::string(Context&, std::string_view&)>;
+    using CommandPair = std::pair<std::string, CmdFunc>;
     static CommandPair cmd_funcs[] = {
             { "TIMEOUT",   CMD_Timeout },
             { "REG",       CMD_Reg },

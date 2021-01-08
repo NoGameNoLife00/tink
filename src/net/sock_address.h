@@ -40,7 +40,6 @@ namespace tink {
         };
     };
 
-    typedef std::shared_ptr<SockAddress> SockAddressPtr;
 }
 
 

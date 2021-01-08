@@ -24,7 +24,7 @@ namespace tink {
     class ModuleMgr;
     class Harbor;
 
-    typedef std::shared_ptr<Server> ServerPtr;
+    using ServerPtr = std::shared_ptr<Server>;
     ServerPtr& GetGlobalServer();
 
     namespace Global {

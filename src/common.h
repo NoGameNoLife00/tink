@@ -6,11 +6,11 @@
 #include <vector>
 
 namespace tink {
-    typedef char byte;
-    typedef std::shared_ptr<void> DataPtr;
-    typedef std::unique_ptr<byte[]> UBytePtr;
-    typedef std::shared_ptr<byte[]> BytePtr;
-    typedef std::mutex Mutex;
+    using byte = char;
+    using DataPtr = std::shared_ptr<void>;
+    using UBytePtr = std::unique_ptr<byte[]>;
+    using BytePtr = std::shared_ptr<byte[]>;
+    using Mutex = std::mutex;
     constexpr static int HANDLE_REMOTE_SHIFT = 24;
     constexpr static int HANDLE_MASK = 0xffffff;
 

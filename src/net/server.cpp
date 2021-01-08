@@ -151,7 +151,7 @@ namespace tink {
         }
     }
 
-    MQPtr ContextMessageDispatch(ServerPtr srv, MonitorNode &m_node, MQPtr q, int weight) {
+    MsgQueuePtr ContextMessageDispatch(ServerPtr srv, MonitorNode &m_node, MsgQueuePtr q, int weight) {
         if (!q) {
             q = srv->GetGlobalMQ()->Pop();
             if (!q) {
@@ -184,7 +184,7 @@ namespace tink {
             m_node.Trigger(0, 0);
         }
         assert(q == ctx->Queue());
-        MQPtr nq = srv->GetGlobalMQ()->Pop();
+        MsgQueuePtr nq = srv->GetGlobalMQ()->Pop();
         if (nq) {
             // ?????????§Ó????????????????push???,????¦É?????????
             srv->GetGlobalMQ()->Push(q);
@@ -197,7 +197,7 @@ namespace tink {
     static void ThreadWorker(ServerPtr srv, MonitorPtr m, int id, int weight) {
         MonitorNodePtr m_node = m->m[id];
         Global::InitThread(THREAD_WORKER);
-        MQPtr q;
+        MsgQueuePtr q;
         while (!m->quit) {
             q = ContextMessageDispatch(srv, *m_node, q, weight);
             if (!q) {

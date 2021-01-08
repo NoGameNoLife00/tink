@@ -6,8 +6,9 @@
 #include <memory>
 namespace tink {
     using std::string;
-    typedef std::vector<string> StringList;
-    typedef std::shared_ptr<string> StringPtr;
+
+    using StringList = std::vector<string>;
+    using StringPtr = std::shared_ptr<string>;
     namespace StringUtil {
         void Split(const string& str, char split, StringList& out);
         void Split(std::string_view str, std::string_view split, StringList& out);

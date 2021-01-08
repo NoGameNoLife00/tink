@@ -5,7 +5,7 @@
 
 namespace tink {
     constexpr int MAX_EVENT = 64;
-    typedef int PollFd;
+
     struct Event {
         void * s;
         bool read;
@@ -13,9 +13,12 @@ namespace tink {
         bool error;
         bool eof;
     };
-    typedef std::vector<Event> EventList;
+
+    using EventList = std::vector<Event>;
     class Poller {
     public:
+        using PollFd = int;
+
         static Poller* NewDefaultPoller();
         virtual bool Invalid() { return false; }
         virtual void Release() {}
@@ -27,8 +30,6 @@ namespace tink {
     protected:
         PollFd poll_fd_;
     };
-
-    typedef std::shared_ptr<Poller> PollerPtr;
 }
 
 #endif //TINK_POLLER_H

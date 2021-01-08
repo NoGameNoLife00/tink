@@ -32,8 +32,7 @@ namespace tink {
         size_t size;
         int type;
     };
-    typedef std::shared_ptr<RemoteMessage> RemoteMessagePtr;
-    typedef std::shared_ptr<TinkMessage> TinkMessagePtr;
+    using RemoteMessagePtr = std::shared_ptr<RemoteMessage>;
 }
 
 

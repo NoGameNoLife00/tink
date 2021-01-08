@@ -40,7 +40,7 @@ namespace tink {
         uint64_t write;
     };
 
-    typedef std::shared_ptr<WriteBuffer> WriteBufferPtr;
+
 
     struct TinkSocketMessage {
         int type;
@@ -61,11 +61,13 @@ namespace tink {
         };
     };
 
-    typedef std::shared_ptr<TinkSocketMessage> TinkSocketMsgPtr;
-    typedef std::list<WriteBufferPtr> WriteBufferList;
+    using WriteBufferPtr = std::shared_ptr<WriteBuffer>;
+    using TinkSocketMsgPtr = std::shared_ptr<TinkSocketMessage>;
+    using WriteBufferList = std::list<WriteBufferPtr>;
 
     class Socket : noncopyable {
     public:
+        using DataBufferPtr = std::shared_ptr<DynamicBuffer> ;
         enum class Type {
             INVALID = 0, // ø’œ–
             RESERVE = 1, // “—’º”√
@@ -174,7 +176,7 @@ namespace tink {
 //        DataPtr dw_buffer_;
 //        size_t dw_size_;
     };
-    typedef std::shared_ptr<Socket> SocketPtr;
+//    using SocketPtr = std::shared_ptr<Socket> ;
 }
 
 

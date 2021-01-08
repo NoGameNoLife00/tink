@@ -12,18 +12,17 @@ namespace tink {
     class Context;
     class BaseModule;
     class Server;
-    typedef std::shared_ptr<BaseModule> ModulePtr;
-    typedef std::shared_ptr<Context> ContextPtr;
-    typedef std::function<int (void* ud, int type, int session, uint32_t source, DataPtr msg, size_t sz)> ContextCallBack;
 
     struct DropT {
         uint32_t handle;
     };
 
-
     class Context : public std::enable_shared_from_this<Context> {
     public:
         using ServerPtr = std::shared_ptr<Server>;
+        using ModulePtr = std::shared_ptr<BaseModule>;
+        using ContextCallBack = std::function<int (void* ud, int type, int session, uint32_t source, DataPtr msg, size_t sz)>;
+
         Context(ServerPtr s) : server_(s) { ++total; }
         ~Context() {  }
         static int Total() { return total.load(); }
@@ -37,7 +36,7 @@ namespace tink {
         uint32_t Handle() const { return handle_; }
         void Reserve() { --total; }
         int NewSession();
-        MQPtr Queue() { return queue_; }
+        MsgQueuePtr Queue() { return queue_; }
         bool Endless() const { return endless_; }
         void SetEndless(bool b) { endless_ = b; }
         void DispatchAll();
@@ -62,7 +61,7 @@ namespace tink {
         int FilterArgs_(int type, int &session, DataPtr data, size_t &sz);
         ServerPtr server_;
         mutable std::mutex mutex_;
-        MQPtr queue_; // 消息队列
+        MsgQueuePtr queue_; // 消息队列
         bool endless_; // 是否堵塞
         uint32_t handle_; // 唯一id
         int message_count_; // 累计的收到的消息数
@@ -76,6 +75,8 @@ namespace tink {
 
         ModulePtr mod_; // module
     };
+
+    using ContextPtr = std::shared_ptr<Context>;
 }
 
 

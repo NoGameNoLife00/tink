@@ -30,12 +30,12 @@ namespace tink {
     struct RequestUdp;
     struct RequestPackage;
 
+    using SocketPtr = std::shared_ptr<Socket>;
     class SocketServer : noncopyable {
     public:
-
-        using SocketPtr = std::shared_ptr<Socket>;
         using WriteBufferList = std::list<WriteBufferPtr>;
         using SocketMsgPtr = std::shared_ptr<SocketMessage>;
+        using PollerPtr = std::shared_ptr<Poller>;
 
         enum SocketCode {
             SOCKET_NONE = -1,
@@ -127,7 +127,6 @@ namespace tink {
         std::shared_ptr<Server> server_;
     };
 
-    typedef std::shared_ptr<SocketServer> SocketServerPtr;
 }
 
 

@@ -19,8 +19,8 @@ namespace tink {
         void Check();
 
     };
+    using MonitorNodePtr = std::shared_ptr<MonitorNode>;
 
-    typedef std::shared_ptr<MonitorNode> MonitorNodePtr;
     class Monitor {
     public:
         int count;
@@ -30,7 +30,7 @@ namespace tink {
         mutable Mutex mutex;
         std::condition_variable cond;
     };
-    typedef std::shared_ptr<Monitor> MonitorPtr;
+    using MonitorPtr = std::shared_ptr<Monitor>;
 }
 
 

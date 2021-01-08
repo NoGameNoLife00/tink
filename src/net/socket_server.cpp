@@ -25,6 +25,8 @@
 namespace tink {
     static const int MAX_INFO = 128;
 
+    using SockAddressPtr = std::shared_ptr<SockAddress>;
+
     struct SocketMessage {
         int id; // socket池中的id
         uintptr_t opaque; // 服务地址

@@ -48,7 +48,7 @@ namespace tink {
         int harbor_;
     };
 
-    typedef std::shared_ptr<Config> ConfigPtr;
+    using ConfigPtr = std::shared_ptr<Config>;
 }
 
 

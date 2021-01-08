@@ -13,7 +13,6 @@
 
 namespace tink {
     class Context;
-    typedef std::shared_ptr<spdlog::logger> LoggerPtr;
     class BaseModule {
     public:
         BaseModule() : name_("default") {
@@ -32,14 +31,13 @@ namespace tink {
             logger->set_pattern("[%Y-%m-%d.%e %T] [t-%t] [%l] %v");
             logger->flush_on(spdlog::level::debug);
         }
-        LoggerPtr logger;
+        std::shared_ptr<spdlog::logger> logger;
     protected:
         std::string name_;
 
     };
 
-    typedef std::shared_ptr<BaseModule> ModulePtr;
-    typedef BaseModule* (*ModuleCreateCallBack)(void);
+    using ModulePtr = std::shared_ptr<BaseModule>;
 }
 
 #endif //TINK_BASE_MODULE_H

@@ -11,10 +11,9 @@
 namespace tink {
     class GlobalMQ;
 
-    typedef std::function<void(TinkMessage&, void *)> MsgDrop;
-
     class MessageQueue : public noncopyable, std::enable_shared_from_this<MessageQueue> {
     public:
+        using MsgDrop = std::function<void(TinkMessage&, void *)>;
         MessageQueue(GlobalMQ* global_mq,uint32_t handle);
         virtual ~MessageQueue(){}
         void Push(TinkMessage &msg);
@@ -45,6 +44,6 @@ namespace tink {
         bool in_global_;
         GlobalMQ* global_mq_;
     };
-
+    using MsgQueuePtr = std::shared_ptr<MessageQueue>;
 }
 #endif //TINK_MESSAGE_QUEUE_H

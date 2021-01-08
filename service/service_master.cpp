@@ -191,7 +191,7 @@ namespace tink::Service {
         StringList out;
         StringUtil::Split(*ip_address, ':', out);
         if (out.size() < 2) {
-            logger->error("Harbor {} : address invalid ({})", id, ip_address);
+            logger->error("Harbor {} : address invalid ({})", id, *ip_address);
             return;
         }
         std::string& ip = out[0];
