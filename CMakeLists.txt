@@ -22,6 +22,42 @@ SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR})
 #set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+if(CMAKE_COMPILER_IS_GNUCC)
+    option(ENABLE_JEMALLOC "enable jemalloc" ON)
+    if(ENABLE_JEMALLOC)
+        set(JEMALLOC_ROOT_DIR "${PROJECT_SOURCE_DIR}/3rdparty/jemalloc")
+        option(WITH_JEMALLOC "enable jemalloc of rocksdb" ON)
+
+        add_custom_command(OUTPUT "${JEMALLOC_ROOT_DIR}/include/jemalloc/jemalloc.h"
+                COMMAND ./autogen.sh
+                WORKING_DIRECTORY ${JEMALLOC_ROOT_DIR})
+        add_custom_command(OUTPUT "${JEMALLOC_ROOT_DIR}/lib/libjemalloc.a" "${JEMALLOC_ROOT_DIR}/lib/libjemalloc.so"
+                COMMAND ${CMAKE_MAKE_PROGRAM}
+                DEPENDS "${JEMALLOC_ROOT_DIR}/include/jemalloc/jemalloc.h"
+                WORKING_DIRECTORY ${JEMALLOC_ROOT_DIR}
+                COMMENT "Making external library jemalloc")
+        add_custom_target(build_jemalloc
+                DEPENDS "${JEMALLOC_ROOT_DIR}/lib/libjemalloc.a")
+
+        add_library(jemalloc_SHARED SHARED IMPORTED)
+        add_library(jemalloc STATIC IMPORTED)
+        set_target_properties(jemalloc PROPERTIES IMPORTED_LOCATION "${JEMALLOC_ROOT_DIR}/lib/libjemalloc.a")
+        set_target_properties(jemalloc_SHARED PROPERTIES IMPORTED_LOCATION "${JEMALLOC_ROOT_DIR}/lib/libjemalloc.so")
+
+        list(APPEND SYS_LIBS jemalloc)
+        add_dependencies(jemalloc build_jemalloc)
+        add_dependencies(jemalloc_SHARED build_jemalloc)
+    endif()
+
+    list(APPEND SYS_LIBS "dl" "pthread" "rt")
+    # thirdparty code
+    # do not set unnecessary flags before thirdparty dirs
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -g -fno-omit-frame-pointer ")
+endif()
+
+list(APPEND SYS_LIBS libcoroutine ${SPDLOG_LIBS})
+
+
 #include_directories(src/net)
 #include_directories(src/base)
 include_directories(3rdparty/cjson)
@@ -35,8 +71,3 @@ add_subdirectory(service)
 #add_subdirectory(test)
 #add_subdirectory(example)
 #add_subdirectory(demo_game)
-
-
-#add_definitions(-std=c++2a)
-
-

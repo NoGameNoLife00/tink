@@ -9,3 +9,6 @@
 [submodule "3rdparty/libcoroutine"]
 	path = 3rdparty/libcoroutine
 	url = https://github.com/NoGameNoLife00/libcoroutine
+[submodule "3rdparty/jemalloc"]
+	path = 3rdparty/jemalloc
+	url = https://github.com/jemalloc/jemalloc.git
