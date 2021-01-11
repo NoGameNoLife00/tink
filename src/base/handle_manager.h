@@ -9,7 +9,7 @@
 #include "base/singleton.h"
 #include "net/server.h"
 
-//#define HANDLE_STORAGE tink::Singleton<tink::HandleMgr>::GetInstance()
+
 
 namespace tink {
     class Server;

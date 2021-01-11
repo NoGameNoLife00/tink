@@ -1,10 +1,5 @@
 #include <sstream>
 #include "base/context.h"
-#include "base/string_util.h"
-#include "base/handle_manager.h"
-#include "net/timer_manager.h"
-#include "net/harbor.h"
-#include "net/server.h"
 #include "error_code.h"
 #include "common.h"
 
@@ -88,14 +83,14 @@ namespace tink {
             }
             return session;
         }
-        if (HARBOR.MessageIsRemote(destination)) {
+        if (server_->GetHarbor()->MessageIsRemote(destination)) {
             // 发送目标不在同一节点,交给harbor处理
             RemoteMessagePtr r_msg = std::make_shared<RemoteMessage>();
             r_msg->destination.handle = destination;
             r_msg->message = data;
             r_msg->size = sz & MESSAGE_TYPE_MASK;
             r_msg->type = sz >> MESSAGE_TYPE_SHIFT;
-            HARBOR.Send(r_msg, source, session);
+            server_->GetHarbor()->Send(r_msg, source, session);
         } else {
             TinkMessage s_msg;
             s_msg.source = source;
@@ -160,7 +155,7 @@ namespace tink {
             r_msg->message = data;
             r_msg->size = sz & MESSAGE_TYPE_MASK;
             r_msg->type = sz >> MESSAGE_TYPE_SHIFT;
-            HARBOR.Send(r_msg, source, session);
+            server_->GetHarbor()->Send(r_msg, source, session);
             return session;
         }
         return Send(source, des, type, session, data, sz);

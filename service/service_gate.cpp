@@ -133,8 +133,7 @@ namespace tink::Service {
         memcpy(tmp, msg.get(), sz);
         tmp[sz] = '\0';
         std::string command(tmp);
-        StringList param_list;
-        StringUtil::Split(command, ' ', param_list);
+        StringList param_list = StringUtil::Split(command, ' ');
         if (param_list.size() < 2) {
             return;
         }

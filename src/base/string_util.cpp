@@ -3,16 +3,19 @@
 
 
 namespace tink::StringUtil {
-    void Split(const string &str, char split, StringList &out) {
+    StringList Split(const string &str, char split) {
+        StringList out;
         std::stringstream ss(str);
         string s;
         while (getline(ss, s, split))
         {
             out.emplace_back(s);
         }
+        return out;
     }
 
-    void Split(std::string_view str, std::string_view split, StringList &out) {
+    StringList Split(std::string_view str, std::string_view split) {
+        StringList out;
         size_t front = 0;
         size_t back = str.find_first_of(split, front);
         while (back != str.npos) {
@@ -23,6 +26,7 @@ namespace tink::StringUtil {
         if (back - front > 0) {
             out.emplace_back(str.substr(front, back - front));
         }
+        return out;
     }
 
     void IdToHex(string &str, uint32_t id) {

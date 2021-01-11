@@ -11,8 +11,6 @@
 #include "common.h"
 #include "net/server.h"
 
-//#define SOCKET_SERVER tink::Singleton<tink::SocketServer>::GetInstance()
-
 namespace tink {
     class Server;
 

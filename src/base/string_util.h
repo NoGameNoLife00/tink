@@ -10,8 +10,8 @@ namespace tink {
     using StringList = std::vector<string>;
     using StringPtr = std::shared_ptr<string>;
     namespace StringUtil {
-        void Split(const string& str, char split, StringList& out);
-        void Split(std::string_view str, std::string_view split, StringList& out);
+        StringList Split(const string& str, char split);
+        StringList Split(std::string_view str, std::string_view split);
         void IdToHex(string &str, uint32_t id);
         template <typename ...Args>
         string Format(std::string_view format, Args && ...args)

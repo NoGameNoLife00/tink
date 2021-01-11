@@ -188,8 +188,7 @@ namespace tink::Service {
     void ServiceMaster::ConnectTo_(int id) {
         assert(!connected_[id]);
         StringPtr ip_address = remote_addr_[id];
-        StringList out;
-        StringUtil::Split(*ip_address, ':', out);
+        StringList out = StringUtil::Split(*ip_address, ':');
         if (out.size() < 2) {
             logger->error("Harbor {} : address invalid ({})", id, *ip_address);
             return;

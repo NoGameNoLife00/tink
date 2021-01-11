@@ -6,7 +6,7 @@
 #include <shared_mutex>
 #include "net/server.h"
 
-//#define TIMER tink::Singleton<tink::TimerMgr>::GetInstance()
+
 
 namespace tink {
     class Server;

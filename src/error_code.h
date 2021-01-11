@@ -1,11 +1,9 @@
-//
-// Created by admin on 2020/5/19.
-//
 
 #ifndef TINK_ERROR_CODE_H
 #define TINK_ERROR_CODE_H
 
-#define MSG_ID_EXIT -1
+namespace tink {
+
 
 #define E_OK 0
 #define E_FAILED -1
@@ -17,4 +15,32 @@
 #define E_CONN_NOT_FIND 6 // 找不到链接
 #define E_BUFF_OVERSIZE 7 // 连接缓存已满
 #define E_QUERY_MODULE 8 // 加载模块出错
+
+
+}
+
+#define MSG_ID_EXIT -1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #endif //TINK_ERROR_CODE_H
+
+
+

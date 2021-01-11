@@ -4,7 +4,7 @@
 #include "common.h"
 #include "base/context.h"
 
-#define HARBOR tink::Singleton<tink::Harbor>::GetInstance()
+
 
 namespace tink {
     class Context;
