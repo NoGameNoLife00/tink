@@ -7,8 +7,6 @@
 #include "common.h"
 
 namespace tink::Service {
-    constexpr auto MESSAGEPOOL = 1023;
-
     struct Message {
         DataPtr buffer;
         int size;
@@ -29,17 +27,6 @@ namespace tink::Service {
     private:
         void ReturnMessage_(MessagePool &mp);
     } ;
-
-
-
-
-//    class MessagePool {
-//        typedef std::array<Message, MESSAGEPOOL> MessageList;
-//
-//    private:
-//        std::list<MessageList> pool;
-//        std::list<Message> free_list;
-//    };
 }
 
 

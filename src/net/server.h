@@ -41,7 +41,7 @@ namespace tink {
         inline void SetHandle(uint32_t h) { t_handle = h; }
     }
 
-    class Server : public noncopyable, std::enable_shared_from_this<Server> {
+    class Server : public noncopyable, public std::enable_shared_from_this<Server> {
     public:
         int Init(ConfigPtr config);
         int Start(); // 启动

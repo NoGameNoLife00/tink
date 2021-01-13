@@ -44,7 +44,7 @@ namespace tink {
         module_mgr_ = std::make_unique<ModuleMgr>();
         timer_mgr_ = std::make_unique<TimerMgr>(shared_from_this());
         socket_server_ = std::make_unique<SocketServer>(shared_from_this());
-
+        global_mq_ = std::make_unique<GlobalMQ>();
         config_ = config;
         Global::InitThread(THREAD_MAIN);
         Sigign();

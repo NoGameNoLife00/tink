@@ -1,11 +1,30 @@
 #include "net/harbor.h"
+#include "base/base_module.h"
+#include "harbor_message.h"
 #include "error_code.h"
-#include "service_dummy.h"
 
 namespace tink::Service {
+
+    class ServiceDummy : public BaseModule {
+    public:
+        int Init(ContextPtr ctx, std::string_view param) override;
+
+        void Release() override;
+    private:
+        static int MainLoop_(void *ud, int type, int session, uint32_t source, DataPtr msg, size_t sz);
+        void UpdateName_(const std::string &name, uint32_t handle);
+        void SendName_(uint32_t source, const std::string &name, int type, int session, DataPtr msg, size_t sz);
+        void DispatchQueue_(HarborMap::iterator &node);
+        void PushQueue_(HarborMsgQueue& queue, DataPtr buffer, size_t sz, RemoteMsgHeader& header);
+        HarborMap map_;
+
+        ContextPtr ctx_;
+    };
+
+
     int ServiceDummy::Init(std::shared_ptr<Context> ctx, std::string_view param) {
         ctx_ = ctx;
-        HARBOR.Start(ctx);
+        ctx_->GetServer()->GetHarbor()->Start(ctx);
         ctx_->SetCallBack(MainLoop_, this);
         return 0;
     }

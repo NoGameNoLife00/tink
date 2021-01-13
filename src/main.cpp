@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
     std::shared_ptr<tink::Config> conf = std::make_shared<tink::Config>();
     conf->Init(config_file);
     printf("tink start");
-    tink::GetGlobalServer().reset(new tink::Server());
+    tink::GetGlobalServer() = std::make_shared<tink::Server>();
     tink::GetGlobalServer()->Init(conf);
     tink::GetGlobalServer()->Start();
     return 0;
