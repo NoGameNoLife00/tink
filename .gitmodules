@@ -12,3 +12,7 @@
 [submodule "3rdparty/jemalloc"]
 	path = 3rdparty/jemalloc
 	url = https://github.com/jemalloc/jemalloc.git
+[submodule "3rdparty/lua"]
+	path = 3rdparty/lua
+	url = https://github.com/lua/lua.git
+	branch = v5.4.0
