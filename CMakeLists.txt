@@ -26,7 +26,7 @@ if(CMAKE_COMPILER_IS_GNUCC)
     option(ENABLE_JEMALLOC "enable jemalloc" ON)
     if(ENABLE_JEMALLOC)
         set(JEMALLOC_ROOT_DIR "${PROJECT_SOURCE_DIR}/3rdparty/jemalloc")
-        option(WITH_JEMALLOC "enable jemalloc of rocksdb" ON)
+        option(WITH_JEMALLOC "enable jemalloc of tink" ON)
 
         add_custom_command(OUTPUT "${JEMALLOC_ROOT_DIR}/include/jemalloc/jemalloc.h"
                 COMMAND ./autogen.sh
@@ -44,6 +44,7 @@ if(CMAKE_COMPILER_IS_GNUCC)
         set_target_properties(jemalloc PROPERTIES IMPORTED_LOCATION "${JEMALLOC_ROOT_DIR}/lib/libjemalloc.a")
         set_target_properties(jemalloc_SHARED PROPERTIES IMPORTED_LOCATION "${JEMALLOC_ROOT_DIR}/lib/libjemalloc.so")
 
+#        MESSAGE("libjemalloc-dir: ${JEMALLOC_ROOT_DIR}/lib/libjemalloc.so ${JEMALLOC_ROOT_DIR}/lib/libjemalloc.a")
         list(APPEND SYS_LIBS jemalloc)
         add_dependencies(jemalloc build_jemalloc)
         add_dependencies(jemalloc_SHARED build_jemalloc)
@@ -52,10 +53,10 @@ if(CMAKE_COMPILER_IS_GNUCC)
     list(APPEND SYS_LIBS "dl" "pthread" "rt")
     # thirdparty code
     # do not set unnecessary flags before thirdparty dirs
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -g -fno-omit-frame-pointer ")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a -g -fno-omit-frame-pointer -ljemalloc")
 endif()
 
-list(APPEND SYS_LIBS libcoroutine ${SPDLOG_LIBS})
+list(APPEND SYS_LIBS ${SPDLOG_LIBS})
 
 
 #include_directories(src/net)
