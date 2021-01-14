@@ -21,26 +21,26 @@ SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR})
 #set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 #set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-option(ENABLE_LUA "enable lua" OFF)
-if(ENABLE_LUA)
-    set(LUA_ROOT_DIR "${PROJECT_SOURCE_DIR}/3rdparty/lua")
-    option(WITH_LUA "enable lua of tink" ON)
-
-    set(LUA_LIBRARY ${LUA_ROOT_DIR}/lib/liblua.a)
-
-    add_custom_target(build_lua ALL
-            COMMAND ${CMAKE_MAKE_PROGRAM}
-            WORKING_DIRECTORY ${LUA_ROOT_DIR}
-            COMMENT "Original lua makefile target")
-#    add_library(lua_SHARED SHARED IMPORTED)
-    add_library(lua STATIC IMPORTED)
-    set_property(TARGET lua APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
-    set_target_properties(lua PROPERTIES IMPORTED_LOCATION_NOCONFIG "${LUA_LIBRARY}")
-#    add_dependencies(lua_SHARED build_lua)
-    add_dependencies(lua build_lua)
-    list(APPEND SYS_LIBS lua)
-    message("lua-path:${LUA_ROOT_DIR}")
-endif()
+option(ENABLE_LUA "enable lua" ON)
+#if(ENABLE_LUA)
+#    set(LUA_ROOT_DIR "${PROJECT_SOURCE_DIR}/3rdparty/lua")
+#    option(WITH_LUA "enable lua of tink" ON)
+#
+#    set(LUA_LIBRARY ${LUA_ROOT_DIR}/lib/liblua.a)
+#
+#    add_custom_target(build_lua
+#            COMMAND ${CMAKE_MAKE_PROGRAM}
+#            WORKING_DIRECTORY ${LUA_ROOT_DIR}
+#            COMMENT "Original lua makefile target")
+##    add_library(lua_SHARED SHARED IMPORTED)
+#    add_library(lua STATIC IMPORTED)
+#    set_property(TARGET lua APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
+#    set_target_properties(lua PROPERTIES IMPORTED_LOCATION_NOCONFIG "${LUA_LIBRARY}")
+##    add_dependencies(lua_SHARED build_lua)
+#    add_dependencies(lua build_lua)
+#    list(APPEND SYS_LIBS lua)
+#    message("lua-path:${LUA_ROOT_DIR}")
+#endif()
 
 
 if(CMAKE_COMPILER_IS_GNUCC)

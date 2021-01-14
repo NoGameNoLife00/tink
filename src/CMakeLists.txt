@@ -14,5 +14,5 @@ set(SOURCES ${SOURCES} ../3rdparty/cjson/cJSON.c)
 message("-- global-lib: ${SYS_LIBS}")
 
 add_executable(${BINARY} ${SOURCES})
-target_link_libraries(${BINARY} PUBLIC libcoroutine ${SYS_LIBS})
+target_link_libraries(${BINARY} PUBLIC libcoroutine lua ${SYS_LIBS})
 set_property(TARGET ${BINARY}  PROPERTY CXX_STANDARD 20)
