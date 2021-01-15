@@ -21,6 +21,7 @@ namespace tink::Service {
         lua_State* L;
         size_t mem;
         size_t mem_report;
+        size_t mem_limit;
         lua_State* active_L;
         volatile int trap;
     private:
@@ -331,9 +332,31 @@ namespace tink::Service {
         return 1;
     }
 
+    static std::string OptString(Context& ctx, std::string_view key, std::string_view str) {
+        std::string ret = ctx.Command("GETENV", key);
+        if (ret.empty()) {
+            return string (str);
+        }
+        return ret;
+    }
+
+    static int Traceback(lua_State *L) {
+        const char* msg = lua_tostring(L, 1);
+        if (msg) {
+            luaL_traceback(L, L, msg, 1);
+        } else {
+            lua_pushliteral(L, "(no error message)");
+        }
+        return 1;
+    }
+
+    static void ReportLauncherError(Context& ctx) {
+        DataPtr msg(new byte[6] {"ERROR"}, std::default_delete<byte[]>());
+        ctx.SendName(0, ".launcher", PTYPE_TEXT, 0, msg, 5);
+    }
 
     int ServiceCLua::InitCB(DataPtr msg, size_t sz) {
-        lua_State* L = L;
+        lua_State* L = this->L;
         lua_gc(L, LUA_GCSTOP, 0);
         lua_pushboolean(L, 1); /* ÈÃluaºöÂÔenv. vars. */
         lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
@@ -353,6 +376,49 @@ namespace tink::Service {
         lua_pushlightuserdata(L, ctx_.get());
         lua_setfield(L, LUA_REGISTRYINDEX, "tink_context");
         luaL_requiref(L, "tink.codecache", codecache, 0);
+        lua_pop(L, 1);
 
+        lua_gc(L, LUA_GCGEN, 0, 0);
+
+        auto path = OptString(*ctx_, "lua_path", "./lualib/?.lua;./lualib/?/init.lua");
+        lua_pushstring(L, path.c_str());
+        lua_setglobal(L, "LUA_PATH");
+        auto cpath = OptString(*ctx_, "lua_cpath", "./luaclib/?.so");
+        lua_pushstring(L, cpath.c_str());
+        lua_setglobal(L, "LUA_CPATH");
+        auto service = OptString(*ctx_, "luaservice", "./service/?.lua");
+        lua_pushstring(L, service.c_str());
+        lua_setglobal(L, "LUA_SERVICE");
+        auto preload = ctx_->Command("GETENV", "preload");
+        lua_pushstring(L, preload.c_str());
+        lua_setglobal(L, "LUA_PERLOAD");
+
+        lua_pushcfunction(L, Traceback);
+        assert(lua_gettop(L) == 1);
+
+        auto loader = OptString(*ctx_, "lualoader", "./lualib/loader.lua");
+
+        if (luaL_loadfile(L, loader.c_str()) != LUA_OK) {
+            logger->error("can't load {} : {}", loader, lua_tostring(L, -1));
+            ReportLauncherError(ctx_);
+            return 1;
+        }
+        lua_pushlstring(L, static_cast<char*>(msg.get()), sz);
+        if (lua_pcall(L, 1, 0, 1)) {
+            logger->error("lua loader error: {}", lua_tostring(L, -1));
+            ReportLauncherError(ctx_);
+            return 1;
+        }
+        lua_settop(L, 0);
+        if (lua_getfield(L, LUA_REGISTRYINDEX, "memlimit") == LUA_TNUMBER) {
+            size_t limit = lua_tointeger(L, -1);
+            mem_limit = limit;
+            logger->error("set memory limit to {} M", static_cast<float>(limit) / (1024*1024));
+            lua_pushnil(L);
+            lua_setfield(L, LUA_REGISTRYINDEX, "memlimit");
+        }
+        lua_pop(L, 1);
+        lua_gc(L, LUA_GCRESTART, 0);
+        return 0;
     }
 }
