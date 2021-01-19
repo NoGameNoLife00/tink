@@ -3,9 +3,6 @@
 #include <lauxlib.h>
 #include "base/base_module.h"
 
-
-
-
 namespace tink::Service {
     class ServiceCLua : public BaseModule {
     public:
@@ -400,13 +397,13 @@ namespace tink::Service {
 
         if (luaL_loadfile(L, loader.c_str()) != LUA_OK) {
             logger->error("can't load {} : {}", loader, lua_tostring(L, -1));
-            ReportLauncherError(ctx_);
+            ReportLauncherError(*ctx_);
             return 1;
         }
         lua_pushlstring(L, static_cast<char*>(msg.get()), sz);
         if (lua_pcall(L, 1, 0, 1)) {
             logger->error("lua loader error: {}", lua_tostring(L, -1));
-            ReportLauncherError(ctx_);
+            ReportLauncherError(*ctx_);
             return 1;
         }
         lua_settop(L, 0);
