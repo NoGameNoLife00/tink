@@ -5,7 +5,7 @@ PROJECT(${CMAKE_PROJECT_NAME}_3rdparty)
 add_subdirectory(googletest)
 add_subdirectory(spdlog)
 add_subdirectory(libcoroutine)
-
+message(${ENABLE_LUA})
 if(ENABLE_LUA)
     set(LUA_ROOT_DIR "${PROJECT_SOURCE_DIR}/lua")
     option(WITH_LUA "enable lua of tink" ON)

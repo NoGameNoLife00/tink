@@ -9,19 +9,21 @@ IF(NOT CMAKE_BUILD_TYPE)
     SET(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose Release or Debug" FORCE)
 ENDIF()
 
-MESSAGE(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
+message(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
 
-MESSAGE( "** INFO ------------------------------------------------")
-MESSAGE( "** STATUS Build tink ${TINK_VERSION}")
+message( "** INFO ------------------------------------------------")
+message( "** STATUS Build tink ${TINK_VERSION}")
 
 
 # 设置可执行文件输出目录
-SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR})
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR})
 
 #set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 #set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-option(ENABLE_LUA "enable lua" ON)
+set(ENABLE_LUA ON)
+
+message(${ENABLE_LUA})
 #if(ENABLE_LUA)
 #    set(LUA_ROOT_DIR "${PROJECT_SOURCE_DIR}/3rdparty/lua")
 #    option(WITH_LUA "enable lua of tink" ON)
@@ -66,22 +68,24 @@ if(CMAKE_COMPILER_IS_GNUCC)
         set_target_properties(jemalloc_SHARED PROPERTIES IMPORTED_LOCATION "${JEMALLOC_ROOT_DIR}/lib/libjemalloc.so")
 
 #        MESSAGE("libjemalloc-dir: ${JEMALLOC_ROOT_DIR}/lib/libjemalloc.so ${JEMALLOC_ROOT_DIR}/lib/libjemalloc.a")
-#        list(APPEND SYS_LIBS jemalloc)
+        list(APPEND SYS_LIBS jemalloc)
         add_dependencies(jemalloc build_jemalloc)
         add_dependencies(jemalloc_SHARED build_jemalloc)
+        set(JEMALLOC_INCLUDE_DIR ${JEMALLOC_ROOT_DIR}/include)
+        set(JEMALLOC_LIBRARIES ${JEMALLOC_ROOT_DIR}/lib)
+        add_definitions(-DJEMALLOC_NO_DEMANGLE)
+        include_directories(${JEMALLOC_INCLUDE_DIR})
     endif()
 
     list(APPEND SYS_LIBS "dl" "pthread" "rt")
     # thirdparty code
     # do not set unnecessary flags before thirdparty dirs
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a -g -fno-omit-frame-pointer -ljemalloc")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a -g -fno-omit-frame-pointer")
 endif()
 
 list(APPEND SYS_LIBS ${SPDLOG_LIBS})
 
 
-#include_directories(src/net)
-#include_directories(src/base)
 include_directories(3rdparty/cjson)
 include_directories(3rdparty/spdlog/include)
 include_directories(3rdparty/lua)

@@ -46,6 +46,7 @@ namespace tink::Service {
         std::string self = ctx_->Command("REG", "");
         uint32_t handle_id = strtoul(self.data()+1, nullptr, 16);
         ctx_->Send(0, handle_id, PTYPE_TEXT, 0, tmp, sz);
+        return 0;
     }
 
     static void SignalHook(lua_State* L, lua_Debug* ar) {
@@ -348,7 +349,8 @@ namespace tink::Service {
     }
 
     static void ReportLauncherError(Context& ctx) {
-        DataPtr msg(new byte[6] {"ERROR"}, std::default_delete<byte[]>());
+        DataPtr msg(new byte[6] {0}, std::default_delete<byte[]>());
+        strcpy(static_cast<byte*>(msg.get()), "ERROR");
         ctx.SendName(0, ".launcher", PTYPE_TEXT, 0, msg, 5);
     }
 

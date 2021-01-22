@@ -330,4 +330,5 @@ extern "C" {
 tink::BaseModule *CreateModule() {
     return new tink::Service::ServiceGate();
 }
+
 };
