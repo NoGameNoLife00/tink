@@ -14,6 +14,6 @@ if(ENABLE_LUA)
 
     LIST(REMOVE_ITEM LUA_SRC lua.c luac.c)
 
-    add_library(lua ${LUA_SRC})
+    add_library(lua STATIC ${LUA_SRC})
     message("lua-path:${LUA_ROOT_DIR}")
 endif()

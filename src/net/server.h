@@ -13,6 +13,7 @@
 #include "base/config.h"
 #include "base/module_manager.h"
 #include "base/handle_manager.h"
+#include "base/lua_env.h"
 #include "net/socket.h"
 #include "net/socket_server.h"
 #include "net/harbor.h"
@@ -23,6 +24,7 @@ namespace tink {
     class HandleMgr;
     class ModuleMgr;
     class Harbor;
+    class LuaEnv;
 
     using ServerPtr = std::shared_ptr<Server>;
     ServerPtr& GetGlobalServer();
@@ -54,6 +56,7 @@ namespace tink {
         GlobalMQ* GetGlobalMQ() const;
         TimerMgr* GetTimerMgr() const;
         SocketServer* GetSocketServer() const;
+        LuaEnv* GetLuaEnv() const ;
     private:
         ConfigPtr config_;
 
@@ -63,6 +66,7 @@ namespace tink {
         std::unique_ptr<GlobalMQ> global_mq_;
         std::unique_ptr<TimerMgr> timer_mgr_;
         std::unique_ptr<SocketServer> socket_server_;
+        std::unique_ptr<LuaEnv> lua_env_;
 
     };
 }

@@ -321,6 +321,20 @@ namespace tink {
         return "";
     }
 
+    std::string CMD_GetEnv(Context& context, std::string_view param) {
+        return context.GetServer()->GetLuaEnv()->GetEnv(param);
+    }
+
+    std::string CMD_SetEnv(Context& context, std::string_view param) {
+        auto strList = StringUtil::Split(param, " ");
+        if (strList.size() < 2) {
+            return "";
+        }
+
+        context.GetServer()->GetLuaEnv()->SetEnv(strList[0], strList[1]);
+        return "";
+    }
+
     using CmdFunc = std::function<std::string(Context&, std::string_view&)>;
     using CommandPair = std::pair<std::string, CmdFunc>;
     static CommandPair cmd_funcs[] = {
@@ -331,8 +345,8 @@ namespace tink {
             { "EXIT",      CMD_Exit },
             { "KILL",      CMD_Kill },
             { "LAUNCH",    CMD_Launch },
-//            { "GETENV",    cmd_getenv },
-//            { "SETENV",    cmd_setenv },
+            { "GETENV",    CMD_GetEnv },
+            { "SETENV",    CMD_SetEnv },
             { "STARTTIME", CMD_StartTime },
             { "ABORT",     CMD_Abort },
             { "MONITOR",   CMD_Monitor },

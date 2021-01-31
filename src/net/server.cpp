@@ -7,6 +7,8 @@
 #include "base/thread.h"
 #include "net/monitor.h"
 #include "common.h"
+#include "server.h"
+
 
 namespace tink {
     static volatile int SIG = 0;
@@ -45,6 +47,8 @@ namespace tink {
         timer_mgr_ = std::make_unique<TimerMgr>(shared_from_this());
         socket_server_ = std::make_unique<SocketServer>(shared_from_this());
         global_mq_ = std::make_unique<GlobalMQ>();
+        lua_env_ = std::make_unique<LuaEnv>();
+
         config_ = config;
         Global::InitThread(THREAD_MAIN);
         Sigign();
@@ -66,7 +70,7 @@ namespace tink {
         module_mgr_->Init(config->GetModulePath());
         timer_mgr_->Init();
         socket_server_->Init(timer_mgr_->Now());
-
+        lua_env_->Init();
         Bootstrap(config->GetBootstrap());
         return 0;
     }
@@ -291,6 +295,10 @@ namespace tink {
 
     SocketServer *Server::GetSocketServer() const {
         return socket_server_.get();
+    }
+
+    LuaEnv *Server::GetLuaEnv() const {
+        return lua_env_.get();
     }
 
 
